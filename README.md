@@ -9,8 +9,46 @@
 - React
 - TypeScript
 - Vite
+- React Router
+- TanStack Query
+- Zustand
+- Tailwind CSS
+- React Hook Form
+- Zod
+- Axios
 - ESLint
 - Prettier
+
+## 주요 라이브러리 역할
+
+프로젝트에서 사용하는 주요 라이브러리와 역할은 아래와 같습니다.
+
+| 라이브러리      | 역할                                          | 사용 예시                                    |
+| --------------- | --------------------------------------------- | -------------------------------------------- |
+| React           | 화면을 컴포넌트 단위로 만드는 UI 라이브러리   | 버튼, 헤더, 페이지 구성                      |
+| TypeScript      | JavaScript에 타입을 추가해 오류를 줄이는 도구 | props 타입, API 응답 타입 정의               |
+| Vite            | 빠른 개발 서버와 빌드 도구                    | `pnpm dev`, `pnpm build`                     |
+| React Router    | 페이지 이동과 라우팅 관리                     | 로그인 페이지, 메인 페이지, 상세 페이지 이동 |
+| TanStack Query  | 서버 API 데이터 상태 관리                     | 게시글 목록 조회, 사용자 정보 조회           |
+| Zustand         | 전역 상태 관리                                | 로그인 사용자 정보, 모달 열림 상태           |
+| Tailwind CSS    | CSS 클래스로 빠르게 UI 스타일 작성            | 여백, 색상, 반응형 레이아웃                  |
+| clsx            | 조건에 따라 `className` 조합                  | 선택된 탭 스타일 변경                        |
+| tailwind-merge  | Tailwind 클래스 충돌 정리                     | `bg-black`과 `bg-red-500` 중 마지막 값 적용  |
+| React Hook Form | 입력 폼 상태 관리                             | 로그인, 회원가입, 글 작성 폼                 |
+| Zod             | 입력값 검증                                   | 이메일 형식, 비밀번호 길이, 필수값 확인      |
+| Axios           | API 요청 관리                                 | 로그인 요청, 데이터 조회, 공통 에러 처리     |
+| ESLint          | 코드 문제 검사                                | 사용하지 않는 변수, React Hook 규칙 검사     |
+| Prettier        | 코드 포맷 자동 정리                           | 들여쓰기, 따옴표, 줄바꿈 통일                |
+
+### 라이브러리 사용 기준
+
+- 화면 이동이 필요한 경우 `React Router`를 사용합니다.
+- 서버에서 데이터를 가져오거나 저장하는 경우 `TanStack Query`를 사용합니다.
+- 여러 화면에서 공유해야 하는 클라이언트 상태는 `Zustand`를 사용합니다.
+- 입력 폼은 `React Hook Form`으로 관리하고, 검증은 `Zod`를 사용합니다.
+- API 요청 공통 설정이 필요하면 `Axios`를 사용합니다.
+- UI 스타일은 `Tailwind CSS`를 기본으로 사용합니다.
+- 조건부 클래스 조합은 `clsx`, Tailwind 클래스 충돌 정리는 `tailwind-merge`를 사용합니다.
 
 ## 실행 방법
 
@@ -18,6 +56,20 @@
 pnpm install
 pnpm dev
 ```
+
+## 자주 사용하는 명령어
+
+```bash
+pnpm dev
+pnpm lint
+pnpm build
+pnpm format
+```
+
+- `pnpm dev`: 개발 서버 실행
+- `pnpm lint`: 코드 규칙 검사
+- `pnpm build`: 배포 가능한 상태로 빌드되는지 확인
+- `pnpm format`: Prettier 기준으로 코드 포맷 정리
 
 ## 협업 흐름
 

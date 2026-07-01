@@ -1,3 +1,24 @@
+.app-container {
+  /* 1. 아이폰 13 가로 크기인 390px을 최대 너비로 제한 */
+  max-width: 390px;
+
+  /* 2. 모바일 기기(390px 이하)로 접속하면 화면에 꽉 차게 설정 */
+  width: 100%;
+
+  /* 3. 데스크탑에서 화면이 가운데에 오도록 정렬 */
+  margin: 0 auto;
+
+  /* (선택) 데스크탑에서 영역 구분을 위해 배경색이나 그림자 추가 */
+  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  background-color: #f5f5f7; /* 데스크탑 전용 배경색 (약간 회색) */
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

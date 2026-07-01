@@ -1,13 +1,13 @@
 // src/app/AppRoutes.tsx
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 
-import HomePage from '../pages/Home/HomePage';
-import SearchPage from '../pages/Search/SearchPage';
-import RecordPage from '../pages/Record/RecordPage';
-import MyPage from '../pages/My/MyPage';
-import OnboardingPage1 from '../pages/Onboarding/OnboardingPage1';
-import OnboardingPage2 from '../pages/Onboarding/OnboardingPage2';
-import OnboardingPage3 from '../pages/Onboarding/OnboardingPage3';
+import HomePage from '../pages/home/HomePage';
+import SearchPage from '../pages/search/SearchPage';
+import RecordPage from '../pages/record/RecordPage';
+import MyPage from '../pages/my/MyPage';
+import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
+import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
+import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
 
 type TabKey = 'home' | 'search' | 'record' | 'my';
 

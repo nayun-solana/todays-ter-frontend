@@ -1,6 +1,6 @@
 export default function HomePage() {
   return (
-    <div className="w-full max-w-[390px] min-h-screen mx-auto bg-white shadow-xl">
+    <div className="w-full min-h-screen mx-auto ">
       <header className="p-5 border-b">
         <h2 className="text-xl font-bold">오늘의 터 홈페이지</h2>
       </header>

@@ -1,6 +1,9 @@
+// import BottomButton from '../../components/BottomButton';
+// import HeaderProgressBar from '../../components/HeaderProgressBar';
+
 export default function OnboardingPage1() {
   return (
-    <div className="w-full max-w-[390px] min-h-screen mx-auto bg-white shadow-xl">
+    <div className="w-full min-h-screen mx-auto">
       <header className="p-5 border-b">
         <h2 className="text-xl font-bold">오늘의 터 온보딩페이지 1</h2>
       </header>

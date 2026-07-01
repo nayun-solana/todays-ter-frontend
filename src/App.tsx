@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   return (
     <div className="min-h-screen ">
-      <div className="mx-auto min-h-screen w-full max-w-[390px] bg-white shadow-xl">
+      <div className="mx-auto min-h-screen w-full max-w-[390px] bg-white shadow-xl px-5">
         <AppRoutes />
       </div>
     </div>

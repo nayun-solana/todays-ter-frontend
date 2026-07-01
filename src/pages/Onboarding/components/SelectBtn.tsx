@@ -1,5 +1,4 @@
 type SelectBtnProps = {
-  id: number;
   img: string;
   onClick: () => void;
   isSelected: boolean;
@@ -8,7 +7,6 @@ type SelectBtnProps = {
 };
 
 export default function SelectBtn({
-  id,
   img,
   onClick,
   isSelected = false,

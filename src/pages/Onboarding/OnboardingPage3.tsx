@@ -78,7 +78,6 @@ export default function OnboardingPage3() {
         {btns.map((btn) => (
           <SelectBtn
             key={btn.id}
-            id={btn.id}
             img={btn.img}
             title={btn.title}
             description={btn.description}

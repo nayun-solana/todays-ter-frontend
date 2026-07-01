@@ -1,12 +1,12 @@
 type BottomButtonProps = {
   text: string;
   onClick: () => void;
-  isAble?: boolean;
+  isAble: boolean;
 };
 
 export default function BottomButton({ text, onClick, isAble }: BottomButtonProps) {
   return (
-    <div className="flex  w-full items-center">
+    <div className="flex  w-full items-center mb-8.75">
       <button
         type="button"
         onClick={onClick}

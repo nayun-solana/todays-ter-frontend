@@ -52,16 +52,19 @@ type TicketPatch = {
 };
 
 const notionToken = process.env.NOTION_TOKEN;
-const dataSourceId = process.env.NOTION_DATA_SOURCE_ID;
+const configuredDataSourceId = process.env.NOTION_DATA_SOURCE_ID;
+const databaseId = process.env.NOTION_DATABASE_ID;
 const eventName = process.env.GITHUB_EVENT_NAME;
 const eventPath = process.env.GITHUB_EVENT_PATH;
+
+let activeDataSourceId = '';
 
 if (!notionToken) {
   throw new Error('NOTION_TOKEN is required.');
 }
 
-if (!dataSourceId) {
-  throw new Error('NOTION_DATA_SOURCE_ID is required.');
+if (!configuredDataSourceId && !databaseId) {
+  throw new Error('NOTION_DATA_SOURCE_ID or NOTION_DATABASE_ID is required.');
 }
 
 if (!eventName) {
@@ -75,6 +78,9 @@ if (!eventPath) {
 const payload = JSON.parse(readFileSync(eventPath, 'utf8'));
 
 async function main() {
+  activeDataSourceId = await resolveDataSourceId();
+  console.log(`Using Notion data source: ${maskId(activeDataSourceId)}`);
+
   if (eventName === 'issues') {
     await handleIssueEvent(payload);
     return;
@@ -187,7 +193,7 @@ async function upsertTicket(ticket: TicketPatch) {
   await notionRequest('POST', '/v1/pages', {
     parent: {
       type: 'data_source_id',
-      data_source_id: dataSourceId,
+      data_source_id: getDataSourceId(),
     },
     properties,
   });
@@ -195,7 +201,7 @@ async function upsertTicket(ticket: TicketPatch) {
 }
 
 async function findTicketPageId(ticketId: string): Promise<string | undefined> {
-  const response = await notionRequest('POST', `/v1/data_sources/${dataSourceId}/query`, {
+  const response = await notionRequest('POST', `/v1/data_sources/${getDataSourceId()}/query`, {
     filter: {
       property: PROPERTY.ticketId,
       rich_text: {
@@ -208,6 +214,46 @@ async function findTicketPageId(ticketId: string): Promise<string | undefined> {
   const results = Array.isArray(response.results) ? response.results : [];
   const firstPage = results[0] as Json | undefined;
   return readString(firstPage?.id) || undefined;
+}
+
+async function resolveDataSourceId() {
+  if (configuredDataSourceId) {
+    try {
+      await notionRequest('GET', `/v1/data_sources/${configuredDataSourceId}`);
+      return configuredDataSourceId;
+    } catch (error) {
+      if (!databaseId) {
+        throw error;
+      }
+
+      console.warn(
+        `Configured NOTION_DATA_SOURCE_ID is not usable. Falling back to NOTION_DATABASE_ID. ${readErrorMessage(error)}`,
+      );
+    }
+  }
+
+  if (!databaseId) {
+    throw new Error('NOTION_DATABASE_ID is required when NOTION_DATA_SOURCE_ID is unavailable.');
+  }
+
+  const database = await notionRequest('GET', `/v1/databases/${databaseId}`);
+  const dataSources = Array.isArray(database.data_sources) ? database.data_sources : [];
+  const firstDataSource = dataSources[0] as Json | undefined;
+  const resolvedDataSourceId = readString(firstDataSource?.id);
+
+  if (!resolvedDataSourceId) {
+    throw new Error(`No data source found for NOTION_DATABASE_ID=${maskId(databaseId)}.`);
+  }
+
+  return resolvedDataSourceId;
+}
+
+function getDataSourceId() {
+  if (!activeDataSourceId) {
+    throw new Error('Notion data source has not been resolved.');
+  }
+
+  return activeDataSourceId;
 }
 
 async function notionRequest(method: string, path: string, body?: Json): Promise<Json> {
@@ -370,6 +416,14 @@ function readType(title: string, labels: string[]) {
 
 function readString(value: unknown) {
   return typeof value === 'string' ? value : '';
+}
+
+function readErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function maskId(id: string) {
+  return id.length > 12 ? `${id.slice(0, 8)}...${id.slice(-4)}` : id;
 }
 
 function truncate(content: string) {

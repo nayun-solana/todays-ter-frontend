@@ -73,37 +73,42 @@ pnpm format
 
 ## 협업 흐름
 
-모든 작업은 GitHub Issue를 먼저 생성한 뒤, 이슈 번호를 기준으로 브랜치를 생성해 진행합니다.
+모든 작업은 GitHub Issue를 먼저 생성한 뒤, Notion 작업 티켓과 연결되는 브랜치를 생성해 진행합니다.
 
 1. GitHub Issue 생성
-2. `dev` 브랜치에서 최신 코드 반영
-3. 이슈 번호 기반 작업 브랜치 생성
-4. 작업 후 커밋 및 push
-5. 작업 브랜치에서 `dev` 브랜치로 PR 생성
-6. 최소 1명 이상 리뷰 후 merge
-7. 평가 또는 배포 시점에만 `dev`에서 `main`으로 PR 생성
+2. Notion 작업 티켓 자동 생성 확인
+3. `dev` 브랜치에서 최신 코드 반영
+4. `feature/todays-ter-이슈번호` 형식으로 작업 브랜치 생성
+5. 작업 후 커밋 및 push
+6. 작업 브랜치에서 `dev` 브랜치로 PR 생성
+7. 최소 1명 이상 리뷰 후 merge
+8. 평가 또는 배포 시점에만 `dev`에서 `main`으로 PR 생성
 
 ```bash
 git checkout dev
 git pull origin dev
-git checkout -b feature/12-login-page
+git checkout -b feature/todays-ter-12
 ```
 
 ## 브랜치 전략
 
 - `main`: 배포 가능한 안정 버전
 - `dev`: 개발 통합 브랜치
-- `feature/이슈번호-작업명`: 기능 개발 브랜치
-- `fix/이슈번호-작업명`: 버그 수정 브랜치
-- `docs/이슈번호-작업명`: 문서 수정 브랜치
-- `chore/이슈번호-작업명`: 설정/기타 작업 브랜치
+- `feature/todays-ter-이슈번호`: 작업 브랜치
 
 예시:
 
+- `feature/todays-ter-12`
+- `feature/todays-ter-15`
+- `feature/todays-ter-21`
+
+브랜치명은 `feature/todays-ter-숫자` 형식만 허용합니다.
+
+잘못된 예시:
+
 - `feature/12-login-page`
-- `feature/15-common-button`
-- `docs/18-update-readme`
-- `chore/21-branch-protection`
+- `fix/todays-ter-12`
+- `feature/todays-ter-login`
 
 `main` 브랜치는 평가 또는 배포 시점 전까지 직접 작업하지 않습니다. 모든 기능은 `dev`에 먼저 통합하고, 필요한 시점에만 `dev`에서 `main`으로 PR을 생성합니다.
 
@@ -147,7 +152,7 @@ Closes #12
 
 - `main`: 직접 push 금지, PR 필수, 평가/배포 시점에만 merge
 - `dev`: 직접 push 금지, PR 필수, 리뷰 1명 이상 필수
-- `feature/*`, `fix/*`, `docs/*`, `chore/*`: 작업자 push 가능
+- 작업 브랜치: `feature/todays-ter-숫자` 형식만 사용
 
 ## Issue 라벨
 
@@ -162,11 +167,20 @@ Closes #12
 
 ## Project 보드
 
-작업 상태는 GitHub Project 보드에서 관리합니다.
+작업 상태는 Notion 작업 티켓 보드에서 자동으로 관리합니다.
 
-- `Todo`: 작업 예정
-- `In Progress`: 작업 진행 중
-- `Review`: PR 리뷰 중
-- `Done`: 완료
+- `이슈`: GitHub Issue가 생성된 상태
+- `진행 중`: `feature/todays-ter-이슈번호` 브랜치가 생성된 상태
+- `리뷰 중`: PR이 생성된 상태
+- `완료`: PR이 merge된 상태
 
-Issue 생성 후 담당자, 라벨, Project 상태를 지정합니다. 작업이 끝나면 PR을 생성하고, PR이 merge되면 Issue와 Project 상태를 완료 처리합니다.
+예시:
+
+1. GitHub Issue `#13` 생성
+2. Notion 티켓 `todays-ter-13` 자동 생성
+3. `feature/todays-ter-13` 브랜치 생성
+4. Notion 상태가 `진행 중`으로 변경
+5. PR 생성 시 `리뷰 중`으로 변경
+6. PR merge 시 `완료`로 변경
+
+작업 티켓 보드: https://app.notion.com/p/71b6e18aff5e45759bd893b57a3ee9da?v=390ca071b41481c4aadd000c2a647bde

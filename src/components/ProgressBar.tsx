@@ -4,7 +4,7 @@ interface ProgressBarProps {
 }
 
 export default function ProgressBar({ step, total }: ProgressBarProps) {
-  const percent = Math.min(100, Math.max(0, (step / total) * 100));
+  const percent = total > 0 ? Math.min(100, Math.max(0, (step / total) * 100)) : 0;
 
   return (
     <div className="h-1.5 w-full rounded-full bg-gray-3">

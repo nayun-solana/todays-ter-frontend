@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import Chip from '../../components/Chip';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
@@ -117,12 +118,13 @@ function OhaengTile({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'flex w-15 flex-col items-center gap-1.5 rounded-xl border pt-3 pb-2',
-        selected ? cn('border-transparent', meta.bg) : cn('bg-white', meta.border),
+        'flex w-15 flex-col items-center gap-1.5 rounded-xl border px-4 py-3 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]',
+        meta.border,
+        selected ? meta.bg : 'bg-white',
       )}
     >
-      <OhaengOrb color={meta.cssVar} />
-      <span className={cn('font-sans text-sm font-bold', selected ? 'text-white' : meta.text)}>
+      <OhaengOrb element={meta.key} />
+      <span className={cn('font-sans text-base font-bold', selected ? 'text-white' : meta.text)}>
         {meta.label}
       </span>
     </button>
@@ -144,13 +146,13 @@ export default function SearchPage() {
   return (
     <div className="mx-auto max-w-[390px] pb-6">
       {/* 헤더 */}
-      <header className="rounded-b-2xl bg-primary px-5 pt-8 pb-5">
-        <h1 className="font-sans text-xl font-extrabold text-white">모든 터 탐색</h1>
-        <SearchBar placeholder="지도에서 탐색" className="mt-3" />
+      <header className="rounded-b-btn bg-primary px-5 pt-[22px] pb-[13px]">
+        <h1 className="font-sans text-2xl font-extrabold text-white">모든 터 탐색</h1>
+        <SearchBar placeholder="지도에서 탐색" className="mt-3 border-0" />
       </header>
 
       {/* 지역 필터 */}
-      <div className="flex gap-2 overflow-x-auto px-5 pt-5">
+      <div className="flex gap-1 overflow-x-auto px-5 pt-5 drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
         {REGIONS.map((r) => (
           <Chip key={r} selected={region === r} onClick={() => setRegion(r)}>
             {r}
@@ -159,27 +161,29 @@ export default function SearchPage() {
       </div>
 
       {/* 테마별 터 컬렉션 */}
-      <section className="mt-6 pl-5">
-        <h2 className="font-sans text-base font-extrabold text-gray-6">테마별 터 컬렉션</h2>
+      <section className="mt-5 pl-5">
+        <h2 className="font-sans text-base font-bold text-gray-6">테마별 터 컬렉션</h2>
         <div className="mt-3 flex gap-2 overflow-x-auto pr-5">
           {THEMES.map((theme) => (
             <div
               key={theme}
-              className="w-[110px] shrink-0 rounded-2xl border border-gray-3/60 bg-white p-4 shadow-btn"
+              className="flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border border-gray-3 bg-white py-3 pr-10 pl-4 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]"
             >
-              {/* ponytail: 테마 아이콘 asset 미확보 → 회색 placeholder */}
-              <div className="h-[30px] w-[30px] rounded-lg bg-gray-3" />
-              <p className="mt-3.5 font-sans text-sm font-bold text-gray-6">{theme}</p>
-              <p className="mt-1.5 font-sans text-[11px] text-gray-4">장소 3개</p>
+              {/* ponytail: 테마 아이콘 asset 미확보 → 회색 placeholder(디자인 원본도 회색) */}
+              <div className="size-[30px] shrink-0 bg-[#d9d9d9]" />
+              <div className="flex flex-col gap-1.5 whitespace-nowrap">
+                <p className="font-sans text-sm font-bold text-gray-5">{theme}</p>
+                <p className="font-sans text-[10px] font-normal text-gray-4">장소 3개</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* 오행별 터 찾기 + 장소 리스트 */}
-      <section className="mt-6 px-5">
-        <h2 className="font-sans text-base font-extrabold text-gray-6">오행별 터 찾기</h2>
-        <div className="mt-3 flex justify-between">
+      <section className="mt-5 px-5">
+        <h2 className="font-sans text-base font-bold text-gray-6">오행별 터 찾기</h2>
+        <div className="mt-3 flex gap-[9px]">
           {OHAENG_LIST.map((meta) => (
             <OhaengTile
               key={meta.key}
@@ -207,39 +211,32 @@ export default function SearchPage() {
       </section>
 
       {/* 에디터 오행 픽 */}
-      <section className="mt-6 px-5">
-        <h2 className="font-sans text-base font-extrabold text-gray-6">에디터 오행 픽</h2>
+      <section className="mt-5 px-5">
+        <h2 className="font-sans text-base font-bold text-gray-6">에디터 오행 픽</h2>
         <div className="mt-3 flex flex-col gap-2">
           {EDITOR_PICKS.map((pick) => {
             const meta = ohaengByKey(pick.element)!;
             return (
               <div
                 key={pick.name}
-                className={cn('flex items-center gap-3 rounded-2xl p-4', meta.bg)}
+                className={cn(
+                  'flex items-center justify-between rounded-btn border px-4 py-3.5',
+                  meta.bg,
+                  meta.border,
+                )}
               >
-                <OhaengOrb color={meta.cssVar} />
-                <div className="flex-1">
-                  <p className="flex items-center gap-1.5 font-sans text-white">
-                    <span className="text-base font-bold">{pick.name}</span>
-                    <span aria-hidden="true" className="h-[3px] w-[3px] rounded-full bg-white" />
-                    <span className="text-[11px]">{pick.course}</span>
-                  </p>
-                  <p className="mt-2 font-sans text-[13px] text-white">{pick.description}</p>
+                <div className="flex items-center gap-3">
+                  <OhaengOrb element={meta.key} />
+                  <div className="flex flex-col gap-3">
+                    <p className="flex items-center gap-1.5 font-sans">
+                      <span className="text-base font-bold text-black1">{pick.name}</span>
+                      <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
+                      <span className="text-[10px] font-bold text-white">{pick.course}</span>
+                    </p>
+                    <p className="font-sans text-xs font-bold text-white">{pick.description}</p>
+                  </div>
                 </div>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="shrink-0 text-white"
-                  aria-hidden="true"
-                >
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
+                <img src={iconChevronRight} alt="" className="h-3.5 w-[7px] rotate-180" />
               </div>
             );
           })}

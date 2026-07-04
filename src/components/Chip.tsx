@@ -12,8 +12,10 @@ export default function Chip({ selected = false, className, ...rest }: ChipProps
     <button
       type="button"
       className={cn(
-        'shrink-0 rounded-full px-4 py-2 font-sans text-sm font-bold transition-colors',
-        selected ? 'bg-primary text-white' : 'border border-gray-3 bg-white text-gray-4',
+        'shrink-0 rounded-btn border px-4 py-2 font-sans text-sm transition-colors',
+        selected
+          ? 'border-primary bg-primary font-bold text-white'
+          : 'border-gray-3 bg-white font-normal text-gray-4',
         className,
       )}
       {...rest}

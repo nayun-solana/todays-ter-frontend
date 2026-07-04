@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 
+import BottomNavBar, { type NavTabKey } from '../components/BottomNavBar';
 import HomePage from '../pages/home/HomePage';
 import SearchPage from '../pages/search/SearchPage';
 import RecordPage from '../pages/record/RecordPage';
@@ -9,26 +10,21 @@ import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 
-type TabKey = 'home' | 'search' | 'record' | 'my';
+const TAB_PATHS: Record<NavTabKey, string> = {
+  home: '/home',
+  search: '/search',
+  record: '/record',
+  my: '/my',
+};
 
-const TABS: { key: TabKey; label: string; path: string }[] = [
-  { key: 'home', label: '홈', path: '/home' },
-  { key: 'search', label: '탐색', path: '/search' },
-  { key: 'record', label: '기록', path: '/record' },
-  { key: 'my', label: '마이', path: '/my' },
-];
-
-function pathToTab(pathname: string): TabKey {
+function pathToTab(pathname: string): NavTabKey {
   if (pathname.startsWith('/search')) return 'search';
   if (pathname.startsWith('/record')) return 'record';
   if (pathname.startsWith('/my')) return 'my';
   return 'home';
 }
 
-/**
- * 하단 탭이 있는 메인 레이아웃.
- * TODO(Step 3): 하단 nav를 공용 BottomNavBar 컴포넌트로 교체.
- */
+/** 하단 탭이 있는 메인 레이아웃. */
 function MainTabsLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -37,18 +33,7 @@ function MainTabsLayout() {
   return (
     <div className="min-h-screen pb-16">
       <Outlet />
-      <nav className="fixed bottom-0 left-1/2 z-50 flex h-16 w-full max-w-[390px] -translate-x-1/2 items-center justify-around border-t border-gray-3 bg-white">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => navigate(tab.path)}
-            className={activeTab === tab.key ? 'font-bold text-primary' : 'text-gray-4'}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <BottomNavBar active={activeTab} onChange={(tab) => navigate(TAB_PATHS[tab])} />
     </div>
   );
 }

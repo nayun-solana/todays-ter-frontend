@@ -18,6 +18,7 @@ export type RecordPlaceCardProps = {
   day: PlaceDay;
   imageUrl?: string;
   className?: string;
+  onClick?: () => void;
 };
 
 export default function RecordPlaceCard({
@@ -27,13 +28,28 @@ export default function RecordPlaceCard({
   day,
   imageUrl,
   className,
+  onClick,
 }: RecordPlaceCardProps) {
   const dayClass = DAY_CLASS[day];
 
   return (
     <article
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={cn(
         'flex items-center gap-2.5 rounded-btn bg-white p-3 shadow-btn',
+        onClick && 'cursor-pointer',
         className,
       )}
     >

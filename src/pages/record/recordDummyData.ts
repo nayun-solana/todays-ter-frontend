@@ -11,6 +11,8 @@ export type Place = {
 export type VisitedPlace = Place & {
   /** 공유 카드로 등록된 다녀온 터인지 */
   isShared: boolean;
+  shareMessage?: string;
+  imageUrl?: string;
 };
 
 /** 저장한 터 — 독립 목록 */
@@ -50,6 +52,9 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     date: '06.25',
     day: '토',
     isShared: true,
+    shareMessage: '오늘은 흙의 기운 받으러 남산타워로!',
+    imageUrl:
+      'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
   },
   {
     id: 'v2',
@@ -58,6 +63,9 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     date: '06.24',
     day: '수',
     isShared: true,
+    shareMessage: '오늘은 물의 기운 받으러 한강공원으로!',
+    imageUrl:
+      'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
   },
   {
     id: 'v3',
@@ -66,6 +74,9 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     date: '06.23',
     day: '화',
     isShared: true,
+    shareMessage: '오늘은 불의 기운 받으러 성수동으로!',
+    imageUrl:
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
   },
   {
     id: 'v4',

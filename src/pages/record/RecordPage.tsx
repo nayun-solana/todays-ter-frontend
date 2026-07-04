@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 import RecordPlaceCard from '../../components/RecordPlaceCard';
+import ShareCardModal from '../../components/ShareCardModal';
 import {
   SAVED_PLACES,
   SHARED_PLACES,
   VISITED_PLACES,
   type Place,
+  type VisitedPlace,
 } from './recordDummyData';
 
 type RecordTab = 'saved' | 'visited' | 'shared';
@@ -34,9 +36,26 @@ function placesForTab(tab: RecordTab): readonly Place[] {
   }
 }
 
+type ShareablePlace = VisitedPlace & {
+  shareMessage: string;
+  imageUrl: string;
+};
+
+function isShareablePlace(place: Place): place is ShareablePlace {
+  const candidate = place as VisitedPlace;
+  return (
+    candidate.isShared === true &&
+    typeof candidate.shareMessage === 'string' &&
+    typeof candidate.imageUrl === 'string'
+  );
+}
+
 export default function RecordPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
+  const [selectedSharePlace, setSelectedSharePlace] = useState<ShareablePlace | null>(
+    null,
+  );
 
   const places = useMemo(() => placesForTab(activeTab), [activeTab]);
   const showExploreButton = activeTab !== 'shared';
@@ -58,6 +77,12 @@ export default function RecordPage() {
                 categories={place.categories}
                 dateLabel={dateLabelForTab(activeTab, place.date)}
                 day={place.day}
+                imageUrl={isShareablePlace(place) ? place.imageUrl : undefined}
+                onClick={
+                  activeTab === 'shared' && isShareablePlace(place)
+                    ? () => setSelectedSharePlace(place)
+                    : undefined
+                }
               />
             </li>
           ))}
@@ -67,12 +92,19 @@ export default function RecordPage() {
           <button
             type="button"
             onClick={() => navigate('/search')}
-            className="mt-2.5 w-full rounded-btn cursor-pointer border border-primary-light bg-white py-4 text-sm font-bold text-primary-light"
+            className="mt-2.5 w-full cursor-pointer rounded-btn border border-primary-light bg-white py-4 text-sm font-bold text-primary-light"
           >
             새로운 터 탐색하기 +
           </button>
         ) : null}
       </div>
+
+      {selectedSharePlace ? (
+        <ShareCardModal
+          place={selectedSharePlace}
+          onClose={() => setSelectedSharePlace(null)}
+        />
+      ) : null}
     </div>
   );
 }

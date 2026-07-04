@@ -40,10 +40,12 @@ export default function PlaceListItem({
       <div className="flex h-21 flex-1 items-end justify-between rounded-r-xl bg-white px-3 py-2.5">
         <div className="flex flex-col gap-[18px]">
           <div className="flex flex-col gap-1.5">
-            <p className="font-sans text-base font-bold text-black1">{name}</p>
-            <p className="font-sans text-[10px] font-normal text-gray-4">{description}</p>
+            <p className="font-sans text-base leading-none font-bold text-black1">{name}</p>
+            <p className="font-sans text-[10px] leading-none font-normal text-gray-4">
+              {description}
+            </p>
           </div>
-          <p className={cn('flex gap-1 font-sans text-[10px] font-normal', element.text)}>
+          <p className={cn('flex gap-1 font-sans text-[10px] leading-none font-normal', element.text)}>
             {tags.map((tag) => `#${tag}`).join(' ')}
           </p>
         </div>

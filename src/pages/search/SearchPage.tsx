@@ -118,7 +118,7 @@ function OhaengTile({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'flex w-15 flex-col items-center gap-1.5 rounded-xl border px-4 py-3 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]',
+        'flex w-15 flex-col items-center gap-2 rounded-xl border px-4 py-3 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]',
         meta.border,
         selected ? meta.bg : 'bg-white',
       )}
@@ -146,7 +146,7 @@ export default function SearchPage() {
   return (
     <div className="mx-auto max-w-[390px] pb-6">
       {/* 헤더 */}
-      <header className="rounded-b-btn bg-primary px-5 pt-[22px] pb-[13px]">
+      <header className="bg-primary px-5 pt-[22px] pb-[13px]">
         <h1 className="font-sans text-2xl font-extrabold text-white">모든 터 탐색</h1>
         <SearchBar placeholder="지도에서 탐색" className="mt-3 border-0" />
       </header>
@@ -172,8 +172,10 @@ export default function SearchPage() {
               {/* ponytail: 테마 아이콘 asset 미확보 → 회색 placeholder(디자인 원본도 회색) */}
               <div className="size-[30px] shrink-0 bg-[#d9d9d9]" />
               <div className="flex flex-col gap-1.5 whitespace-nowrap">
-                <p className="font-sans text-sm font-bold text-gray-5">{theme}</p>
-                <p className="font-sans text-[10px] font-normal text-gray-4">장소 3개</p>
+                <p className="font-sans text-sm leading-none font-bold text-gray-5">{theme}</p>
+                <p className="font-sans text-[10px] leading-none font-normal text-gray-4">
+                  장소 3개
+                </p>
               </div>
             </div>
           ))}
@@ -183,7 +185,7 @@ export default function SearchPage() {
       {/* 오행별 터 찾기 + 장소 리스트 */}
       <section className="mt-5 px-5">
         <h2 className="font-sans text-base font-bold text-gray-6">오행별 터 찾기</h2>
-        <div className="mt-3 flex gap-[9px]">
+        <div className="mt-3 flex justify-between">
           {OHAENG_LIST.map((meta) => (
             <OhaengTile
               key={meta.key}
@@ -228,12 +230,18 @@ export default function SearchPage() {
                 <div className="flex items-center gap-3">
                   <OhaengOrb element={meta.key} />
                   <div className="flex flex-col gap-3">
-                    <p className="flex items-center gap-1.5 font-sans">
-                      <span className="text-base font-bold text-black1">{pick.name}</span>
+                    <p className="flex items-center gap-1.5 font-sans leading-none">
+                      <span className="text-base leading-none font-bold text-black1">
+                        {pick.name}
+                      </span>
                       <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
-                      <span className="text-[10px] font-bold text-white">{pick.course}</span>
+                      <span className="text-[10px] leading-none font-bold text-white">
+                        {pick.course}
+                      </span>
                     </p>
-                    <p className="font-sans text-xs font-bold text-white">{pick.description}</p>
+                    <p className="font-sans text-xs leading-none font-bold text-white">
+                      {pick.description}
+                    </p>
                   </div>
                 </div>
                 <img src={iconChevronRight} alt="" className="h-3.5 w-[7px] rotate-180" />

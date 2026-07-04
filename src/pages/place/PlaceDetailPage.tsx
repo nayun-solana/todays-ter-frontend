@@ -46,7 +46,7 @@ export default function PlaceDetailPage() {
           aria-label="공유하기"
           className="flex size-6 items-center justify-center"
         >
-          <img src={iconShare} alt="" className="size-6" />
+          <img src={iconShare} alt="" className="h-[16px] w-[14px]" />
         </button>
       </header>
 
@@ -63,7 +63,7 @@ export default function PlaceDetailPage() {
           aria-label="저장하기"
           className="flex size-6 items-center justify-center"
         >
-          <img src={iconBookmark} alt="" className="size-6" />
+          <img src={iconBookmark} alt="" className="h-[15.5px] w-[12px]" />
         </button>
       </div>
 
@@ -102,8 +102,8 @@ export default function PlaceDetailPage() {
           <>
             {/* ponytail: 지도 SDK는 새 dependency라 금지, SDK 결정 후 교체 */}
             <div className="h-40 rounded-btn bg-[#e1e1e1]" />
-            <p className="mt-2.5 font-sans text-sm font-bold text-black1">{PLACE.address}</p>
-            <p className="mt-1.5 font-sans text-[10px] font-normal text-black1">
+            <p className="mt-2.5 pl-2.5 font-sans text-sm font-bold text-black1">{PLACE.address}</p>
+            <p className="mt-1.5 pl-2.5 font-sans text-[10px] font-normal text-black1">
               {PLACE.addressDetail}
             </p>
           </>
@@ -128,8 +128,14 @@ export default function PlaceDetailPage() {
       </div>
 
       <div className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-gray-1 px-5 pt-2 pb-4">
-        <Button fullWidth>다녀왔어요</Button>
-        <Button variant="secondary" fullWidth>
+        <Button fullWidth className="flex h-[52px] items-center justify-center py-0 text-base">
+          다녀왔어요
+        </Button>
+        <Button
+          variant="secondary"
+          fullWidth
+          className="flex h-[52px] items-center justify-center py-0 text-base"
+        >
           길찾기
         </Button>
       </div>

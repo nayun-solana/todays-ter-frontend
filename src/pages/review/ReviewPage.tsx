@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import FileAttachButton from '../../components/FileAttachButton';
 import OhaengBadge from '../../components/OhaengBadge';
 import TextInput from '../../components/TextInput';
-import { cn } from '../../lib/cn';
+import Button from './components/Button';
 
 /** 페이지 더미 — API 연동 전 */
 const PLACE = {
@@ -67,18 +67,18 @@ export default function ReviewPage() {
 
         <div className="flex-1" />
 
-        <button
-          type="button"
+        <Button
           disabled={!canSubmit}
-          className={cn(
-            'mb-3 w-full rounded-btn py-4 text-sm font-bold',
-            canSubmit
-              ? 'bg-primary text-white'
-              : 'cursor-not-allowed bg-gray-3 text-gray-4',
-          )}
+          className="mb-3"
+          onClick={() =>
+            navigate('/review/complete', {
+              replace: true,
+              state: { placeName: PLACE.name },
+            })
+          }
         >
           방문 기록 저장하기
-        </button>
+        </Button>
       </div>
     </div>
   );

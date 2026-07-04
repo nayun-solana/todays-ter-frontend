@@ -9,6 +9,8 @@ import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
+import ReviewCompletePage from '../pages/review/ReviewCompletePage';
+import ReviewPage from '../pages/review/ReviewPage';
 import MatchedTerPage from '../pages/matched-ter/MatchedTerPage';
 
 const TAB_PATHS: Record<NavTabKey, string> = {
@@ -67,6 +69,8 @@ export default function AppRoutes() {
           <Route path="step-3" element={<OnboardingPage3 />} />
         </Route>
         <Route path="/place/:id" element={<PlaceDetailPage />} />
+        <Route path="/review" element={<ReviewPage />} />
+        <Route path="/review/complete" element={<ReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
       </Route>
 

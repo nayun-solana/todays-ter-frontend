@@ -158,7 +158,7 @@ export default function ShareCardModal({ place, onClose }: ShareCardModalProps) 
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-[350px] flex-col items-center"
+        className="flex w-full max-w-[350px] px-5 flex-col items-center"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-3 w-full rounded-btn bg-primary py-4 text-center text-lg font-extrabold text-white">

@@ -31,7 +31,7 @@ export default function PillTabs<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(item.value)}
             className={cn(
-              'rounded-full px-4 py-2 text-sm shadow-btn transition-colors',
+              'rounded-full px-4 py-2 text-sm shadow-btn transition-colors cursor-pointer',
               isActive
                 ? 'bg-primary font-extrabold text-white'
                 : 'border border-gray-3 bg-white font-extrabold text-gray-4',

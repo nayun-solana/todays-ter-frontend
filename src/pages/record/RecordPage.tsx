@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 import RecordPlaceCard from '../../components/RecordPlaceCard';
@@ -34,9 +35,11 @@ function placesForTab(tab: RecordTab): readonly Place[] {
 }
 
 export default function RecordPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
 
   const places = useMemo(() => placesForTab(activeTab), [activeTab]);
+  const showExploreButton = activeTab !== 'shared';
 
   return (
     <div className="bg-gray-1">
@@ -44,7 +47,7 @@ export default function RecordPage() {
         <h1 className="text-xl font-bold text-gray-6">내 터</h1>
       </header>
 
-      <div className="px-5 pt-4">
+      <div className="px-5 pt-4 pb-6">
         <PillTabs items={RECORD_TABS} value={activeTab} onChange={setActiveTab} />
 
         <ul className="mt-4 flex flex-col gap-3">
@@ -59,6 +62,16 @@ export default function RecordPage() {
             </li>
           ))}
         </ul>
+
+        {showExploreButton ? (
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className="mt-2.5 w-full rounded-btn cursor-pointer border border-primary-light bg-white py-4 text-sm font-bold text-primary-light"
+          >
+            새로운 터 탐색하기 +
+          </button>
+        ) : null}
       </div>
     </div>
   );

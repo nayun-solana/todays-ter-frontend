@@ -12,6 +12,7 @@ import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 import ReviewCompletePage from '../pages/review/ReviewCompletePage';
 import ReviewPage from '../pages/review/ReviewPage';
 import MatchedTerPage from '../pages/matched-ter/MatchedTerPage';
+import TestPage from '../pages/test';
 
 const TAB_PATHS: Record<NavTabKey, string> = {
   home: '/home',
@@ -72,6 +73,8 @@ export default function AppRoutes() {
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/review/complete" element={<ReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+        {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
+        <Route path="/test" element={<TestPage />} />
       </Route>
 
       {/* 없는 주소는 임시로 홈으로 */}

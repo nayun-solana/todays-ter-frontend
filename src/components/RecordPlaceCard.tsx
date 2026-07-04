@@ -4,11 +4,11 @@ import { cn } from '../lib/cn';
 export type PlaceDay = '화' | '수' | '목' | '금' | '토';
 
 const DAY_CLASS: Record<PlaceDay, { text: string; badge: string }> = {
-  화: { text: 'text-badge-fire', badge: 'bg-badge-fire' },
-  수: { text: 'text-badge-water', badge: 'bg-badge-water' },
-  목: { text: 'text-badge-wood', badge: 'bg-badge-wood' },
-  금: { text: 'text-badge-metal', badge: 'bg-badge-metal' },
-  토: { text: 'text-badge-earth', badge: 'bg-badge-earth' },
+  화: { text: 'text-ohaeng-fire', badge: 'bg-ohaeng-fire' },
+  수: { text: 'text-ohaeng-water', badge: 'bg-ohaeng-water' },
+  목: { text: 'text-ohaeng-wood', badge: 'bg-ohaeng-wood' },
+  금: { text: 'text-ohaeng-metal', badge: 'bg-ohaeng-metal' },
+  토: { text: 'text-ohaeng-earth', badge: 'bg-ohaeng-earth' },
 };
 
 export type RecordPlaceCardProps = {

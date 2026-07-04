@@ -16,11 +16,11 @@ type ShareCardModalProps = {
 };
 
 const DAY_FILL: Record<PlaceDay, string> = {
-  화: 'var(--color-badge-fire)',
-  수: 'var(--color-badge-water)',
-  목: 'var(--color-badge-wood)',
-  금: 'var(--color-badge-metal)',
-  토: 'var(--color-badge-earth)',
+  화: 'var(--color-ohaeng-fire)',
+  수: 'var(--color-ohaeng-water)',
+  목: 'var(--color-ohaeng-wood)',
+  금: 'var(--color-ohaeng-metal)',
+  토: 'var(--color-ohaeng-earth)',
 };
 
 /** 물방울 path */

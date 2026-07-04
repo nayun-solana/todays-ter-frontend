@@ -9,6 +9,7 @@ import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
+import MatchedTerPage from '../pages/matched-ter/MatchedTerPage';
 
 const TAB_PATHS: Record<NavTabKey, string> = {
   home: '/home',
@@ -66,6 +67,7 @@ export default function AppRoutes() {
           <Route path="step-3" element={<OnboardingPage3 />} />
         </Route>
         <Route path="/place/:id" element={<PlaceDetailPage />} />
+        <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
       </Route>
 
       {/* 없는 주소는 임시로 홈으로 */}

@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import FileAttachButton from '../../components/FileAttachButton';
 import OhaengBadge from '../../components/OhaengBadge';
 import TextInput from '../../components/TextInput';
+import { cn } from '../../lib/cn';
 
 /** 페이지 더미 — API 연동 전 */
 const PLACE = {
@@ -17,6 +18,7 @@ const PLACE = {
 export default function ReviewPage() {
   const navigate = useNavigate();
   const [memo, setMemo] = useState('');
+  const canSubmit = memo.trim().length > 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-1">
@@ -67,7 +69,13 @@ export default function ReviewPage() {
 
         <button
           type="button"
-          className="mb-3 w-full rounded-btn bg-gray-3 py-4 text-base font-bold text-gray-4"
+          disabled={!canSubmit}
+          className={cn(
+            'mb-3 w-full rounded-btn py-4 text-sm font-bold',
+            canSubmit
+              ? 'bg-primary text-white'
+              : 'cursor-not-allowed bg-gray-3 text-gray-4',
+          )}
         >
           방문 기록 저장하기
         </button>

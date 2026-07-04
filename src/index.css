@@ -20,6 +20,13 @@
   --color-gray-5: #3f3f46;
   --color-gray-6: #18181b;
 
+  /* Place badge tones */
+  --color-badge-wood: #A0DD00;
+  --color-badge-water: #5599FF;
+  --color-badge-fire: #FF8B8D;
+  --color-badge-earth: #FF9853;
+  --color-badge-metal: #515151;
+
   /* Radius */
   --radius-btn: 20px;
 

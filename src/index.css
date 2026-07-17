@@ -21,6 +21,7 @@
   --color-gray-4: #71717a;
   --color-gray-5: #3f3f46;
   --color-gray-6: #18181b;
+  --color-gray-disabled: #c4c4c4; /* Figma text/Gray3 · placeholder·미선택·비활성 텍스트 */
 
   /* Black scale */
   --color-black-1: #222222;

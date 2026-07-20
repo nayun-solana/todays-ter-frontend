@@ -1,5 +1,6 @@
 // libraries
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 // components
 import AnalysisProgress from './components/CircularProgress';
 import StatusBox from './components/StatusBox';
@@ -9,6 +10,7 @@ import Modal from './components/Modal';
 const STATUS_BAR_COLOR = '#5a81fa';
 
 export default function OnboardingStep2Page() {
+  const navigate = useNavigate();
   // state
   const [progress, setProgress] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,7 +97,14 @@ export default function OnboardingStep2Page() {
         ))}
       </div>
       {isModalOpen && (
-        <Modal isOpen={isModalOpen} onClick={() => setIsModalOpen(false)} isSuccess={true} />
+        <Modal
+          isOpen={isModalOpen}
+          onClick={() => {
+            setIsModalOpen(false);
+            navigate('/report/1');
+          }}
+          isSuccess={true}
+        />
       )}
     </main>
   );

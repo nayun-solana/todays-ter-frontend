@@ -12,6 +12,7 @@ import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 import ReviewCompletePage from '../pages/review/ReviewCompletePage';
 import ReviewPage from '../pages/review/ReviewPage';
 import MatchedTerPage from '../pages/matched-ter/MatchedTerPage';
+import LoginPage from '../pages/login/LoginPage';
 import TestPage from '../pages/test';
 
 const TAB_PATHS: Record<NavTabKey, string> = {
@@ -63,6 +64,7 @@ export default function AppRoutes() {
 
       {/* 하단바 없는 화면 */}
       <Route element={<NoFooterLayout />}>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding">
           <Route index element={<Navigate to="/onboarding/step-1" replace />} />
           <Route path="step-1" element={<OnboardingPage1 />} />

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 import RecordPlaceCard from './components/RecordPlaceCard';
-import ShareCardModal from './components/ShareCardModal';
 import {
   SAVED_PLACES,
   VISITED_PLACES,
@@ -11,7 +10,7 @@ import {
   type VisitedPlace,
 } from './recordDummyData';
 
-type RecordTab = 'saved' | 'visited' | 'shared';
+type RecordTab = 'saved' | 'visited';
 
 const RECORD_TABS: readonly PillTabItem<RecordTab>[] = [
   { value: 'saved', label: '저장한 터' },
@@ -48,12 +47,8 @@ function isShareablePlace(place: Place): place is ShareablePlace {
 export default function RecordPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
-  const [selectedSharePlace, setSelectedSharePlace] = useState<ShareablePlace | null>(
-    null,
-  );
 
   const places = useMemo(() => placesForTab(activeTab), [activeTab]);
-  const showExploreButton = activeTab !== 'shared';
 
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-1">
@@ -73,33 +68,19 @@ export default function RecordPage() {
                 dateLabel={dateLabel(place.date)}
                 day={place.day}
                 imageUrl={isShareablePlace(place) ? place.imageUrl : undefined}
-                onClick={
-                  activeTab === 'shared' && isShareablePlace(place)
-                    ? () => setSelectedSharePlace(place)
-                    : undefined
-                }
               />
             </li>
           ))}
         </ul>
 
-        {showExploreButton ? (
-          <button
-            type="button"
-            onClick={() => navigate('/search')}
-            className="mt-2.5 w-full cursor-pointer rounded-btn border border-primary-light bg-white py-4 text-sm font-bold text-primary-light leading-none"
-          >
-            새로운 터 탐색하기 +
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => navigate('/search')}
+          className="mt-2.5 w-full cursor-pointer rounded-btn border border-primary-light bg-white py-4 text-sm font-bold text-primary-light leading-none"
+        >
+          새로운 터 탐색하기 +
+        </button>
       </div>
-
-      {selectedSharePlace ? (
-        <ShareCardModal
-          place={selectedSharePlace}
-          onClose={() => setSelectedSharePlace(null)}
-        />
-      ) : null}
     </div>
   );
 }

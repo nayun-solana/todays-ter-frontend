@@ -5,6 +5,10 @@ import HomePage from '../pages/home/HomePage';
 import SearchPage from '../pages/search/SearchPage';
 import RecordPage from '../pages/record/RecordPage';
 import MyPage from '../pages/my/MyPage';
+import AccountLinkPage from '../pages/my/AccountLinkPage';
+import NotificationPage from '../pages/my/NotificationPage';
+import PermissionsPage from '../pages/my/PermissionsPage';
+import SajuEditPage, { SajuReportCompletePage } from '../pages/my/SajuEditPage';
 import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
@@ -36,7 +40,7 @@ function MainTabsLayout() {
   const activeTab = pathToTab(pathname);
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen pb-24">
       <Outlet />
       <BottomNavBar active={activeTab} onChange={(tab) => navigate(TAB_PATHS[tab])} />
     </div>
@@ -75,6 +79,11 @@ export default function AppRoutes() {
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/review/complete" element={<ReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+        <Route path="/my/saju" element={<SajuEditPage />} />
+        <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
+        <Route path="/my/notifications" element={<NotificationPage />} />
+        <Route path="/my/account-links" element={<AccountLinkPage />} />
+        <Route path="/my/permissions" element={<PermissionsPage />} />
         {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
         <Route path="/test" element={<TestPage />} />
       </Route>

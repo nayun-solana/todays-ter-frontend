@@ -1,6 +1,5 @@
-<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 18.5 18.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Group 2422">
-<path id="Vector" d="M17.75 17.75L13.6481 13.6481M13.6481 13.6481C15.0154 12.2809 15.8611 10.392 15.8611 8.30556C15.8611 4.13274 12.4784 0.75 8.30556 0.75C4.13274 0.75 0.75 4.13274 0.75 8.30556C0.75 12.4784 4.13274 15.8611 8.30556 15.8611C10.392 15.8611 12.2809 15.0154 13.6481 13.6481Z" stroke="var(--stroke-0, #18181B)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle id="Ellipse 3604" cx="8.25" cy="8.25" r="5.5" fill="var(--fill-0, #18181B)"/>
+<path id="Vector" d="M20.5 20.5L16.3981 16.3981M16.3981 16.3981C17.7654 15.0309 18.6111 13.142 18.6111 11.0556C18.6111 6.88274 15.2284 3.5 11.0556 3.5C6.88274 3.5 3.5 6.88274 3.5 11.0556C3.5 15.2284 6.88274 18.6111 11.0556 18.6111C13.142 18.6111 15.0309 17.7654 16.3981 16.3981Z" stroke="var(--stroke-0, #71717A)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

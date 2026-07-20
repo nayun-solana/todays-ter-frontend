@@ -8,6 +8,8 @@ import MyPage from '../pages/my/MyPage';
 import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
+import ReportPage from '../pages/onboarding/ReportPage';
+import ReportDetailPage from '../pages/onboarding/ReportDetailPage';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 import ReviewCompletePage from '../pages/review/ReviewCompletePage';
 import ReviewPage from '../pages/review/ReviewPage';
@@ -73,6 +75,8 @@ export default function AppRoutes() {
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/review/complete" element={<ReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+        <Route path="/report/:id" element={<ReportPage />} />
+        <Route path="/report/:id/detail" element={<ReportDetailPage />} />
         {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
         <Route path="/test" element={<TestPage />} />
       </Route>

@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff') format('woff');
+}
+
 /* ──────────────────────────────────────────────
    디자인 토큰 (Tailwind v4 @theme)
    - 값은 개발 페이지(디자인 완료-개발) 기준 "잠정값"입니다.
@@ -40,9 +64,7 @@
   /* Shadow */
   --shadow-btn: 0 2px 2px rgba(0, 0, 0, 0.1);
 
-  /* Font
-     NanumSquare Neo 웹폰트 로딩은 소스 확정 후 후속 작업(@font-face).
-     지금은 토큰 구조 + fallback 스택만 둡니다. */
+  /* Font */
   --font-sans: 'NanumSquare Neo', system-ui, 'Apple SD Gothic Neo', sans-serif;
 }
 

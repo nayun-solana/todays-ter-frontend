@@ -27,15 +27,15 @@ export default function PlaceListItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full text-left drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]"
+      className="flex w-full overflow-hidden rounded-xl bg-white text-left shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
     >
       {/* ponytail: 장소 사진 asset 미확보 → Figma 시안과 동일한 회색 placeholder */}
-      <div className="h-21 w-21 shrink-0 rounded-l-xl bg-[#d6d6d6]" />
+      <div className="h-21 w-21 shrink-0 bg-[#d6d6d6]" />
 
-      <div className="flex h-21 flex-1 items-end justify-between rounded-r-xl bg-white px-3 py-2.5">
+      <div className="flex h-21 flex-1 items-end justify-between bg-white px-3 py-2.5">
         <div className="flex flex-col gap-[18px]">
           <div className="flex flex-col gap-1.5">
-            <p className="font-sans text-base leading-none font-bold text-black1">{name}</p>
+            <p className="font-sans text-[14px] mb-1 leading-none font-bold text-black1">{name}</p>
             <p className="font-sans text-[10px] leading-none font-normal text-gray-4">
               {description}
             </p>
@@ -51,8 +51,8 @@ export default function PlaceListItem({
         </div>
 
         <div className="flex h-16 shrink-0 flex-col items-end justify-between">
-          <span className="flex h-6 items-center gap-1 rounded-full bg-white px-2">
-            <span className={cn('text-[10px] font-bold', element.text)}>{element.label}</span>
+          <span className={cn('flex h-6 items-center gap-1 rounded-full px-2', element.bg)}>
+            <span className="text-[10px] font-bold text-white">{element.label}</span>
             <OhaengOrb element={element.key} size={14} />
           </span>
           <span className="flex items-center gap-0.5 text-[10px] font-bold text-gray-4">

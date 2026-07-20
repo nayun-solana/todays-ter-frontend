@@ -161,17 +161,17 @@ export default function SearchPage() {
           hasScrolled && 'shadow-btn',
         )}
       >
-        <h1 className="text-xl leading-8 font-extrabold text-primary">모든 터 탐색</h1>
+        <h1 className="text-2xl leading-8 font-extrabold text-primary">모든 터 탐색</h1>
       </header>
 
       <main>
         <SearchBar
           aria-label="지도에서 탐색"
           placeholder="지도에서 탐색"
-          className="mx-5 mt-3 h-11 border-0 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
+          className="mx-5 mt-3 h-11 border-0 shadow-[0_2px_2px_rgba(0,0,0,0.05)]"
         />
 
-        <div className="flex gap-1 overflow-x-auto px-5 pt-4 drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
+        <div className="flex gap-1 overflow-x-auto px-5 pt-4 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]">
           {REGIONS.map((item) => (
             <Chip
               key={item}
@@ -186,16 +186,16 @@ export default function SearchPage() {
 
         <section className="mt-5 pl-5">
           <h2 className="text-base leading-[22px] font-bold text-gray-6">테마별 터 컬렉션</h2>
-          <div className="mt-3 flex gap-2 overflow-x-auto pr-5">
+          <div className="mt-3 flex gap-2 overflow-x-auto py-1 pr-5">
             {THEMES.map((theme) => (
               <div
                 key={theme.label}
                 className="flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border border-gray-2 bg-white py-3 pr-10 pl-4 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
               >
-                <img src={theme.icon} alt="" className="size-[30px] shrink-0" />
+                <img src={theme.icon} alt="" className="size-[26px] shrink-0" />
                 <div className="flex flex-col gap-1.5 whitespace-nowrap">
                   <p className="text-sm leading-none font-bold text-gray-5">{theme.label}</p>
-                  <p className="text-[10px] leading-none text-gray-4">장소 3개</p>
+                  <p className="mt-1 text-[10px] leading-none text-gray-4">장소 3개</p>
                 </div>
               </div>
             ))}
@@ -204,7 +204,7 @@ export default function SearchPage() {
 
         <section className="mt-5 px-5">
           <h2 className="text-base leading-[22px] font-bold text-gray-6">오행별 터 찾기</h2>
-          <div className="mt-3 flex gap-1 overflow-x-auto drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
+          <div className="mt-3 flex gap-1 overflow-x-auto drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]">
             {ELEMENT_CHIPS.map((item) => (
               <Chip
                 key={item.label}
@@ -252,7 +252,7 @@ export default function SearchPage() {
                     <OhaengOrb element={meta.key} size={36} />
                     <div className="flex flex-col gap-3">
                       <p className="flex items-center gap-1.5 leading-none">
-                        <span className="text-base leading-none font-bold text-white">
+                        <span className="text-base leading-none font-bold text-black1">
                           {pick.name}
                         </span>
                         <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
@@ -265,7 +265,7 @@ export default function SearchPage() {
                       </p>
                     </div>
                   </div>
-                  <img src={iconChevronRight} alt="" className="h-3.5 w-[7px]" />
+                  <img src={iconChevronRight} alt="" className="h-3.5 w-[7px] -scale-x-100" />
                 </button>
               );
             })}

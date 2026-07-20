@@ -29,7 +29,7 @@ export default function PermissionsPage() {
           aria-label="뒤로 가기"
           className="flex size-6 items-center justify-center"
         >
-          <img src={iconChevronLeft} alt="" className="size-6" />
+          <img src={iconChevronLeft} alt="" className="h-3.5 w-[7px]" />
         </button>
         <h1 className="text-sm font-bold text-gray-6">권한 안내</h1>
         <span className="size-6" aria-hidden="true" />

@@ -6,8 +6,9 @@ import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
 import placeImage from '../../assets/place-cheonggyecheon.png';
 import Button from '../../components/Button';
-import Chip from '../../components/Chip';
+import OhaengOrb from '../../components/OhaengOrb';
 import { cn } from '../../lib/cn';
+import { ohaengByKey } from '../../lib/ohaeng';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
@@ -15,6 +16,7 @@ type Tab = (typeof TABS)[number];
 // TODO: API 연동 시 교체 (Figma 시안 데이터)
 const PLACE = {
   name: '청계전 모전교',
+  element: 'water' as const,
   theme: '감정 회복',
   address: '서울 중구 무교동',
   addressDetail: '광화문역 5번 출구에서 223m',
@@ -48,7 +50,7 @@ function ReviewItem({ writer, date, content }: (typeof REVIEWS)[number]) {
           <div key={index} className="h-[120px] w-[120px] shrink-0 rounded-btn bg-[#d9d9d9]" />
         ))}
       </div>
-      <p className="mt-2.5 font-sans text-sm font-normal text-gray-6">{content}</p>
+      <p className="mt-2.5 font-sans text-sm font-normal text-gray-5">{content}</p>
     </article>
   );
 }
@@ -56,6 +58,7 @@ function ReviewItem({ writer, date, content }: (typeof REVIEWS)[number]) {
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('지도');
+  const element = ohaengByKey(PLACE.element)!;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[390px] flex-col bg-white pb-[106px]">
@@ -68,7 +71,7 @@ export default function PlaceDetailPage() {
         >
           <img src={iconChevronLeft} alt="" className="h-3.5 w-[7px]" />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 font-sans text-sm font-bold text-gray-6">
+        <h1 className="absolute left-1/2 -translate-x-1/2 font-sans text-[14px] font-body3 text-gray-6">
           장소 상세
         </h1>
         <button
@@ -83,21 +86,25 @@ export default function PlaceDetailPage() {
       <img
         src={placeImage}
         alt={PLACE.name}
-        className="mx-5 mt-5 h-[210px] rounded-btn object-cover"
+        className="mx-5 mt-1 h-[210px] rounded-btn object-cover"
       />
 
       <div className="mt-5 px-5">
         <h2 className="font-sans text-xl font-extrabold text-gray-6">{PLACE.name}</h2>
       </div>
 
-      <div className="mt-2.5 flex gap-1 px-5 drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
-        <Chip selected className="border-ohaeng-water bg-ohaeng-water">
-          수
-        </Chip>
-        <Chip>{PLACE.theme}</Chip>
+      <div className="mt-2.5 flex gap-1 px-5">
+        <span className={cn('flex h-8 items-center gap-1 rounded-btn px-3', element.bg)}>
+          <span className="text-xs leading-4 font-bold text-white">{element.label}</span>
+          <OhaengOrb element={element.key} size={16} />
+        </span>
+        <span className="flex h-8 items-center gap-1 rounded-btn border border-gray-2 bg-white px-3 text-xs leading-4 font-bold text-gray-5">
+          <span>#</span>
+          <span>{PLACE.theme}</span>
+        </span>
       </div>
 
-      <div className="mx-5 mt-2.5 rounded-btn border border-gray-3 px-4 py-3">
+      <div className="mx-5 mt-2.5 rounded-btn border border-gray-2 px-4 py-3">
         <p className="font-sans text-xs font-bold text-primary">이 터의 특징은 무엇인가요?</p>
         <p className="mt-2 font-sans text-[10px] font-normal leading-[14px] text-gray-5">
           {PLACE.feature}
@@ -117,7 +124,7 @@ export default function PlaceDetailPage() {
           >
             <span>
               {t}
-              {t === '후기' && <span className="text-primary"> 9</span>}
+              {t === '후기' && <span className={tab === t ? 'text-primary' : 'text-gray-4'}> 9</span>}
             </span>
             <span
               className={cn(
@@ -151,14 +158,14 @@ export default function PlaceDetailPage() {
         )}
       </div>
 
-      <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-white px-5">
-        <Button fullWidth className="flex h-[50px] items-center justify-center py-0 text-base">
+      <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
+        <Button fullWidth className="flex h-[50px] items-center justify-center py-0 text-sm">
           다녀왔어요
         </Button>
         <Button
           variant="secondary"
           fullWidth
-          className="flex h-[50px] items-center justify-center py-0 text-base"
+          className="flex h-[50px] items-center justify-center py-0 text-sm"
         >
           길찾기
         </Button>

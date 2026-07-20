@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconChevronLeft from '../../assets/icon-chevron-left.svg';
@@ -25,6 +25,7 @@ const PLACE = {
 
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [tab, setTab] = useState<Tab>('지도');
 
   return (
@@ -128,7 +129,11 @@ export default function PlaceDetailPage() {
       </div>
 
       <div className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-gray-1 px-5 pt-2 pb-4">
-        <Button fullWidth className="flex h-[52px] items-center justify-center py-0 text-base">
+        <Button
+          fullWidth
+          className="flex h-[52px] items-center justify-center py-0 text-base"
+          onClick={() => navigate(`/place/${id}/review`)}
+        >
           다녀왔어요
         </Button>
         <Button

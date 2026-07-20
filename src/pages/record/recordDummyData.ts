@@ -1,4 +1,4 @@
-import type { PlaceDay } from '../../components/RecordPlaceCard';
+import type { PlaceDay } from './components/RecordPlaceCard';
 
 export type Place = {
   id: string;
@@ -21,21 +21,21 @@ export const SAVED_PLACES: readonly Place[] = [
     id: 's1',
     name: '경복궁',
     categories: ['재물', '커리어'],
-    date: '06.29',
+    date: '06/29',
     day: '토',
   },
   {
     id: 's2',
     name: '청계천',
     categories: ['연애', '건강'],
-    date: '06.28',
+    date: '06/28',
     day: '수',
   },
   {
     id: 's3',
     name: '용산 호텔 라운지',
     categories: ['커리어'],
-    date: '06.27',
+    date: '06/27',
     day: '화',
   },
 ];
@@ -49,7 +49,7 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     id: 'v1',
     name: '남산타워',
     categories: ['연애'],
-    date: '06.25',
+    date: '06/25',
     day: '토',
     isShared: true,
     shareMessage: '오늘은 흙의 기운 받으러 남산타워로!',
@@ -60,7 +60,7 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     id: 'v2',
     name: '한강공원',
     categories: ['건강'],
-    date: '06.24',
+    date: '06/24',
     day: '수',
     isShared: true,
     shareMessage: '오늘은 물의 기운 받으러 한강공원으로!',
@@ -71,7 +71,7 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     id: 'v3',
     name: '성수동 카페거리',
     categories: ['재물', '커리어'],
-    date: '06.23',
+    date: '06/23',
     day: '화',
     isShared: true,
     shareMessage: '오늘은 불의 기운 받으러 성수동으로!',
@@ -82,7 +82,7 @@ export const VISITED_PLACES: readonly VisitedPlace[] = [
     id: 'v4',
     name: '북촌 한옥마을',
     categories: ['건강'],
-    date: '06.22',
+    date: '06/22',
     day: '목',
     isShared: false,
   },

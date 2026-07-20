@@ -1,20 +1,23 @@
 import placeSample from '../../assets/home/place-sample.jpg';
+import type { OhaengKey } from '../../lib/ohaeng';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
 import RoutineChips from './components/RoutineChips';
 import { OHAENG_HOME } from './ohaeng';
 
-// TODO: 오행/인사말/추천 터는 사주·서버 데이터 연동 예정 (현재 물 variant + 시안 샘플)
-const theme = OHAENG_HOME.water;
+// TODO: 오행/인사말/추천 터는 사주·서버 데이터 연동 예정. 현재 물(水) variant 고정.
+const HOME_OHAENG: OhaengKey = 'water';
 
 export default function HomePage() {
+  const theme = OHAENG_HOME[HOME_OHAENG];
+
   return (
     <div className="relative min-h-screen bg-gray-1">
-      {/* 오행별 배경 일러스트 */}
-      <img
-        src={theme.bg}
-        alt=""
-        className="pointer-events-none absolute inset-x-0 top-0 h-[530px] w-full rounded-b-[30px] object-cover"
+      {/* 오행별 배경 그라데이션 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[530px] rounded-b-[30px]"
+        style={{ background: theme.bgGradient }}
       />
 
       <div className="relative flex flex-col gap-8 px-5 pb-8 pt-[70px]">
@@ -27,7 +30,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        <EnergyCard label={theme.label} orb={theme.orb} desc={theme.energyDesc} />
+        <EnergyCard element={theme.key} label={theme.label} desc={theme.energyDesc} />
         <RoutineChips title={theme.routineTitle} routines={theme.routines} />
         <RecommendedPlaceCard
           image={placeSample}

@@ -122,7 +122,7 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
           onClick={onClick}
           className="flex h-12 w-full items-center justify-center rounded-btn bg-primary py-4"
         >
-          <span className="text-sm font-normal text-white">
+          <span className="text-sm font-bold text-white">
             {isSuccess ? '리포트 보러가기' : '다시 시도'}
           </span>
         </button>

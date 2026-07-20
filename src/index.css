@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'NanumSquare Neo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff') format('woff');
+}
+
 /* ──────────────────────────────────────────────
    디자인 토큰 (Tailwind v4 @theme)
    - 값은 개발 페이지(디자인 완료-개발) 기준 "잠정값"입니다.
@@ -27,6 +51,9 @@
   --color-black-1: #222222;
   --color-black1: #222222;
 
+  /* 브랜드 */
+  --color-kakao: #fee500; /* 카카오 로그인 버튼 */
+
   /* 오행(五行) — Figma variables 확정값 (오행_목/불/흙/금/물) */
   --color-ohaeng-wood: #a0dd00; /* 목 */
   --color-ohaeng-fire: #ff8b8d; /* 화 */
@@ -40,9 +67,7 @@
   /* Shadow */
   --shadow-btn: 0 2px 2px rgba(0, 0, 0, 0.1);
 
-  /* Font
-     NanumSquare Neo 웹폰트 로딩은 소스 확정 후 후속 작업(@font-face).
-     지금은 토큰 구조 + fallback 스택만 둡니다. */
+  /* Font */
   --font-sans: 'NanumSquare Neo', system-ui, 'Apple SD Gothic Neo', sans-serif;
 }
 
@@ -51,4 +76,66 @@ body {
   font-family: var(--font-sans);
   color: var(--color-gray-6);
   background: #fff;
+}
+
+/* ──────────────────────────────────────────────
+   로그인 인트로 애니메이션 (통통 공 → 폭발 → 로그인)
+   공: 화면 밖 왼쪽에서 진입 → 통통 튀며 '오'에 안착 → 폭발하여 화면 채움.
+   좌표는 Figma 9단계 키프레임(375x812) 기준.
+   ────────────────────────────────────────────── */
+@keyframes login-ball-bounce {
+  0% {
+    left: -28%;
+    top: 51%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  18% {
+    left: 11%;
+    top: 35%;
+  }
+  36% {
+    left: 21%;
+    top: 43%;
+  }
+  54% {
+    left: 34%;
+    top: 38%;
+  }
+  72% {
+    left: 39%;
+    top: 44%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    left: 39%;
+    top: 44%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(48);
+  }
+}
+
+@keyframes login-header-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes login-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

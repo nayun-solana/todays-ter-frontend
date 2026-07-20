@@ -5,6 +5,7 @@ import { Check } from 'lucide-react';
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
 import { cn } from '../../lib/cn';
+import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
 
 type CalendarType = 'solar' | 'lunar';
 
@@ -21,17 +22,29 @@ export default function OnboardingPage1() {
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const [unknownTime, setUnknownTime] = useState(false);
+  const [skipSheetOpen, setSkipSheetOpen] = useState(false);
 
   const canSubmit =
     calendarType !== null && birthDate !== '' && (unknownTime || birthTime !== '');
 
-  const toggleUnknownTime = () => {
-    setUnknownTime((prev) => {
-      const next = !prev;
-      if (next) setBirthTime('');
-      return next;
-    });
-    // TODO: 체크 시 '출생시간 없이 진행' 바텀시트(Figma 1137:1804) 연결 — 간이 리포트 안내
+  /** '시간 모름' 선택 → 출생시간 없이 진행 안내 바텀시트를 연다. */
+  const openSkipSheet = () => {
+    setUnknownTime(true);
+    setBirthTime('');
+    setSkipSheetOpen(true);
+  };
+
+  /** 바텀시트 '출생시간 입력하기' → 시간 입력을 계속한다. */
+  const cancelSkip = () => {
+    setUnknownTime(false);
+    setSkipSheetOpen(false);
+  };
+
+  /** 바텀시트 '간이 리포트 생성하기' → 출생시간 없이 분석으로 진행한다. */
+  const confirmSkip = () => {
+    setSkipSheetOpen(false);
+    // TODO: 사주 정보(간이) 저장 후 분석(온보딩2)으로 이동
+    navigate('/onboarding/step-2');
   };
 
   return (
@@ -114,7 +127,7 @@ export default function OnboardingPage1() {
               />
               <button
                 type="button"
-                onClick={toggleUnknownTime}
+                onClick={openSkipSheet}
                 className={cn(
                   'flex shrink-0 items-center gap-1 pb-2 text-xs font-bold',
                   unknownTime ? 'text-primary' : 'text-gray-disabled',
@@ -149,6 +162,8 @@ export default function OnboardingPage1() {
       >
         내 기운 확인하기
       </Button>
+
+      <BirthTimeSkipSheet open={skipSheetOpen} onClose={cancelSkip} onConfirm={confirmSkip} />
     </div>
   );
 }

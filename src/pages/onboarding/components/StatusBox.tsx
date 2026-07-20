@@ -15,7 +15,7 @@ export default function StatusBox({ isSuccess, title, description, onClick }: Pr
 
   return (
     <div
-      className={`flex justify-between py-3 px-5 h-14.5 w-full items-center rounded-btn shadow-[0 1px 10px 0 rgba(0, 0, 0, 0.10)] ${backgroundColor}`}
+      className={`flex justify-between py-3 px-5 h-14.5 w-full items-center rounded-btn shadow-[0_1px_10px_0_rgba(0,0,0,0.10)] ${backgroundColor}`}
       onClick={onClick}
     >
       <div className="flex flex-col gap-1">

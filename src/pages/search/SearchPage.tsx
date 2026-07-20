@@ -1,17 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
+import themeCareer from '../../assets/search/theme-career.svg';
+import themeHealth from '../../assets/search/theme-health.svg';
+import themeLove from '../../assets/search/theme-love.svg';
+import themeMoney from '../../assets/search/theme-money.svg';
+import themeOther from '../../assets/search/theme-other.svg';
+import themeRelationship from '../../assets/search/theme-relationship.svg';
 import Chip from '../../components/Chip';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
 import SearchBar from '../../components/SearchBar';
 import { cn } from '../../lib/cn';
-import { OHAENG_LIST, ohaengByKey, type OhaengKey, type OhaengMeta } from '../../lib/ohaeng';
+import { ohaengByKey, type OhaengKey } from '../../lib/ohaeng';
 
-const REGIONS = ['전체', '서울', '수도권', '부산', '강원', '제주'];
+const REGIONS = ['전체', '서울', '제주', '부산', '강원', '수도권'];
 
-const THEMES = ['연애 터', '커리어 터', '재물 터', '인간관계 터', '건강 터', '기타'];
+const THEMES = [
+  { label: '연애 터', icon: themeLove },
+  { label: '커리어 터', icon: themeCareer },
+  { label: '재물 터', icon: themeMoney },
+  { label: '인간관계 터', icon: themeRelationship },
+  { label: '건강 터', icon: themeHealth },
+  { label: '기타', icon: themeOther },
+];
+
+const ELEMENT_CHIPS: { label: string; key?: OhaengKey }[] = [
+  { label: '전체' },
+  { label: '화', key: 'fire' },
+  { label: '토', key: 'earth' },
+  { label: '목', key: 'wood' },
+  { label: '수', key: 'water' },
+  { label: '금', key: 'metal' },
+];
 
 interface Place {
   id: string;
@@ -81,20 +103,29 @@ const PLACES: Place[] = [
   },
 ];
 
-const EDITOR_PICKS: { name: string; course: string; description: string; element: OhaengKey }[] = [
+const EDITOR_PICKS: {
+  id: string;
+  name: string;
+  course: string;
+  description: string;
+  element: OhaengKey;
+}[] = [
   {
+    id: 'bukhansan',
     name: '북한산 둘레길',
     course: '목기 창작 코스',
     description: '창작 슬럼프를 깨는 최고의 오행 터',
     element: 'wood',
   },
   {
+    id: 'cheonggyecheon',
     name: '청계천',
     course: '수기 감정 정화 루트',
     description: '마음이 무거울 때 꼭 가야 하는 곳',
     element: 'water',
   },
   {
+    id: 'gyeongbokgung',
     name: '경복궁',
     course: '토기 안정 충전지',
     description: '결정을 앞둔 날, 중심 잡기 최적 터',
@@ -102,154 +133,145 @@ const EDITOR_PICKS: { name: string; course: string; description: string; element
   },
 ];
 
-/** 오행별 터 찾기 타일. 선택 시 오행색 채움. */
-function OhaengTile({
-  meta,
-  selected,
-  onClick,
-}: {
-  meta: OhaengMeta;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      className={cn(
-        'flex w-15 flex-col items-center gap-2 rounded-xl border px-4 py-3 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]',
-        meta.border,
-        selected ? meta.bg : 'bg-white',
-      )}
-    >
-      <OhaengOrb element={meta.key} />
-      <span className={cn('font-sans text-base font-bold', selected ? 'text-white' : meta.text)}>
-        {meta.label}
-      </span>
-    </button>
-  );
-}
-
 export default function SearchPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [region, setRegion] = useState('전체');
-
+  const [hasScrolled, setHasScrolled] = useState(false);
   const selected = ohaengByKey(params.get('element'));
-  const places = selected ? PLACES.filter((p) => p.element === selected.key) : PLACES;
+  const places = selected ? PLACES.filter((place) => place.element === selected.key) : PLACES;
 
-  const toggleElement = (key: OhaengKey) => {
-    setParams(selected?.key === key ? {} : { element: key });
+  useEffect(() => {
+    const updateHeaderShadow = () => setHasScrolled(window.scrollY > 0);
+
+    updateHeaderShadow();
+    window.addEventListener('scroll', updateHeaderShadow, { passive: true });
+    return () => window.removeEventListener('scroll', updateHeaderShadow);
+  }, []);
+
+  const toggleElement = (key?: OhaengKey) => {
+    setParams(key && selected?.key !== key ? { element: key } : {});
   };
 
   return (
-    <div className="mx-auto max-w-[390px] pb-6">
-      {/* 헤더 */}
-      <header className="bg-primary px-5 pt-[22px] pb-[13px]">
-        <h1 className="font-sans text-2xl font-extrabold text-white">모든 터 탐색</h1>
-        <SearchBar placeholder="지도에서 탐색" className="mt-3 border-0" />
+    <div className="mx-auto min-h-screen max-w-[390px] bg-gray-1 pb-24">
+      <header
+        className={cn(
+          'sticky top-0 z-40 flex h-[111px] items-end bg-white px-5 pb-3 transition-shadow',
+          hasScrolled && 'shadow-btn',
+        )}
+      >
+        <h1 className="text-xl leading-8 font-extrabold text-primary">모든 터 탐색</h1>
       </header>
 
-      {/* 지역 필터 */}
-      <div className="flex gap-1 overflow-x-auto px-5 pt-5 drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
-        {REGIONS.map((r) => (
-          <Chip key={r} selected={region === r} onClick={() => setRegion(r)}>
-            {r}
-          </Chip>
-        ))}
-      </div>
+      <main>
+        <SearchBar
+          aria-label="지도에서 탐색"
+          placeholder="지도에서 탐색"
+          className="mx-5 mt-3 h-11 border-0 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
+        />
 
-      {/* 테마별 터 컬렉션 */}
-      <section className="mt-5 pl-5">
-        <h2 className="font-sans text-base font-bold text-gray-6">테마별 터 컬렉션</h2>
-        <div className="mt-3 flex gap-2 overflow-x-auto pr-5">
-          {THEMES.map((theme) => (
-            <div
-              key={theme}
-              className="flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border border-gray-3 bg-white py-3 pr-10 pl-4 drop-shadow-[0_2px_1px_rgba(0,0,0,0.1)]"
+        <div className="flex gap-1 overflow-x-auto px-5 pt-4 drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
+          {REGIONS.map((item) => (
+            <Chip
+              key={item}
+              selected={region === item}
+              onClick={() => setRegion(item)}
+              className="h-8 px-4 text-xs"
             >
-              {/* ponytail: 테마 아이콘 asset 미확보 → 회색 placeholder(디자인 원본도 회색) */}
-              <div className="size-[30px] shrink-0 bg-[#d9d9d9]" />
-              <div className="flex flex-col gap-1.5 whitespace-nowrap">
-                <p className="font-sans text-sm leading-none font-bold text-gray-5">{theme}</p>
-                <p className="font-sans text-[10px] leading-none font-normal text-gray-4">
-                  장소 3개
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 오행별 터 찾기 + 장소 리스트 */}
-      <section className="mt-5 px-5">
-        <h2 className="font-sans text-base font-bold text-gray-6">오행별 터 찾기</h2>
-        <div className="mt-3 flex justify-between">
-          {OHAENG_LIST.map((meta) => (
-            <OhaengTile
-              key={meta.key}
-              meta={meta}
-              selected={selected?.key === meta.key}
-              onClick={() => toggleElement(meta.key)}
-            />
+              {item}
+            </Chip>
           ))}
         </div>
 
-        <div className="mt-3 flex flex-col gap-2">
-          {places.map((place) => (
-            <PlaceListItem
-              key={place.id}
-              name={place.name}
-              description={place.description}
-              tags={place.tags}
-              rating={place.rating}
-              distance={place.distance}
-              element={ohaengByKey(place.element)!}
-              onClick={() => navigate(`/place/${place.id}`)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* 에디터 오행 픽 */}
-      <section className="mt-5 px-5">
-        <h2 className="font-sans text-base font-bold text-gray-6">에디터 오행 픽</h2>
-        <div className="mt-3 flex flex-col gap-2">
-          {EDITOR_PICKS.map((pick) => {
-            const meta = ohaengByKey(pick.element)!;
-            return (
+        <section className="mt-5 pl-5">
+          <h2 className="text-base leading-[22px] font-bold text-gray-6">테마별 터 컬렉션</h2>
+          <div className="mt-3 flex gap-2 overflow-x-auto pr-5">
+            {THEMES.map((theme) => (
               <div
-                key={pick.name}
-                className={cn(
-                  'flex items-center justify-between rounded-btn border px-4 py-3.5',
-                  meta.bg,
-                  meta.border,
-                )}
+                key={theme.label}
+                className="flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border border-gray-2 bg-white py-3 pr-10 pl-4 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
               >
-                <div className="flex items-center gap-3">
-                  <OhaengOrb element={meta.key} />
-                  <div className="flex flex-col gap-3">
-                    <p className="flex items-center gap-1.5 font-sans leading-none">
-                      <span className="text-base leading-none font-bold text-black1">
-                        {pick.name}
-                      </span>
-                      <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
-                      <span className="text-[10px] leading-none font-bold text-white">
-                        {pick.course}
-                      </span>
-                    </p>
-                    <p className="font-sans text-xs leading-none font-bold text-white">
-                      {pick.description}
-                    </p>
-                  </div>
+                <img src={theme.icon} alt="" className="size-[30px] shrink-0" />
+                <div className="flex flex-col gap-1.5 whitespace-nowrap">
+                  <p className="text-sm leading-none font-bold text-gray-5">{theme.label}</p>
+                  <p className="text-[10px] leading-none text-gray-4">장소 3개</p>
                 </div>
-                <img src={iconChevronRight} alt="" className="h-3.5 w-[7px] rotate-180" />
               </div>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-5 px-5">
+          <h2 className="text-base leading-[22px] font-bold text-gray-6">오행별 터 찾기</h2>
+          <div className="mt-3 flex gap-1 overflow-x-auto drop-shadow-[0_2px_1px_rgba(0,0,0,0.05)]">
+            {ELEMENT_CHIPS.map((item) => (
+              <Chip
+                key={item.label}
+                selected={item.key === selected?.key || (!item.key && !selected)}
+                onClick={() => toggleElement(item.key)}
+                className="h-8 px-4 text-xs"
+              >
+                {item.label}
+              </Chip>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2">
+            {places.map((place) => (
+              <PlaceListItem
+                key={place.id}
+                name={place.name}
+                description={place.description}
+                tags={place.tags}
+                rating={place.rating}
+                distance={place.distance}
+                element={ohaengByKey(place.element)!}
+                onClick={() => navigate(`/place/${place.id}`)}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-5 px-5">
+          <h2 className="text-base leading-[22px] font-bold text-gray-6">에디터 오행 픽</h2>
+          <div className="mt-3 flex flex-col gap-2">
+            {EDITOR_PICKS.map((pick) => {
+              const meta = ohaengByKey(pick.element)!;
+              return (
+                <button
+                  key={pick.id}
+                  type="button"
+                  onClick={() => navigate(`/place/${pick.id}`)}
+                  className={cn(
+                    'flex h-20 items-center justify-between rounded-btn px-4 text-left',
+                    meta.bg,
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <OhaengOrb element={meta.key} size={36} />
+                    <div className="flex flex-col gap-3">
+                      <p className="flex items-center gap-1.5 leading-none">
+                        <span className="text-base leading-none font-bold text-white">
+                          {pick.name}
+                        </span>
+                        <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
+                        <span className="text-[10px] leading-none font-bold text-white">
+                          {pick.course}
+                        </span>
+                      </p>
+                      <p className="text-xs leading-none font-bold text-white">
+                        {pick.description}
+                      </p>
+                    </div>
+                  </div>
+                  <img src={iconChevronRight} alt="" className="h-3.5 w-[7px]" />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

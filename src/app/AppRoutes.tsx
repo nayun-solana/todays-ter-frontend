@@ -39,7 +39,7 @@ function MainTabsLayout() {
   const activeTab = pathToTab(pathname);
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen pb-24">
       <Outlet />
       <BottomNavBar active={activeTab} onChange={(tab) => navigate(TAB_PATHS[tab])} />
     </div>

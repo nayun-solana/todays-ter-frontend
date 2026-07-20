@@ -13,6 +13,8 @@ import num4 from '../../assets/onboarding/3-4.svg';
 import num5 from '../../assets/onboarding/3-5.svg';
 import num6 from '../../assets/onboarding/3-6.svg';
 
+const CONCERN_ICONS = [num1, num2, num3, num4, num5, num6];
+
 interface Concern {
   id: string;
   title: string;
@@ -58,7 +60,7 @@ export default function OnboardingPage3() {
       <div className="mt-8 grid grid-cols-2 gap-2.5">
         {CONCERNS.map((concern, index) => (
           <CategoryCard
-            icon={eval(`num${index + 1}`)}
+            icon={CONCERN_ICONS[index]}
             key={concern.id}
             title={concern.title}
             description={concern.description}

@@ -116,6 +116,14 @@ const CircularProgress = ({
   const shouldReduceMotion = useReducedMotion();
 
   /**
+   * 움직임 줄이기 설정이 켜져 있으면
+   * 별도의 state 변경 없이 전달받은 진행률을 바로 표시합니다.
+   *
+   * 그렇지 않으면 Motion Value를 따라 변경되는 값을 표시합니다.
+   */
+  const renderedDisplayValue = shouldReduceMotion ? Math.round(normalizedValue) : displayValue;
+
+  /**
    * Motion Value가 변경될 때 가운데 숫자도 함께 변경합니다.
    */
   useMotionValueEvent(animatedProgress, 'change', (latestValue) => {
@@ -124,8 +132,14 @@ const CircularProgress = ({
 
   useEffect(() => {
     if (shouldReduceMotion) {
+      /**
+       * 움직임 줄이기가 활성화된 경우
+       * 애니메이션 없이 즉시 최종 진행률로 변경합니다.
+       *
+       * 숫자는 renderedDisplayValue에서 직접 계산하기 때문에
+       * effect 내부에서 setState를 호출하지 않습니다.
+       */
       animatedProgress.set(normalizedValue);
-      setDisplayValue(Math.round(normalizedValue));
 
       return;
     }
@@ -156,8 +170,8 @@ const CircularProgress = ({
       aria-label="진행률"
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={displayValue}
-      aria-valuetext={`${displayValue}%`}
+      aria-valuenow={renderedDisplayValue}
+      aria-valuetext={`${renderedDisplayValue}%`}
     >
       {/*
         가운데 디자인 원 SVG입니다.
@@ -275,7 +289,7 @@ const CircularProgress = ({
             text-white
           "
         >
-          {displayValue}%
+          {renderedDisplayValue}%
         </span>
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function LoginPage() {
           </p>
           <span
             className="absolute block size-5 rounded-full bg-primary"
-            style={{ animation: 'login-ball-bounce 1.7s cubic-bezier(0.45, 0.05, 0.35, 1) forwards' }}
+            style={{ animation: 'login-ball-bounce 1.9s linear forwards' }}
             onAnimationEnd={() => setPhase('login')}
           />
         </div>

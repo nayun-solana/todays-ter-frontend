@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import iconChevronLeft from '../../assets/icon-chevron-left.svg';
 import iconBookmark from '../../assets/icon-bookmark.svg';
@@ -57,6 +57,7 @@ function ReviewItem({ writer, date, content }: (typeof REVIEWS)[number]) {
 
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [tab, setTab] = useState<Tab>('지도');
   const element = ohaengByKey(PLACE.element)!;
 
@@ -159,7 +160,11 @@ export default function PlaceDetailPage() {
       </div>
 
       <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
-        <Button fullWidth className="flex h-[50px] items-center justify-center py-0 text-sm">
+        <Button
+          fullWidth
+          className="flex h-[50px] items-center justify-center py-0 text-sm"
+          onClick={() => navigate(`/place/${id}/review`)}
+        >
           다녀왔어요
         </Button>
         <Button

@@ -28,6 +28,11 @@ export default function LoginPage() {
     navigate('/onboarding/step-1', { state: { provider } });
   };
 
+  const handleGuest = () => {
+    // TODO: 비회원(게스트) 진입 처리. 사주 입력(온보딩)으로 이동.
+    navigate('/onboarding/step-1', { state: { guest: true } });
+  };
+
   return (
     <div className="relative mx-auto h-screen w-full max-w-[375px] overflow-hidden bg-primary">
       {phase === 'intro' && (
@@ -43,12 +48,18 @@ export default function LoginPage() {
         </div>
       )}
 
-      {phase === 'login' && <LoginContent onLogin={handleLogin} />}
+      {phase === 'login' && <LoginContent onLogin={handleLogin} onGuest={handleGuest} />}
     </div>
   );
 }
 
-function LoginContent({ onLogin }: { onLogin: (provider: Provider) => void }) {
+function LoginContent({
+  onLogin,
+  onGuest,
+}: {
+  onLogin: (provider: Provider) => void;
+  onGuest: () => void;
+}) {
   return (
     <div className="absolute inset-0">
       {/* 흰 헤더 원 (Figma 551px, 상단 곡선 헤더) */}
@@ -72,15 +83,25 @@ function LoginContent({ onLogin }: { onLogin: (provider: Provider) => void }) {
         <p className="text-sm text-gray-4">사주 기반 장소 추천 서비스</p>
       </div>
 
-      {/* 소셜 로그인 버튼 */}
+      {/* 비회원 시작 + 구분선 + 소셜 로그인 버튼 */}
       <div
-        className="absolute inset-x-5 flex flex-col gap-2"
+        className="absolute inset-x-5 flex flex-col"
         style={{ bottom: 72, animation: 'login-rise-in 0.5s ease-out 0.55s both' }}
       >
         <button
           type="button"
+          onClick={onGuest}
+          className="flex h-12 items-center justify-center rounded-full bg-white text-sm font-bold text-primary"
+        >
+          비회원으로 시작하기
+        </button>
+
+        <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />
+
+        <button
+          type="button"
           onClick={() => onLogin('kakao')}
-          className="flex h-12 items-center justify-center gap-2.5 rounded-full bg-kakao"
+          className="mt-2.5 flex h-12 items-center justify-center gap-2.5 rounded-full bg-kakao"
         >
           <KakaoIcon className="size-5" />
           <span className="text-sm font-bold text-black/85">카카오로 로그인</span>
@@ -88,7 +109,7 @@ function LoginContent({ onLogin }: { onLogin: (provider: Provider) => void }) {
         <button
           type="button"
           onClick={() => onLogin('apple')}
-          className="flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
+          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
         >
           <AppleIcon className="h-5 w-4" />
           <span className="text-sm font-bold text-black/85">Apple로 로그인</span>
@@ -96,7 +117,7 @@ function LoginContent({ onLogin }: { onLogin: (provider: Provider) => void }) {
         <button
           type="button"
           onClick={() => onLogin('google')}
-          className="flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
+          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
         >
           <GoogleIcon className="size-5" />
           <span className="text-sm font-bold text-black/85">구글로 로그인</span>

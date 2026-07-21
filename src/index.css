@@ -54,6 +54,9 @@
   /* 브랜드 */
   --color-kakao: #fee500; /* 카카오 로그인 버튼 */
 
+  /* Animation */
+  --animate-onboarding-shake: onboarding-shake 0.4s ease-in-out;
+
   /* 오행(五行) — Figma variables 확정값 (오행_목/불/흙/금/물) */
   --color-ohaeng-wood: #a0dd00; /* 목 */
   --color-ohaeng-fire: #ff8b8d; /* 화 */
@@ -137,5 +140,21 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 온보딩1 미래날짜 입력 시 흔들림 */
+@keyframes onboarding-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
   }
 }

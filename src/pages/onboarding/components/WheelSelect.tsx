@@ -97,12 +97,27 @@ export default function WheelSelect({
   error,
   shake,
 }: WheelSelectProps) {
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // 펼쳐진 동안 휠 박스 바깥을 누르면 닫는다. (여는 클릭은 effect 등록 전 이미 끝나 무시됨)
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (boxRef.current && !boxRef.current.contains(event.target as Node)) onToggle();
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [open, onToggle]);
+
   return (
     <section className="flex flex-col gap-3">
       <p className="text-sm font-bold text-gray-6">{label}</p>
 
       {open ? (
-        <div className="overflow-hidden rounded-[20px] border border-primary-light bg-gray-1">
+        <div
+          ref={boxRef}
+          className="overflow-hidden rounded-[20px] border border-primary-light bg-gray-1"
+        >
           <button
             type="button"
             onClick={onToggle}

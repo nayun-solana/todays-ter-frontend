@@ -53,6 +53,8 @@ export default function OnboardingPage1() {
   // date/time은 휠 구동용으로 항상 값을 갖되, 사용자가 실제로 고른 뒤에만 '입력됨'(touched)으로 취급한다.
   const [date, setDate] = useState<DateValue>(DEFAULT_DATE);
   const [dateTouched, setDateTouched] = useState(false);
+  // 생년월일 드롭다운을 한 번 닫아(입력 완료) 태어난 시간을 활성화했는지. 한 번 켜지면 유지.
+  const [dateConfirmed, setDateConfirmed] = useState(false);
   const [time, setTime] = useState<TimeValue>(DEFAULT_TIME);
   const [timeTouched, setTimeTouched] = useState(false);
   const [unknownTime, setUnknownTime] = useState(false);
@@ -63,7 +65,15 @@ export default function OnboardingPage1() {
   const timeFilled = timeTouched || unknownTime;
   const canSubmit = calendarType !== null && dateTouched && !dateError && timeFilled;
 
-  const toggleDate = () => setOpenField((f) => (f === 'date' ? null : 'date'));
+  const toggleDate = () =>
+    setOpenField((f) => {
+      // 닫는 동작이고 유효한 날짜가 입력됐으면 태어난 시간을 활성화한다.
+      if (f === 'date') {
+        if (dateTouched && !isFutureDate(date)) setDateConfirmed(true);
+        return null;
+      }
+      return 'date';
+    });
   const toggleTime = () => {
     setUnknownTime(false);
     setOpenField((f) => (f === 'time' ? null : 'time'));
@@ -177,8 +187,8 @@ export default function OnboardingPage1() {
           />
         )}
 
-        {/* 태어난 시간 — 유효한 생년월일 입력 후에만 노출 */}
-        {dateTouched && !dateError && (
+        {/* 태어난 시간 — 생년월일 드롭다운을 닫아 입력을 마친 뒤에만 노출 */}
+        {dateConfirmed && !dateError && (
           <WheelSelect
             label="태어난 시간"
             display={unknownTime ? '시간 모름' : timeTouched ? `${pad(time.hour)}:${pad(time.minute)}` : '00:00'}

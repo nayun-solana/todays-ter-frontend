@@ -31,10 +31,10 @@ export default function PillTabs<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(item.value)}
             className={cn(
-              'rounded-full px-4 py-2 text-sm shadow-btn transition-colors cursor-pointer',
+              'rounded-full px-4 py-2.5 text-sm transition-colors duration-200 cursor-pointer leading-none',
               isActive
-                ? 'bg-primary font-extrabold text-white'
-                : 'border border-gray-3 bg-white font-extrabold text-gray-4',
+                ? 'bg-primary font-bold text-white'
+                : 'border border-gray-3 bg-white text-gray-4',
             )}
           >
             {item.label}

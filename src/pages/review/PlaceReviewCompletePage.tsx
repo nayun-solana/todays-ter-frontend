@@ -2,17 +2,16 @@ import { useNavigate, useLocation } from 'react-router';
 import { X } from 'lucide-react';
 
 import checkIcon from '../../assets/review/check.png';
-import Button from './components/Button';
 
 type CompleteLocationState = {
-  matchedTerName?: string;
+  placeName?: string;
 };
 
-export default function ReviewCompletePage() {
+export default function PlaceReviewCompletePage() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const matchedTerName =
-    (state as CompleteLocationState | null)?.matchedTerName ?? '청계천 모전교';
+  const placeName =
+    (state as CompleteLocationState | null)?.placeName ?? '청계천 모전교';
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-1">
@@ -30,23 +29,11 @@ export default function ReviewCompletePage() {
       <div className="flex flex-1 flex-col items-center justify-center px-5">
         <img src={checkIcon} alt="" className="size-10" />
         <h1 className="mt-8 text-center text-xl font-extrabold text-gray-6">
-          방문 기록이 저장됐어요
+          후기가 저장됐어요
         </h1>
         <p className="mt-3 text-center text-xs text-gray-6">
-          {matchedTerName}가 다녀온 터에 추가되었습니다.
+          {placeName}의 후기가 저장되었어요.
         </p>
-      </div>
-
-      <div className="flex flex-col gap-2 px-5 pb-8">
-        <Button onClick={() => navigate('/home', { replace: true })}>
-          홈화면으로 돌아가기
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => navigate('/record', { replace: true })}
-        >
-          기록에서 보기
-        </Button>
       </div>
     </div>
   );

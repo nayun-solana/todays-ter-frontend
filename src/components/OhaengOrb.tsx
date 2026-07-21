@@ -10,23 +10,11 @@ import type { OhaengKey } from '../lib/ohaeng';
 
 /** Figma 원본 asset의 crop 오프셋 (mask 36px 기준 백분율) */
 const ORBS: Record<OhaengKey, { src: string; img?: CSSProperties }> = {
-  fire: {
-    src: orbFire,
-    img: { width: '117.17%', height: '116.37%', left: '-6.99%', top: '-11.58%' },
-  },
+  fire: { src: orbFire },
   earth: { src: orbEarth },
-  wood: {
-    src: orbWood,
-    img: { width: '117.54%', height: '117.54%', left: '-7.11%', top: '-12.56%' },
-  },
-  water: {
-    src: orbWater,
-    img: { width: '117.17%', height: '117.17%', left: '-6.93%', top: '-12.52%' },
-  },
-  metal: {
-    src: orbMetal,
-    img: { width: '117.54%', height: '117.54%', left: '-7.11%', top: '-12.48%' },
-  },
+  wood: { src: orbWood },
+  water: { src: orbWater },
+  metal: { src: orbMetal },
 };
 
 interface OhaengOrbProps {

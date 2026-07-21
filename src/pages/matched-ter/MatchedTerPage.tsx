@@ -1,3 +1,5 @@
+import { useNavigate, useParams } from 'react-router';
+
 import Button from '../../components/Button';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
 import ImageCarousel from './components/ImageCarousel';
@@ -8,6 +10,9 @@ import WhyMatchCard from './components/WhyMatchCard';
 // 나와 어울리는 터(오늘의터 추천상세) — 홈 "오늘 가장 잘 맞는 터"에서 진입, 사주 매칭 중심.
 // TODO: 장소/사주 매칭 데이터 서버 연동 (현재 시안 샘플 = 청계천 모전교, 물)
 export default function MatchedTerPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
   return (
     <div className="flex min-h-screen flex-col bg-white pb-28">
       <MatchedTerAppBar title="나와 어울리는 터" />
@@ -29,7 +34,11 @@ export default function MatchedTerPage() {
 
       {/* 하단 고정 액션바 */}
       <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-white px-5 py-4">
-        <Button variant="primary" fullWidth>
+        <Button
+          variant="primary"
+          fullWidth
+          onClick={() => navigate(`/matched-ter/${id}/review`)}
+        >
           다녀왔어요
         </Button>
         <Button variant="secondary" fullWidth>

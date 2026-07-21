@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { X } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router';
 
 import FileAttachButton from '../../components/FileAttachButton';
 import OhaengBadge from '../../components/OhaengBadge';
 import TextInput from '../../components/TextInput';
 import Button from './components/Button';
+import ReviewHeader from './components/ReviewHeader';
+import StarRating from './components/StarRating';
 
 /** 페이지 더미 — API 연동 전 */
 const PLACE = {
@@ -17,63 +18,53 @@ const PLACE = {
 
 export default function ReviewPage() {
   const navigate = useNavigate();
+  const [rating, setRating] = useState(0);
   const [memo, setMemo] = useState('');
-  const canSubmit = memo.trim().length > 0;
+  const canSubmit = rating > 0;
+  const { id: matchedTerId } = useParams();
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-1">
-      <header className="flex items-center border-b border-gray-3 bg-white p-5">
-        <button
-          type="button"
-          aria-label="닫기"
-          onClick={() => navigate(-1)}
-          className="flex size-6 shrink-0 items-center justify-center text-gray-5"
-        >
-          <X size={24} aria-hidden />
-        </button>
-        <h1 className="flex-1 text-center text-sm font-bold text-gray-6">방문 기록하기</h1>
-      </header>
+      <ReviewHeader title="방문 기록하기" />
 
-      <div className="flex flex-1 flex-col gap-3 px-5 py-3">
-        {/* 장소 정보 */}
-        <section className="flex items-center gap-3 rounded-2xl border border-primary-light bg-white p-3">
-          <div className="size-20 shrink-0 rounded-xl bg-gray-3" />
+      <div className="flex flex-1 flex-col gap-3">
+        <section className="flex items-center gap-4 border-b border-gray-2 bg-white px-5 py-4">
+          <div className="size-25 shrink-0 rounded-2xl bg-gray-3" />
           <div className="min-w-0 flex-1">
             <p className="text-[10px] text-gray-4">{PLACE.label}</p>
             <h2 className="mt-1 truncate text-sm font-bold text-gray-6">{PLACE.name}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-1">
-              <OhaengBadge element={PLACE.day} className="px-3 py-1 text-sm" />
-              <span className="rounded-full border border-gray-3 bg-white px-3 py-1 text-sm font-bold text-gray-5">
+              <OhaengBadge element={PLACE.day} className="px-3 py-2 text-xs" />
+              <span className="rounded-full border border-gray-3 bg-white px-3 py-2 text-xs font-bold text-gray-5">
                 {PLACE.tag}
               </span>
             </div>
           </div>
         </section>
 
-        {/* 기운 메모 */}
-        <section className="rounded-2xl bg-white p-4 border text-black-1 border-gray-2">
-          <h3 className="text-base font-bold text-gray-6">오늘 기운은 어땠나요?</h3>
+        <section className="rounded-2xl border border-gray-2 bg-white p-5 mx-4 flex flex-col gap-3">
+          <h3 className="text-sm font-bold text-gray-6">별점을 선택해주세요</h3>
+          <StarRating value={rating} onChange={setRating} />
+         <span className="text-sm text-gray-6 font-bold mt-2">오늘 기운은 어땠나요?</span>
           <TextInput
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
             placeholder="한 줄 메모를 남겨보세요"
-            rows={3}
-            className="mt-3"
+            rows={4}
           />
-        </section>
 
-        {/* 파일 첨부 */}
-        <FileAttachButton />
+          <FileAttachButton maxCount={1} />
+        </section>
 
         <div className="flex-1" />
 
         <Button
           disabled={!canSubmit}
-          className="mb-3"
+          className="mb-5 mx-5 w-auto"
           onClick={() =>
-            navigate('/review/complete', {
+            navigate(`/matched-ter/${matchedTerId}/review/complete`, {
               replace: true,
-              state: { placeName: PLACE.name },
+              state: { matchedTerName: PLACE.name },
             })
           }
         >

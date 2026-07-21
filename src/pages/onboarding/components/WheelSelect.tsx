@@ -147,7 +147,7 @@ export default function WheelSelect({
             </button>
             {trailing}
           </div>
-          {error ? <p className="mt-2 text-[11px] text-[#ff5353]">{error}</p> : null}
+          {error ? <p className="mt-2 text-[10px] font-bold text-gray-4">{error}</p> : null}
         </div>
       )}
     </section>

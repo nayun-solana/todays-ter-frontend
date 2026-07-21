@@ -50,38 +50,41 @@ export default function OnboardingPage1() {
   const navigate = useNavigate();
 
   const [calendarType, setCalendarType] = useState<CalendarType | null>(null);
-  const [date, setDate] = useState<DateValue | null>(null);
-  const [time, setTime] = useState<TimeValue | null>(null);
+  // date/time은 휠 구동용으로 항상 값을 갖되, 사용자가 실제로 고른 뒤에만 '입력됨'(touched)으로 취급한다.
+  const [date, setDate] = useState<DateValue>(DEFAULT_DATE);
+  const [dateTouched, setDateTouched] = useState(false);
+  const [time, setTime] = useState<TimeValue>(DEFAULT_TIME);
+  const [timeTouched, setTimeTouched] = useState(false);
   const [unknownTime, setUnknownTime] = useState(false);
   const [openField, setOpenField] = useState<OpenField>(null);
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
 
-  const dateError = date !== null && isFutureDate(date);
-  const canSubmit =
-    calendarType !== null && date !== null && !dateError && (unknownTime || time !== null);
+  const dateError = dateTouched && isFutureDate(date);
+  const timeFilled = timeTouched || unknownTime;
+  const canSubmit = calendarType !== null && dateTouched && !dateError && timeFilled;
 
-  const toggleDate = () => {
-    if (date === null) setDate(DEFAULT_DATE);
-    setOpenField((f) => (f === 'date' ? null : 'date'));
-  };
-
+  const toggleDate = () => setOpenField((f) => (f === 'date' ? null : 'date'));
   const toggleTime = () => {
-    if (time === null) setTime(DEFAULT_TIME);
     setUnknownTime(false);
     setOpenField((f) => (f === 'time' ? null : 'time'));
   };
 
   const patchDate = (patch: Partial<DateValue>) => {
+    setDateTouched(true);
     setDate((prev) => {
-      const next = { ...(prev ?? DEFAULT_DATE), ...patch };
+      const next = { ...prev, ...patch };
       return { ...next, day: Math.min(next.day, daysInMonth(next.year, next.month)) };
     });
+  };
+
+  const patchTime = (patch: Partial<TimeValue>) => {
+    setTimeTouched(true);
+    setTime((prev) => ({ ...prev, ...patch }));
   };
 
   /** '시간 모름' → 출생시간 없이 진행 안내 바텀시트. */
   const openSkipSheet = () => {
     setUnknownTime(true);
-    setTime(null);
     setOpenField(null);
     setSkipSheetOpen(true);
   };
@@ -95,35 +98,21 @@ export default function OnboardingPage1() {
     navigate('/onboarding/step-2');
   };
 
-  const dateColumns: WheelColumnSpec[] = date
-    ? [
-        { options: YEARS, value: date.year, format: (v) => `${v}년`, onChange: (v) => patchDate({ year: v }) },
-        { options: MONTHS, value: date.month, format: (v) => `${v}월`, onChange: (v) => patchDate({ month: v }) },
-        {
-          options: Array.from({ length: daysInMonth(date.year, date.month) }, (_, i) => i + 1),
-          value: date.day,
-          format: (v) => `${v}일`,
-          onChange: (v) => patchDate({ day: v }),
-        },
-      ]
-    : [];
+  const dateColumns: WheelColumnSpec[] = [
+    { options: YEARS, value: date.year, format: (v) => `${v}년`, onChange: (v) => patchDate({ year: v }) },
+    { options: MONTHS, value: date.month, format: (v) => `${v}월`, onChange: (v) => patchDate({ month: v }) },
+    {
+      options: Array.from({ length: daysInMonth(date.year, date.month) }, (_, i) => i + 1),
+      value: date.day,
+      format: (v) => `${v}일`,
+      onChange: (v) => patchDate({ day: v }),
+    },
+  ];
 
-  const timeColumns: WheelColumnSpec[] = time
-    ? [
-        {
-          options: HOURS,
-          value: time.hour,
-          format: formatHour,
-          onChange: (v) => setTime((p) => ({ ...(p ?? DEFAULT_TIME), hour: v })),
-        },
-        {
-          options: MINUTES,
-          value: time.minute,
-          format: (v) => `${v}분`,
-          onChange: (v) => setTime((p) => ({ ...(p ?? DEFAULT_TIME), minute: v })),
-        },
-      ]
-    : [];
+  const timeColumns: WheelColumnSpec[] = [
+    { options: HOURS, value: time.hour, format: formatHour, onChange: (v) => patchTime({ hour: v }) },
+    { options: MINUTES, value: time.minute, format: (v) => `${v}분`, onChange: (v) => patchTime({ minute: v }) },
+  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col px-5 pb-8 pt-4">
@@ -178,8 +167,8 @@ export default function OnboardingPage1() {
         {calendarType !== null && (
           <WheelSelect
             label="생년월일"
-            display={date ? `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일` : '0000년 00월 00일'}
-            filled={date !== null}
+            display={dateTouched ? `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일` : '0000년 00월 00일'}
+            filled={dateTouched}
             open={openField === 'date'}
             onToggle={toggleDate}
             columns={dateColumns}
@@ -188,12 +177,12 @@ export default function OnboardingPage1() {
           />
         )}
 
-        {/* 태어난 시간 — 유효한 생년월일 입력 후 노출 */}
-        {date !== null && !dateError && (
+        {/* 태어난 시간 — 유효한 생년월일 입력 후에만 노출 */}
+        {dateTouched && !dateError && (
           <WheelSelect
             label="태어난 시간"
-            display={unknownTime ? '시간 모름' : time ? `${pad(time.hour)}:${pad(time.minute)}` : '00:00'}
-            filled={time !== null || unknownTime}
+            display={unknownTime ? '시간 모름' : timeTouched ? `${pad(time.hour)}:${pad(time.minute)}` : '00:00'}
+            filled={timeFilled}
             open={openField === 'time'}
             onToggle={toggleTime}
             columns={timeColumns}

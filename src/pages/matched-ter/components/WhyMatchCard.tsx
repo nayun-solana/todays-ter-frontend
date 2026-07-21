@@ -1,6 +1,10 @@
 import info from '../../../assets/matched-ter/info.svg';
+import { cn } from '../../../lib/cn';
+import type { OhaengMeta } from '../../../lib/ohaeng';
 
 interface WhyMatchCardProps {
+  /** 오행 메타 (사주 매칭 포인트 강조색) */
+  meta: OhaengMeta;
   /** 매칭 이유 설명 (개행 포함) */
   reason: string;
   /** 사주 매칭 포인트 칩 목록 */
@@ -8,7 +12,7 @@ interface WhyMatchCardProps {
 }
 
 /** 나와 어울리는 터 "왜 나에게 맞나요?" 카드 + 사주 매칭 포인트. */
-export default function WhyMatchCard({ reason, points }: WhyMatchCardProps) {
+export default function WhyMatchCard({ meta, reason, points }: WhyMatchCardProps) {
   return (
     <div className="flex flex-col gap-4 rounded-[20px] border border-gray-3 bg-white p-5">
       <div className="flex flex-col gap-1">
@@ -20,13 +24,21 @@ export default function WhyMatchCard({ reason, points }: WhyMatchCardProps) {
           {reason}
         </p>
       </div>
-      <div className="flex flex-col items-center gap-3 rounded-[20px] border border-primary px-4 py-3.5">
-        <p className="text-sm font-bold text-primary">사주 매칭 포인트</p>
+      <div
+        className={cn(
+          'flex flex-col items-center gap-3 rounded-[20px] border px-4 py-3.5',
+          meta.border,
+        )}
+      >
+        <p className={cn('text-sm font-bold', meta.text)}>사주 매칭 포인트</p>
         <div className="flex gap-1">
           {points.map((point) => (
             <span
               key={point}
-              className="rounded-[20px] border border-gray-3 bg-white px-3 py-1.5 text-xs font-normal text-primary"
+              className={cn(
+                'rounded-[20px] border border-gray-2 bg-white px-3 py-1.5 text-xs font-normal',
+                meta.text,
+              )}
             >
               {point}
             </span>

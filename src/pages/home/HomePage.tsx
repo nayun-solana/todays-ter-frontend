@@ -19,6 +19,7 @@ const RECOMMENDED_DESC =
 /** 추천 터 목록 (현재 시안 샘플). TODO: 서버 추천 데이터 연동. */
 const RECOMMENDED_PLACES = [
   {
+    id: '1',
     image: placeSample,
     badge: '최고 궁합',
     name: '경복궁',
@@ -28,6 +29,7 @@ const RECOMMENDED_PLACES = [
     rating: 4.7,
   },
   {
+    id: '2',
     image: placeSample,
     badge: '최고 궁합',
     name: '경복궁',
@@ -41,6 +43,11 @@ const RECOMMENDED_PLACES = [
 export default function HomePage() {
   const navigate = useNavigate();
   const theme = OHAENG_HOME[HOME_OHAENG];
+
+  // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
+  const renderCard = ({ id, ...card }: (typeof RECOMMENDED_PLACES)[number]) => (
+    <RecommendedPlaceCard {...card} onClick={() => navigate(`/matched-ter/${id}`)} />
+  );
 
   return (
     <div className="relative min-h-screen bg-gray-1">
@@ -68,11 +75,11 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
           <div className="flex flex-col gap-3">
-            <RecommendedPlaceCard {...RECOMMENDED_PLACES[0]} />
+            {renderCard(RECOMMENDED_PLACES[0])}
             {IS_GUEST ? (
               // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
               <div className="relative">
-                <RecommendedPlaceCard {...RECOMMENDED_PLACES[1]} />
+                {renderCard(RECOMMENDED_PLACES[1])}
                 <div
                   aria-hidden
                   className="absolute inset-0 rounded-[20px]"
@@ -98,7 +105,7 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-              <RecommendedPlaceCard {...RECOMMENDED_PLACES[1]} />
+              renderCard(RECOMMENDED_PLACES[1])
             )}
           </div>
         </section>

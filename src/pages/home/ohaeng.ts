@@ -42,11 +42,24 @@ function copy() {
   return { ...PLACEHOLDER_COPY, routines: [...PLACEHOLDER_COPY.routines] };
 }
 
+/**
+ * 홈 상단 배경 — Figma는 mesh 그라데이션 이미지지만(일러스트 아님 원칙),
+ * 오행색만 파라미터로 받는 CSS 레이어드 그라데이션으로 근사한다.
+ * 1) 좌상단 밝은 광원 glow  2) 중앙하단 크림 웜톤 bloom  3) 오행색→흰색 세로 흐름.
+ */
+function buildBgGradient(color: string): string {
+  return [
+    'radial-gradient(58% 48% at 14% 4%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 62%)',
+    'radial-gradient(82% 58% at 68% 98%, rgba(255,249,232,0.7) 0%, rgba(255,249,232,0) 58%)',
+    `linear-gradient(178deg, ${color} 0%, #ffffff 70%)`,
+  ].join(', ');
+}
+
 function buildTheme(key: OhaengKey, label: string): OhaengHomeTheme {
   return {
     key,
     label,
-    bgGradient: `linear-gradient(180deg, ${OHAENG_COLOR[key]} 0%, #ffffff 72%)`,
+    bgGradient: buildBgGradient(OHAENG_COLOR[key]),
     ...copy(),
   };
 }

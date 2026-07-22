@@ -1,8 +1,19 @@
+// libraries
 import { useState } from 'react';
-
+// components
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
 import CategoryCard from './components/CategoryCard';
+
+//assets
+import num1 from '../../assets/onboarding/3-1.svg';
+import num2 from '../../assets/onboarding/3-2.svg';
+import num3 from '../../assets/onboarding/3-3.svg';
+import num4 from '../../assets/onboarding/3-4.svg';
+import num5 from '../../assets/onboarding/3-5.svg';
+import num6 from '../../assets/onboarding/3-6.svg';
+
+const CONCERN_ICONS = [num1, num2, num3, num4, num5, num6];
 
 interface Concern {
   id: string;
@@ -24,10 +35,10 @@ export default function OnboardingPage3() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const toggle = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
   };
+
+  console.log(num1, num2, num3, num4, num5, num6);
 
   return (
     <div className="flex min-h-screen w-full flex-col px-5 pb-8 pt-4">
@@ -47,8 +58,9 @@ export default function OnboardingPage3() {
       </header>
 
       <div className="mt-8 grid grid-cols-2 gap-2.5">
-        {CONCERNS.map((concern) => (
+        {CONCERNS.map((concern, index) => (
           <CategoryCard
+            icon={CONCERN_ICONS[index]}
             key={concern.id}
             title={concern.title}
             description={concern.description}

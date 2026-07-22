@@ -12,6 +12,8 @@ import SajuEditPage, { SajuReportCompletePage } from '../pages/my/SajuEditPage';
 import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
 import OnboardingPage3 from '../pages/onboarding/OnboardingPage3';
+import ReportPage from '../pages/onboarding/ReportPage';
+import ReportDetailPage from '../pages/onboarding/ReportDetailPage';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 import PlaceReviewPage from '../pages/review/PlaceReviewPage';
 import ReviewCompletePage from '../pages/review/ReviewCompletePage';
@@ -83,11 +85,16 @@ export default function AppRoutes() {
         <Route path="/place/:id/review" element={<PlaceReviewPage />} />
         <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+
+        <Route path="/report/:id" element={<ReportPage />} />
+        <Route path="/report/:id/detail" element={<ReportDetailPage />} />
+
         <Route path="/my/saju" element={<SajuEditPage />} />
         <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
         <Route path="/my/notifications" element={<NotificationPage />} />
         <Route path="/my/account-links" element={<AccountLinkPage />} />
         <Route path="/my/permissions" element={<PermissionsPage />} />
+
         {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
         <Route path="/test" element={<TestPage />} />
       </Route>

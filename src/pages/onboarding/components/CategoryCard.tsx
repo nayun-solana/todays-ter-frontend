@@ -1,6 +1,7 @@
 import { cn } from '../../../lib/cn';
 
 interface CategoryCardProps {
+  icon: string;
   title: string;
   description: string;
   selected: boolean;
@@ -12,6 +13,7 @@ interface CategoryCardProps {
  * 온보딩3 화면 전용 로컬 컴포넌트 — 공용화 여부는 Step6에서 판단.
  */
 export default function CategoryCard({
+  icon,
   title,
   description,
   selected,
@@ -28,13 +30,10 @@ export default function CategoryCard({
       )}
     >
       {/* 아이콘: 시안이 회색 플레이스홀더라 동일 처리 — 에셋 확정 후 교체 */}
-      <span className="size-[30px] shrink-0 rounded bg-gray-3" aria-hidden />
+      <img src={icon} alt={title} className="h-6 w-6" />
       <span className="flex flex-col gap-1.5">
         <span
-          className={cn(
-            'text-[15px] font-extrabold',
-            selected ? 'text-primary' : 'text-gray-5',
-          )}
+          className={cn('text-[15px] font-extrabold', selected ? 'text-primary' : 'text-gray-5')}
         >
           {title}
         </span>

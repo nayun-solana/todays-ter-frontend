@@ -24,32 +24,23 @@
   src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff') format('woff');
 }
 
-/* ──────────────────────────────────────────────
-   디자인 토큰 (Tailwind v4 @theme)
-   - 값은 개발 페이지(디자인 완료-개발) 기준 "잠정값"입니다.
-   - 디자이너 확정 후 이 토큰만 교체하면 컴포넌트는 무수정.
-   - 컴포넌트는 raw hex 대신 반드시 토큰 클래스(bg-primary 등)를 사용합니다.
-   ────────────────────────────────────────────── */
+/* Figma 디자인 시스템 (node 2370:1227) 기준 Color·Typography 토큰 */
 @theme {
-  /* Primary */
-  --color-primary: #5a81fa; /* Primary2 · 기본 */
-  --color-primary-deep: #0d36b7; /* Primary1 */
-  --color-primary-light: #bbc8f0; /* Primary3 */
-  --color-primary-bg: #f1f4ff; /* Primary4 · 배경 */
+  /* Primary 1–4 */
+  --color-primary: #5a81fa; /* Primary 2 */
+  --color-primary-deep: #0d36b7; /* Primary 1 */
+  --color-primary-light: #bbc8f0; /* Primary 3 */
+  --color-primary-bg: #f1f4ff; /* Primary 4 */
 
-  /* Gray scale */
-  --color-black1: #222222; /* Figma black1 */
+  /* Text Gray 1–6 */
   --color-gray-1: #fafafa;
   --color-gray-2: #f4f4f5;
-  --color-gray-3: #e4e4e7;
+  --color-gray-3: #c4c4c4;
   --color-gray-4: #71717a;
   --color-gray-5: #3f3f46;
   --color-gray-6: #18181b;
-  --color-gray-disabled: #c4c4c4; /* Figma text/Gray3 · placeholder·미선택·비활성 텍스트 */
-
-  /* Black scale */
-  --color-black-1: #222222;
-  --color-black1: #222222;
+  --color-gray-disabled: #c4c4c4; /* 기존 클래스 호환용. 새 코드는 gray-3 사용 */
+  --color-black1: #18181b; /* 기존 클래스 호환용. 새 코드는 gray-6 사용 */
 
   /* 브랜드 */
   --color-kakao: #fee500; /* 카카오 로그인 버튼 */
@@ -69,6 +60,79 @@
 
   /* Font */
   --font-sans: 'NanumSquare Neo', system-ui, 'Apple SD Gothic Neo', sans-serif;
+}
+
+/* Figma Typography: Head, Body, Sub, 부가설명폰트 */
+.typo-head-1 {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 32px;
+}
+
+.typo-head-2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 22px;
+}
+
+.typo-head-3 {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+.typo-head-4 {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.typo-body-1 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 19px;
+}
+
+.typo-body-2 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.typo-body-3 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.typo-body-4 {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.typo-sub-1 {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.typo-sub-2 {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.typo-sub-3 {
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px;
+}
+
+.typo-caption {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 11px;
 }
 
 body {

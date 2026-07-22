@@ -16,3 +16,7 @@ export type OhaengKey = OhaengMeta['key'];
 export function ohaengByKey(key: string | null | undefined): OhaengMeta | undefined {
   return OHAENG_LIST.find((o) => o.key === key);
 }
+
+export function ohaengByLabel(label: OhaengMeta['label']): OhaengMeta | undefined {
+  return OHAENG_LIST.find((o) => o.label === label);
+}

@@ -46,24 +46,40 @@ export default function LoginPage() {
 function BallIntro({ onDone }: { onDone: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLSpanElement>(null);
+  const oCharRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     const ball = ballRef.current;
+    const oChar = oCharRef.current;
     if (!container || !ball) return;
 
     const W = container.clientWidth;
     const H = container.clientHeight;
 
+    // 공이 튕기는 바닥선·최종 안착점 = 로고 '오늘의 터'의 '오' 글자 위치에서 파생.
+    // 하드코딩 %가 아니라 실제 '오' 글자를 실측해 폰트/화면 크기와 무관하게 정렬한다.
+    const measureO = (): { floor: number; centerX: number } => {
+      if (!oChar) return { floor: 0.5 * H, centerX: 0.5 * W }; // 폴백
+      const gr = oChar.getBoundingClientRect();
+      const cr = container.getBoundingClientRect();
+      return {
+        // 튕기는 선 = '오'의 ㅇ 상단끝. 글자 상자(line-box) 위쪽 leading을 감안해 살짝 안쪽(≈0.15).
+        floor: gr.top - cr.top + gr.height * 0.15,
+        centerX: gr.left - cr.left + gr.width / 2,
+      };
+    };
+    const { floor: FLOOR, centerX: O_X } = measureO();
+
     // 물리 상수 — 컨테이너 크기에 비례시켜 화면 크기와 무관하게 일관된 느낌을 낸다.
     const GRAVITY = 3.2 * H; // px/s²
     const RESTITUTION = 0.66; // 반발계수: 튈수록 높이·주기가 자동 감쇠
-    const FLOOR = 0.5 * H; // 공 바닥(접촉점)이 안착하는 선 — 로고 '오늘의 터' 근처
     const START_X = -0.1 * W; // 화면 밖 왼쪽에서 진입
     const START_Y = 0.15 * H;
-    const VX = (0.5 * W - START_X) / 1.45; // 좌→우 등속: 3회째 바닥(≈1.45s)에서 화면 중앙 도달
+    const VX = (O_X - START_X) / 1.45; // 좌→우 등속: 3회째 바닥(≈1.45s)에서 '오' 위치 도달
     const SQUASH_DUR = 0.09; // 접촉 스쿼시 지속(초)
     const SETTLE_BOUNCES = 3; // 이만큼 튄 뒤 폭발
+    const SETTLE_HOLD = 0.12; // 마지막 접촉 후 '오'에 얹혀 정지하는 시간(초) — 색 변화만 스치듯 보이고 바로 폭발
     const EXPLODE_DUR = 0.42; // 폭발 지속(초)
     const EXPLODE_SCALE = 64;
 
@@ -72,6 +88,8 @@ function BallIntro({ onDone }: { onDone: () => void }) {
     let vy = 0;
     let squashT = 0;
     let bounces = 0;
+    let settling = false; // 마지막 접촉 후 폭발 전 정지 구간
+    let settleT = 0;
     let exploding = false;
     let explodeT = 0;
     let last = performance.now();
@@ -94,17 +112,24 @@ function BallIntro({ onDone }: { onDone: () => void }) {
       const dt = Math.min((now - last) / 1000, 1 / 30); // 탭 전환 등으로 dt 폭주 방지
       last = now;
 
-      if (!exploding) {
+      if (!exploding && !settling) {
         cx += VX * dt; // 수평 등속
         vy += GRAVITY * dt; // 수직 중력 가속
         cy += vy * dt;
 
         if (cy >= FLOOR) {
           cy = FLOOR;
-          vy = -vy * RESTITUTION; // 바닥 반사 + 감쇠
           squashT = SQUASH_DUR;
           bounces += 1;
-          if (bounces >= SETTLE_BOUNCES) exploding = true;
+          if (bounces >= SETTLE_BOUNCES) {
+            // 마지막 접촉: '오'에 얹혀 잠시 정지. 이 순간에만 '오'를 공과 같은 색으로 점등.
+            vy = 0;
+            settling = true;
+            settleT = SETTLE_HOLD;
+            if (oChar) oChar.classList.add('text-primary');
+          } else {
+            vy = -vy * RESTITUTION; // 바닥 반사 + 감쇠
+          }
         }
 
         let sx: number;
@@ -124,6 +149,25 @@ function BallIntro({ onDone }: { onDone: () => void }) {
         ball.style.top = `${cy}px`;
         ball.style.transformOrigin = 'center bottom';
         ball.style.transform = `translate(-50%, -100%) scale(${sx}, ${sy})`;
+      } else if (settling) {
+        // '오' 위에 정지: 잔여 스쿼시만 풀어주고 대기 → 시간이 다 되면 폭발.
+        settleT -= dt;
+        let sx = 1;
+        let sy = 1;
+        if (squashT > 0) {
+          const p = squashT / SQUASH_DUR;
+          sx = 1 + 0.45 * p;
+          sy = 1 - 0.35 * p;
+          squashT -= dt;
+        }
+        ball.style.left = `${cx}px`;
+        ball.style.top = `${cy}px`;
+        ball.style.transformOrigin = 'center bottom';
+        ball.style.transform = `translate(-50%, -100%) scale(${sx}, ${sy})`;
+        if (settleT <= 0) {
+          settling = false; // 정지 해제 → 아래 폭발 분기로 넘어감
+          exploding = true;
+        }
       } else {
         explodeT += dt;
         const p = Math.min(explodeT / EXPLODE_DUR, 1);
@@ -151,7 +195,11 @@ function BallIntro({ onDone }: { onDone: () => void }) {
   return (
     <div ref={containerRef} className="absolute inset-0 bg-white">
       <p className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 text-2xl font-extrabold text-gray-6">
-        오늘의 터
+        {/* '오'만 분리 — 공이 닿는 순간 색을 공과 일치시키기 위함 */}
+        <span ref={oCharRef} className="transition-colors duration-100">
+          오
+        </span>
+        늘의 터
       </p>
       <span
         ref={ballRef}

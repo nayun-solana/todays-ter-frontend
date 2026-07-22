@@ -25,6 +25,9 @@ const OHAENG_COLOR: Record<OhaengKey, string> = {
   metal: '#515151',
 };
 
+// 오행 라벨은 한자로 통일(수/목/화/토/금) — OHAENG_LIST.label 그대로 사용.
+// Figma 홈 시안이 earth/fire만 순우리말(흙/불)로 혼용했으나 디자이너 확인 결과 한자 통일로 정리됨.
+
 /**
  * 오행별 기운 설명·루틴은 아직 확정 카피가 없어 5종 공통 placeholder를 쓴다(현 시안도 5종 동일).
  * 오행별 카피가 나오면 아래 값을 오행별로 분리하면 됨.

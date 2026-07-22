@@ -19,7 +19,7 @@ export default function Button({
       type="button"
       disabled={disabled}
       className={cn(
-        'rounded-btn px-5 py-4 font-sans text-lg font-extrabold shadow-btn',
+        'flex h-12 w-full items-center justify-center rounded-btn text-sm font-bold shadow-btn',
         variant === 'primary' && 'bg-primary text-white',
         variant === 'secondary' && 'border border-gray-3 bg-gray-1 text-primary',
         fullWidth && 'w-full',

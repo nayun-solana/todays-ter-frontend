@@ -1,12 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
 import { useParams } from 'react-router';
 
-// import { useEffect, useState } from 'react';
 // import type { ApiError } from '../../api/types';
 // import { getVisitedReviewDetail } from './api/getVisitedReviewDetail';
 import type { VisitedReviewDetail } from './api/types';
 import Button from './components/Button';
+import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
+import ReviewMoreMenu from './components/ReviewMoreMenu';
 import StarRating from './components/StarRating';
 
 /** "2025-06-28" → "2025.06.28" */
@@ -38,6 +40,22 @@ export default function ReviewDetailPage() {
   const { id: visitId } = useParams();
   const review = DUMMY_REVIEW;
   const photos = review.imageUrls;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isMenuOpen]);
 
   // const [result, setResult] = useState<FetchResult | null>(null);
   //
@@ -79,13 +97,30 @@ export default function ReviewDetailPage() {
       <ReviewHeader
         title="후기 상세"
         rightSlot={
-          <button
-            type="button"
-            aria-label="더보기"
-            className="flex size-6 shrink-0 items-center justify-center text-gray-5"
-          >
-            <EllipsisVertical size={24} aria-hidden />
-          </button>
+          <div ref={menuRef} className="relative shrink-0">
+            <button
+              type="button"
+              aria-label="더보기"
+              aria-expanded={isMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className="flex size-6 items-center justify-center text-gray-5"
+            >
+              <EllipsisVertical size={24} aria-hidden />
+            </button>
+            {isMenuOpen ? (
+              <ReviewMoreMenu
+                onEdit={() => {
+                  setIsMenuOpen(false);
+                  // TODO: 후기 수정 화면 이동
+                }}
+                onDelete={() => {
+                  setIsMenuOpen(false);
+                  setIsDeleteModalOpen(true);
+                }}
+              />
+            ) : null}
+          </div>
         }
       />
 
@@ -127,6 +162,16 @@ export default function ReviewDetailPage() {
 
         <Button className="mx-5 mb-5 w-auto">스토리 공유하기</Button>
       </div>
+
+      {isDeleteModalOpen ? (
+        <DeleteReviewModal
+          onCancel={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => {
+            // TODO: 후기 삭제 API 연동
+            setIsDeleteModalOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

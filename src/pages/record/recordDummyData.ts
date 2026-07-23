@@ -1,94 +1,68 @@
-import type { PlaceDay } from './components/RecordPlaceCard';
+import type { MyPlaceItem } from './api/types';
 
-export type Place = {
-  id: string;
-  name: string;
-  categories: readonly string[];
-  date: string;
-  day: PlaceDay;
-};
-
-export type VisitedPlace = Place & {
-  /** 공유 카드로 등록된 다녀온 터인지 */
-  isShared: boolean;
-  shareMessage?: string;
-  imageUrl?: string;
-};
-
-/** 저장한 터 — 독립 목록 */
-export const SAVED_PLACES: readonly Place[] = [
+/** 저장한 터 — API 연동 전 더미 */
+export const SAVED_PLACES: readonly MyPlaceItem[] = [
   {
-    id: 's1',
-    name: '경복궁',
+    placeId: 1,
+    placeName: '경복궁',
+    thumbnailUrl: '',
     categories: ['재물', '커리어'],
-    date: '06/29',
-    day: '토',
+    savedDate: '2026-06-29',
+    element: '토',
   },
   {
-    id: 's2',
-    name: '청계천',
+    placeId: 2,
+    placeName: '청계천',
+    thumbnailUrl: '',
     categories: ['연애', '건강'],
-    date: '06/28',
-    day: '수',
+    savedDate: '2026-06-28',
+    element: '수',
   },
   {
-    id: 's3',
-    name: '용산 호텔 라운지',
+    placeId: 3,
+    placeName: '용산 호텔 라운지',
+    thumbnailUrl: '',
     categories: ['커리어'],
-    date: '06/27',
-    day: '화',
+    savedDate: '2026-06-27',
+    element: '화',
   },
 ];
 
-/**
- * 다녀온 터 — 공유 카드는 이 목록의 부분집합.
- * isShared: true 인 항목만 공유 카드 탭에 노출.
- */
-export const VISITED_PLACES: readonly VisitedPlace[] = [
+/** 다녀온 터 — API 연동 전 더미 */
+export const VISITED_PLACES: readonly MyPlaceItem[] = [
   {
-    id: 'v1',
-    name: '남산타워',
-    categories: ['연애'],
-    date: '06/25',
-    day: '토',
-    isShared: true,
-    shareMessage: '오늘은 흙의 기운 받으러 남산타워로!',
-    imageUrl:
+    placeId: 10,
+    placeName: '남산타워',
+    thumbnailUrl:
       'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
+    categories: ['연애'],
+    savedDate: '2026-06-25',
+    element: '토',
   },
   {
-    id: 'v2',
-    name: '한강공원',
-    categories: ['건강'],
-    date: '06/24',
-    day: '수',
-    isShared: true,
-    shareMessage: '오늘은 물의 기운 받으러 한강공원으로!',
-    imageUrl:
+    placeId: 11,
+    placeName: '한강공원',
+    thumbnailUrl:
       'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
-  },
-  {
-    id: 'v3',
-    name: '성수동 카페거리',
-    categories: ['재물', '커리어'],
-    date: '06/23',
-    day: '화',
-    isShared: true,
-    shareMessage: '오늘은 불의 기운 받으러 성수동으로!',
-    imageUrl:
-      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
-  },
-  {
-    id: 'v4',
-    name: '북촌 한옥마을',
     categories: ['건강'],
-    date: '06/22',
-    day: '목',
-    isShared: false,
+    savedDate: '2026-06-24',
+    element: '수',
+  },
+  {
+    placeId: 12,
+    placeName: '성수동 카페거리',
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
+    categories: ['재물', '커리어'],
+    savedDate: '2026-06-23',
+    element: '화',
+  },
+  {
+    placeId: 13,
+    placeName: '북촌 한옥마을',
+    thumbnailUrl: '',
+    categories: ['건강'],
+    savedDate: '2026-06-22',
+    element: '목',
   },
 ];
-
-/** 공유 카드 = 다녀온 터 중 isShared 인 항목 */
-export const SHARED_PLACES: readonly VisitedPlace[] = VISITED_PLACES.filter(
-  (place) => place.isShared,
-);

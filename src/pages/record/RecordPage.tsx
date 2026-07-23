@@ -2,13 +2,11 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
+// import type { ApiError } from '../../api/types';
+// import { getMyPlaces } from './api/getMyPlaces';
+import type { MyPlaceItem } from './api/types';
 import RecordPlaceCard from './components/RecordPlaceCard';
-import {
-  SAVED_PLACES,
-  VISITED_PLACES,
-  type Place,
-  type VisitedPlace,
-} from './recordDummyData';
+import { SAVED_PLACES, VISITED_PLACES } from './recordDummyData';
 
 type RecordTab = 'saved' | 'visited';
 
@@ -17,11 +15,14 @@ const RECORD_TABS: readonly PillTabItem<RecordTab>[] = [
   { value: 'visited', label: '다녀온 터' },
 ];
 
-function dateLabel(date: string) {
-  return `저장일 ${date}`;
+/** "2026-06-29" → "저장일 06/29" */
+function dateLabel(savedDate: string) {
+  const [, month, day] = savedDate.split('-');
+  if (!month || !day) return `저장일 ${savedDate}`;
+  return `저장일 ${month}/${day}`;
 }
 
-function placesForTab(tab: RecordTab): readonly Place[] {
+function placesForTab(tab: RecordTab): readonly MyPlaceItem[] {
   switch (tab) {
     case 'saved':
       return SAVED_PLACES;
@@ -30,23 +31,32 @@ function placesForTab(tab: RecordTab): readonly Place[] {
   }
 }
 
-type ShareablePlace = VisitedPlace & {
-  shareMessage: string;
-  imageUrl: string;
-};
-
-function isShareablePlace(place: Place): place is ShareablePlace {
-  const candidate = place as VisitedPlace;
-  return (
-    candidate.isShared === true &&
-    typeof candidate.shareMessage === 'string' &&
-    typeof candidate.imageUrl === 'string'
-  );
-}
-
 export default function RecordPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
+
+  // API 연동 시 사용
+  // const type: MyPlaceListType = activeTab === 'saved' ? 'saved' : 'recordId';
+  // const [places, setPlaces] = useState<MyPlaceItem[]>([]);
+  //
+  // useEffect(() => {
+  //   let cancelled = false;
+  //
+  //   getMyPlaces(type)
+  //     .then((data) => {
+  //       if (!cancelled) setPlaces(data);
+  //     })
+  //     .catch((error: ApiError) => {
+  //       if (!cancelled) {
+  //         console.error(error.message);
+  //         setPlaces([]);
+  //       }
+  //     });
+  //
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [type]);
 
   const places = useMemo(() => placesForTab(activeTab), [activeTab]);
 
@@ -61,16 +71,16 @@ export default function RecordPage() {
 
         <ul className="mt-4 flex flex-col gap-3">
           {places.map((place) => (
-            <li key={place.id}>
+            <li key={place.placeId}>
               <RecordPlaceCard
-                name={place.name}
+                name={place.placeName}
                 categories={place.categories}
-                dateLabel={dateLabel(place.date)}
-                day={place.day}
-                imageUrl={isShareablePlace(place) ? place.imageUrl : undefined}
+                dateLabel={dateLabel(place.savedDate)}
+                day={place.element}
+                imageUrl={place.thumbnailUrl || undefined}
                 onClick={
                   activeTab === 'visited'
-                    ? () => navigate(`/review/${place.id}`)
+                    ? () => navigate(`/review/${place.placeId}`)
                     : undefined
                 }
               />

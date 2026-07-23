@@ -17,6 +17,7 @@ import ReportDetailPage from '../pages/onboarding/ReportDetailPage';
 import PlaceDetailPage from '../pages/place/PlaceDetailPage';
 import PlaceReviewPage from '../pages/review/PlaceReviewPage';
 import ReviewCompletePage from '../pages/review/ReviewCompletePage';
+import ReviewDetailPage from '../pages/review/ReviewDetailPage';
 import ReviewPage from '../pages/review/ReviewPage';
 import MatchedTerPage from '../pages/matched-ter/MatchedTerPage';
 import LoginPage from '../pages/login/LoginPage';
@@ -84,6 +85,7 @@ export default function AppRoutes() {
         <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
         <Route path="/place/:id/review" element={<PlaceReviewPage />} />
         <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
+        <Route path="/review/:id" element={<ReviewDetailPage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
 
         <Route path="/report/:id" element={<ReportPage />} />

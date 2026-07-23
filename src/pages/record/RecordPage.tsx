@@ -68,6 +68,11 @@ export default function RecordPage() {
                 dateLabel={dateLabel(place.date)}
                 day={place.day}
                 imageUrl={isShareablePlace(place) ? place.imageUrl : undefined}
+                onClick={
+                  activeTab === 'visited'
+                    ? () => navigate(`/review/${place.id}`)
+                    : undefined
+                }
               />
             </li>
           ))}

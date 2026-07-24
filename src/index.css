@@ -54,6 +54,9 @@
   /* 브랜드 */
   --color-kakao: #fee500; /* 카카오 로그인 버튼 */
 
+  /* Animation */
+  --animate-onboarding-shake: onboarding-shake 0.4s ease-in-out;
+
   /* 오행(五行) — Figma variables 확정값 (오행_목/불/흙/금/물) */
   --color-ohaeng-wood: #a0dd00; /* 목 */
   --color-ohaeng-fire: #ff8b8d; /* 화 */
@@ -78,45 +81,6 @@ body {
   background: #fff;
 }
 
-/* ──────────────────────────────────────────────
-   로그인 인트로 애니메이션 (통통 공 → 폭발 → 로그인)
-   공: 화면 밖 왼쪽에서 진입 → 통통 튀며 '오'에 안착 → 폭발하여 화면 채움.
-   좌표는 Figma 9단계 키프레임(375x812) 기준.
-   ────────────────────────────────────────────── */
-@keyframes login-ball-bounce {
-  0% {
-    left: -28%;
-    top: 51%;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  18% {
-    left: 11%;
-    top: 35%;
-  }
-  36% {
-    left: 21%;
-    top: 43%;
-  }
-  54% {
-    left: 34%;
-    top: 38%;
-  }
-  72% {
-    left: 39%;
-    top: 44%;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  80% {
-    left: 39%;
-    top: 44%;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(48);
-  }
-}
 
 @keyframes login-header-in {
   from {
@@ -137,5 +101,21 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 온보딩1 미래날짜 입력 시 흔들림 */
+@keyframes onboarding-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
   }
 }

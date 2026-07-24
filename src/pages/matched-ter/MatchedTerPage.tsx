@@ -21,21 +21,24 @@ export default function MatchedTerPage() {
     <div className="flex min-h-screen flex-col bg-white pb-28">
       <MatchedTerAppBar title="나와 어울리는 터" />
 
-      <div className="flex flex-col gap-4 px-5 pt-4">
+      <div className="flex flex-col gap-5 px-5 pt-4">
         <ImageCarousel />
         <h2 className="text-xl font-extrabold text-gray-6">청계천 모전교</h2>
-        <MatchChips meta={meta} matchRate={87} hashtag="감정 회복" />
-        <WhyMatchCard
-          meta={meta}
-          reason={
-            '계수님은 수(水)와 목(木)의 흐름이 강하고,\n오늘은 감정 정리와 회복이 필요한 날이에요.\n이 터는 수기(水氣)가 강해 현재 흐름과 잘 맞습니다.'
-          }
-          points={['주 오행 水', '오늘 흐름 안정', '연애운 회복']}
-        />
-        <ActionSuggestionCard
-          meta={meta}
-          suggestion={'오늘은 30분 정도 물길을 따라 걸으며\n마음을 정리해보세요.'}
-        />
+        {/* 매칭칩·왜맞나요·행동제안은 12px 간격 (Figma) */}
+        <div className="flex flex-col gap-3">
+          <MatchChips meta={meta} matchRate={87} hashtag="감정 회복" />
+          <WhyMatchCard
+            meta={meta}
+            reason={
+              '계수님은 수(水)와 목(木)의 흐름이 강하고,\n오늘은 감정 정리와 회복이 필요한 날이에요.\n이 터는 수기(水氣)가 강해 현재 흐름과 잘 맞습니다.'
+            }
+            points={['주 오행 水', '오늘 흐름 안정', '연애운 회복']}
+          />
+          <ActionSuggestionCard
+            meta={meta}
+            suggestion={'오늘은 30분 정도 물길을 따라 걸으며\n마음을 정리해보세요.'}
+          />
+        </div>
       </div>
 
       {/* 하단 고정 액션바 */}

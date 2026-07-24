@@ -14,7 +14,7 @@ interface WhyMatchCardProps {
 /** 나와 어울리는 터 "왜 나에게 맞나요?" 카드 + 사주 매칭 포인트. */
 export default function WhyMatchCard({ meta, reason, points }: WhyMatchCardProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-[20px] border border-gray-3 bg-white p-5">
+    <div className="flex flex-col gap-4 rounded-[20px] border border-gray-2 bg-white p-5 shadow-[0px_2px_2px_0px_rgba(0,0,0,0.05)]">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <img src={info} alt="" className="size-4" />

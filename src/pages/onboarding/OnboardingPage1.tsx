@@ -3,54 +3,135 @@ import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
-import ProgressBar from '../../components/ProgressBar';
 import { cn } from '../../lib/cn';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
+import WheelSelect, { type WheelColumnSpec } from './components/WheelSelect';
 
 type CalendarType = 'solar' | 'lunar';
-
-/** 오늘 날짜(yyyy-mm-dd). 미래 생년월일 선택 방지용 max 값. */
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+type OpenField = 'date' | 'time' | null;
+interface DateValue {
+  year: number;
+  month: number;
+  day: number;
+}
+interface TimeValue {
+  hour: number;
+  minute: number;
 }
 
-/** 온보딩1 — 내 사주 입력 (달력 종류 → 생년월일 → 태어난 시간). */
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 1 }, (_, i) => 1900 + i);
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const DEFAULT_DATE: DateValue = { year: 2000, month: 1, day: 1 };
+const DEFAULT_TIME: TimeValue = { hour: 0, minute: 0 };
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month, 0).getDate();
+}
+
+function isFutureDate({ year, month, day }: DateValue) {
+  const d = new Date(year, month - 1, day);
+  d.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d.getTime() > today.getTime();
+}
+
+function formatHour(hour: number) {
+  return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
+}
+
+/** 온보딩1 — 내 사주 입력 (달력 종류 → 생년월일 → 태어난 시간). 날짜/시간은 휠 드롭다운. */
 export default function OnboardingPage1() {
   const navigate = useNavigate();
 
   const [calendarType, setCalendarType] = useState<CalendarType | null>(null);
-  const [birthDate, setBirthDate] = useState('');
-  const [birthTime, setBirthTime] = useState('');
+  // date/time은 휠 구동용으로 항상 값을 갖되, 사용자가 실제로 고른 뒤에만 '입력됨'(touched)으로 취급한다.
+  const [date, setDate] = useState<DateValue>(DEFAULT_DATE);
+  const [dateTouched, setDateTouched] = useState(false);
+  // 생년월일 드롭다운을 한 번 닫아(입력 완료) 태어난 시간을 활성화했는지. 한 번 켜지면 유지.
+  const [dateConfirmed, setDateConfirmed] = useState(false);
+  const [time, setTime] = useState<TimeValue>(DEFAULT_TIME);
+  const [timeTouched, setTimeTouched] = useState(false);
   const [unknownTime, setUnknownTime] = useState(false);
+  const [openField, setOpenField] = useState<OpenField>(null);
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
 
-  const canSubmit =
-    calendarType !== null && birthDate !== '' && (unknownTime || birthTime !== '');
+  const dateError = dateTouched && isFutureDate(date);
+  const timeFilled = timeTouched || unknownTime;
+  const canSubmit = calendarType !== null && dateTouched && !dateError && timeFilled;
 
-  /** '시간 모름' 선택 → 출생시간 없이 진행 안내 바텀시트를 연다. */
-  const openSkipSheet = () => {
-    setUnknownTime(true);
-    setBirthTime('');
-    setSkipSheetOpen(true);
+  const toggleDate = () =>
+    setOpenField((f) => {
+      // 닫는 동작이고 유효한 날짜가 입력됐으면 태어난 시간을 활성화한다.
+      if (f === 'date') {
+        if (dateTouched && !isFutureDate(date)) setDateConfirmed(true);
+        return null;
+      }
+      return 'date';
+    });
+  const toggleTime = () => {
+    setUnknownTime(false);
+    setOpenField((f) => (f === 'time' ? null : 'time'));
   };
 
-  /** 바텀시트 '출생시간 입력하기' → 시간 입력을 계속한다. */
+  const patchDate = (patch: Partial<DateValue>) => {
+    setDateTouched(true);
+    setDate((prev) => {
+      const next = { ...prev, ...patch };
+      return { ...next, day: Math.min(next.day, daysInMonth(next.year, next.month)) };
+    });
+  };
+
+  const patchTime = (patch: Partial<TimeValue>) => {
+    setTimeTouched(true);
+    setTime((prev) => ({ ...prev, ...patch }));
+  };
+
+  /** '시간 모름' → 출생시간 없이 진행 안내 바텀시트. */
+  const openSkipSheet = () => {
+    setUnknownTime(true);
+    setOpenField(null);
+    setSkipSheetOpen(true);
+  };
   const cancelSkip = () => {
     setUnknownTime(false);
     setSkipSheetOpen(false);
   };
-
-  /** 바텀시트 '간이 리포트 생성하기' → 출생시간 없이 분석으로 진행한다. */
   const confirmSkip = () => {
     setSkipSheetOpen(false);
     // TODO: 사주 정보(간이) 저장 후 분석(온보딩2)으로 이동
     navigate('/onboarding/step-2');
   };
 
+  const dateColumns: WheelColumnSpec[] = [
+    { options: YEARS, value: date.year, format: (v) => `${v}년`, onChange: (v) => patchDate({ year: v }) },
+    { options: MONTHS, value: date.month, format: (v) => `${v}월`, onChange: (v) => patchDate({ month: v }) },
+    {
+      options: Array.from({ length: daysInMonth(date.year, date.month) }, (_, i) => i + 1),
+      value: date.day,
+      format: (v) => `${v}일`,
+      onChange: (v) => patchDate({ day: v }),
+    },
+  ];
+
+  const timeColumns: WheelColumnSpec[] = [
+    { options: HOURS, value: time.hour, format: formatHour, onChange: (v) => patchTime({ hour: v }) },
+    { options: MINUTES, value: time.minute, format: (v) => `${v}분`, onChange: (v) => patchTime({ minute: v }) },
+  ];
+
   return (
     <div className="flex min-h-screen w-full flex-col px-5 pb-8 pt-4">
-      {/* 상단 진행바 — 사주입력은 온보딩 1/3 단계 (시안 3분할 세그먼트를 연속형으로 근사) */}
-      <ProgressBar step={1} total={3} />
+      {/* 상단 진행바 — 3분할 세그먼트, 1/3 (Figma Component 5/베리언트4) */}
+      <div className="flex gap-1">
+        <span className="h-1 flex-1 rounded-full bg-primary" />
+        <span className="h-1 flex-1 rounded-full bg-gray-disabled" />
+        <span className="h-1 flex-1 rounded-full bg-gray-disabled" />
+      </div>
 
       <header className="mt-11 flex flex-col gap-4">
         <p className="text-base font-bold text-primary">내 사주 입력</p>
@@ -94,37 +175,28 @@ export default function OnboardingPage1() {
 
         {/* 생년월일 — 달력 종류 선택 후 노출 */}
         {calendarType !== null && (
-          <section className="flex flex-col gap-3">
-            <p className="text-sm font-bold text-gray-6">생년월일</p>
-            <input
-              type="date"
-              value={birthDate}
-              max={todayISO()}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className={cn(
-                'w-full border-b bg-transparent pb-2 text-sm font-bold outline-none',
-                birthDate ? 'border-primary text-primary' : 'border-gray-3 text-gray-disabled',
-              )}
-            />
-          </section>
+          <WheelSelect
+            label="생년월일"
+            display={dateTouched ? `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일` : '0000년 00월 00일'}
+            filled={dateTouched}
+            open={openField === 'date'}
+            onToggle={toggleDate}
+            columns={dateColumns}
+            error={dateError ? '지금보다 미래의 날짜는 선택할 수 없어요.' : undefined}
+            shake={dateError}
+          />
         )}
 
-        {/* 태어난 시간 — 생년월일 입력 후 노출 */}
-        {birthDate !== '' && (
-          <section className="flex flex-col gap-3">
-            <p className="text-sm font-bold text-gray-6">태어난 시간</p>
-            <div className="flex items-end justify-between gap-3">
-              <input
-                type="time"
-                value={birthTime}
-                disabled={unknownTime}
-                onChange={(e) => setBirthTime(e.target.value)}
-                className={cn(
-                  'min-w-0 flex-1 border-b bg-transparent pb-2 text-sm font-bold outline-none',
-                  unknownTime && 'opacity-40',
-                  birthTime ? 'border-primary text-primary' : 'border-gray-3 text-gray-disabled',
-                )}
-              />
+        {/* 태어난 시간 — 생년월일 드롭다운을 닫아 입력을 마친 뒤에만 노출 */}
+        {dateConfirmed && !dateError && (
+          <WheelSelect
+            label="태어난 시간"
+            display={unknownTime ? '시간 모름' : timeTouched ? `${pad(time.hour)}:${pad(time.minute)}` : '00:00'}
+            filled={timeFilled}
+            open={openField === 'time'}
+            onToggle={toggleTime}
+            columns={timeColumns}
+            trailing={
               <button
                 type="button"
                 onClick={openSkipSheet}
@@ -145,8 +217,8 @@ export default function OnboardingPage1() {
                 </span>
                 시간 모름
               </button>
-            </div>
-          </section>
+            }
+          />
         )}
       </div>
 

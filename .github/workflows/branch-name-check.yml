@@ -14,7 +14,7 @@ jobs:
       - name: Validate branch name
         run: |
           branch="${{ github.head_ref }}"
-          pattern='^feature/todays-ter-[0-9]+$'
+          pattern='^(feature|fix|chore|design|docs|refactor|test)/todays-ter-[0-9]+$'
 
           if [ "$branch" = "feature/4-issue-tiket" ]; then
             echo "Allowing migration branch: $branch"
@@ -23,8 +23,8 @@ jobs:
 
           if [[ ! "$branch" =~ $pattern ]]; then
             echo "Invalid branch name: $branch"
-            echo "Expected format: feature/todays-ter-<issue-number>"
-            echo "Example: feature/todays-ter-13"
+            echo "Expected format: <type>/todays-ter-<issue-number>"
+            echo "Example: chore/todays-ter-13"
             exit 1
           fi
 

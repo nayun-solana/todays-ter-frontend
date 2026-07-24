@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
+import {
+  useInitGuestSession,
+  useSaveGuestSaju,
+} from '../../hooks/onboarding/useGuestOnboarding';
+import type { GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
 import WheelSelect, { type WheelColumnSpec } from './components/WheelSelect';
 
@@ -61,9 +66,36 @@ export default function OnboardingPage1() {
   const [openField, setOpenField] = useState<OpenField>(null);
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
 
+  // 게스트 세션 보장(진입 경로 무관 안전망). 서버 idempotent — 쿠키 있으면 재사용.
+  const initSession = useInitGuestSession();
+  useEffect(() => {
+    initSession.mutate();
+    // 마운트 시 1회. mutate는 안정 참조.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveSaju = useSaveGuestSaju();
+
   const dateError = dateTouched && isFutureDate(date);
   const timeFilled = timeTouched || unknownTime;
   const canSubmit = calendarType !== null && dateTouched && !dateError && timeFilled;
+
+  /** 폼 상태 → 사주 저장 요청. (calendarType 대문자, 날짜/시간 문자열, 시간모름 시 null) */
+  const buildSajuRequest = (): GuestSajuRequest => ({
+    calendarType: calendarType === 'lunar' ? 'LUNAR' : 'SOLAR',
+    birthDate: `${date.year}-${pad(date.month)}-${pad(date.day)}`,
+    birthTime: unknownTime ? null : `${pad(time.hour)}:${pad(time.minute)}`,
+    birthTimeUnknown: unknownTime,
+  });
+
+  /** 사주 저장 후 분석(온보딩2)으로 이동. */
+  const submitSaju = () => {
+    if (saveSaju.isPending) return; // 중복 제출 방지
+    saveSaju.mutate(buildSajuRequest(), {
+      onSuccess: () => navigate('/onboarding/step-2'),
+      // TODO: 에러 UX(토스트) — 현재는 버튼 재시도 가능 상태 유지
+    });
+  };
 
   const toggleDate = () =>
     setOpenField((f) => {
@@ -104,8 +136,8 @@ export default function OnboardingPage1() {
   };
   const confirmSkip = () => {
     setSkipSheetOpen(false);
-    // TODO: 사주 정보(간이) 저장 후 분석(온보딩2)으로 이동
-    navigate('/onboarding/step-2');
+    // 시간 모름(unknownTime=true) 상태로 사주 저장 후 진행.
+    submitSaju();
   };
 
   const dateColumns: WheelColumnSpec[] = [
@@ -225,12 +257,9 @@ export default function OnboardingPage1() {
       <Button
         variant="primary"
         fullWidth
-        disabled={!canSubmit}
+        disabled={!canSubmit || saveSaju.isPending}
         className="mt-auto"
-        onClick={() => {
-          // TODO: 사주 정보(달력종류/생년월일/시간) 저장 후 분석(온보딩2)으로 이동
-          navigate('/onboarding/step-2');
-        }}
+        onClick={submitSaju}
       >
         내 기운 확인하기
       </Button>

@@ -2,14 +2,14 @@ import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import placeSample from '../../assets/home/place-sample.jpg';
-import type { OhaengKey } from '../../lib/ohaeng';
+import { useTodayEnergy } from '../../hooks/home/useHomeEnergy';
+import { toOhaengKey } from '../../types/home/homeEnergy';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
 import RoutineChips from './components/RoutineChips';
 import { OHAENG_HOME } from './ohaeng';
 
-// TODO: 오행/인사말/추천 터는 사주·서버 데이터 연동 예정. 현재 물(水) variant 고정.
-const HOME_OHAENG: OhaengKey = 'water';
+// BE 미배포라 오늘의 기운은 MSW mock(GET /home/today-energy). 로드 전 fallback = water.
 // TODO: 실제 로그인 상태 연동. true면 첫 카드 이후를 블러+로그인 게이트로 가린다(로그인 전 홈).
 const IS_GUEST = false;
 
@@ -42,7 +42,11 @@ const RECOMMENDED_PLACES = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const theme = OHAENG_HOME[HOME_OHAENG];
+
+  // 오늘 나의 기운(오행) — 서버(mock). 로드 전엔 water fallback.
+  const { data: energy } = useTodayEnergy();
+  const ohaengKey = energy ? toOhaengKey(energy.element) : 'water';
+  const theme = OHAENG_HOME[ohaengKey];
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
   const renderCard = ({ id, ...card }: (typeof RECOMMENDED_PLACES)[number]) => (
@@ -68,7 +72,11 @@ export default function HomePage() {
           </div>
         </header>
 
-        <EnergyCard element={theme.key} label={theme.label} desc={theme.energyDesc} />
+        <EnergyCard
+          element={theme.key}
+          label={energy?.label ?? theme.label}
+          desc={energy?.description ?? theme.energyDesc}
+        />
         <RoutineChips title={theme.routineTitle} routines={theme.routines} />
 
         {/* 오늘 가장 잘 맞는 터 */}

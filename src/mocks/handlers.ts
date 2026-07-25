@@ -142,7 +142,7 @@ export const handlers = [
   ),
 
   // GET /places/explore-filters — 탐색 필터와 테마 metadata
-  http.get('/places/explore-filters', () =>
+  http.get('*/places/explore-filters', () =>
     ok({
       regions: [
         { code: 'ALL', name: '전체', displayOrder: 0 },
@@ -172,13 +172,13 @@ export const handlers = [
   ),
 
   // 동적 /places/:placeId보다 먼저 둬서 editor-picks가 placeId로 잡히지 않게 한다.
-  http.get('/places/editor-picks', ({ request }) => {
+  http.get('*/places/editor-picks', ({ request }) => {
     const limit = Number(new URL(request.url).searchParams.get('limit') ?? 3);
     return ok({ content: EDITOR_PICKS.slice(0, limit) });
   }),
 
   // GET /places — 탐색 장소 목록
-  http.get('/places', ({ request }) => {
+  http.get('*/places', ({ request }) => {
     const url = new URL(request.url);
     const regionCode = url.searchParams.get('regionCode');
     const elementType = url.searchParams.get('elementType');
@@ -216,7 +216,7 @@ export const handlers = [
   }),
 
   // GET /places/:placeId — 장소 상세 기본 정보
-  http.get('/places/:placeId', ({ params }) => {
+  http.get('*/places/:placeId', ({ params }) => {
     const place = SEARCH_PLACES.find((item) => String(item.placeId) === params.placeId);
 
     if (!place) {
@@ -250,7 +250,7 @@ export const handlers = [
   }),
 
   // GET /mypage — 마이페이지 프로필
-  http.get('/mypage', () =>
+  http.get('*/mypage', () =>
     ok({
       nickname: '계수',
       profileImageUrl: null,
@@ -259,7 +259,7 @@ export const handlers = [
   ),
 
   // GET /mypage/social-connections — 소셜 계정 연동 상태
-  http.get('/mypage/social-connections', () =>
+  http.get('*/mypage/social-connections', () =>
     ok({
       connections: [
         {

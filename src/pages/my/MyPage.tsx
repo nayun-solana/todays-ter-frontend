@@ -46,7 +46,7 @@ export default function MyPage() {
             {profile?.profileImageUrl ? (
               <img
                 src={profile.profileImageUrl}
-                alt=""
+                alt={`${profile.nickname} 프로필`}
                 className="size-25 rounded-full object-cover"
               />
             ) : (

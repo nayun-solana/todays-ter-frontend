@@ -214,4 +214,38 @@ export const handlers = [
       },
     });
   }),
+
+  // GET /places/:placeId — 장소 상세 기본 정보
+  http.get('/places/:placeId', ({ params }) => {
+    const place = SEARCH_PLACES.find((item) => String(item.placeId) === params.placeId);
+
+    if (!place) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: 'PLACE_NOT_FOUND',
+          message: '존재하지 않는 장소입니다.',
+        },
+        { status: 404 },
+      );
+    }
+
+    return ok({
+      placeId: place.placeId,
+      placeName: place.placeName,
+      imageUrl: null,
+      element: place.element.name,
+      hashtags: [place.theme.name.replace(/ 터$/, '')],
+      description: {
+        question: '이 터의 특징은 무엇인가요?',
+        answer: place.summary,
+      },
+      address: place.placeId === 2 ? '서울 중구 무교동' : '서울특별시',
+      latitude: 37.5665,
+      longitude: 126.978,
+      reviewCount: 9,
+      isSaved: false,
+      isVisited: false,
+    });
+  }),
 ];

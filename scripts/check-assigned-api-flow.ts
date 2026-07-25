@@ -16,6 +16,12 @@ try {
   const searchHooks = (await server.ssrLoadModule(
     '/src/hooks/search/useSearch.ts',
   )) as typeof import('../src/hooks/search/useSearch');
+  const placeApi = (await server.ssrLoadModule(
+    '/src/api/place.ts',
+  )) as typeof import('../src/api/place');
+  const placeHooks = (await server.ssrLoadModule(
+    '/src/hooks/place/usePlace.ts',
+  )) as typeof import('../src/hooks/place/usePlace');
 
   const axiosInstance = axiosModule.default;
   const requests: Array<{ url: string; params?: unknown }> = [];
@@ -31,7 +37,7 @@ try {
             themes: [{ code: 'LOVE', name: '연애 터', placeCount: 1, displayOrder: 1 }],
             elements: [{ code: 'ALL', name: '전체', displayOrder: 0 }],
           }
-        : url === '/places/editor-picks'
+      : url === '/places/editor-picks'
           ? {
               content: [
                 {
@@ -46,7 +52,25 @@ try {
                 },
               ],
             }
-          : {
+          : url === '/places/2'
+            ? {
+                placeId: 2,
+                placeName: '청계천 모전교',
+                imageUrl: null,
+                element: '수',
+                hashtags: ['감정 회복'],
+                description: {
+                  question: '이 터의 특징은 무엇인가요?',
+                  answer: '수 기운이 강한 장소예요.',
+                },
+                address: '서울 중구 무교동',
+                latitude: 37.5665,
+                longitude: 126.978,
+                reviewCount: 9,
+                isSaved: false,
+                isVisited: false,
+              }
+            : {
               appliedFilters: {
                 keyword: null,
                 regionCode: 'SEOUL',
@@ -71,6 +95,7 @@ try {
       size: 20,
     });
     await searchApi.getEditorPicks(3);
+    await placeApi.getPlaceDetail('2');
   } finally {
     axiosInstance.get = originalGet;
   }
@@ -82,12 +107,14 @@ try {
       params: { regionCode: 'SEOUL', elementType: 'WATER', page: 0, size: 20 },
     },
     { url: '/places/editor-picks', params: { limit: 3 } },
+    { url: '/places/2', params: undefined },
   ]);
   assert.deepEqual(searchHooks.searchKeys.places({ regionCode: 'SEOUL' }), [
     'search',
     'places',
     { regionCode: 'SEOUL' },
   ]);
+  assert.deepEqual(placeHooks.placeKeys.detail('2'), ['places', 'detail', '2']);
 } finally {
   await server.close();
 }

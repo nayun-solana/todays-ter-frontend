@@ -38,7 +38,7 @@ export default function BottomNavBar({ active, onChange }: BottomNavBarProps) {
         <span
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute top-1 z-0 h-[54px] w-[92px] rounded-[30.5px] bg-gray-disabled',
+            'pointer-events-none absolute top-1 z-0 h-[54px] w-[92px] rounded-[30.5px] bg-gray-3',
             ACTIVE_BACKGROUND_POSITIONS[active],
           )}
         />

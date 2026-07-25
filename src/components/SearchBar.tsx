@@ -12,7 +12,7 @@ export default function SearchBar({ className, ...rest }: SearchBarProps) {
   return (
     <label
       className={cn(
-        'flex h-10 items-center gap-1.5 rounded-btn border border-gray-3 bg-white px-4 py-2',
+        'flex h-10 items-center gap-1.5 rounded-btn border border-gray-2 bg-white px-4 py-2',
         className,
       )}
     >

@@ -3,7 +3,7 @@ import { ChevronRightIcon } from '../../components/icons';
 
 export default function AccountLinkPage() {
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <PageHeader title="계정 연동 관리" backTo="/my" />
 
       <main className="px-5 pt-5">

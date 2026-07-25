@@ -246,7 +246,7 @@ export default function PlaceDetailPage() {
   const otherReviews = reviews.filter((review) => !review.isMine);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-[375px] flex-col bg-white pb-[106px]">
+    <div className="flex min-h-dvh w-full flex-col bg-white pb-[106px]">
       <PageHeader
         title="장소 상세"
         className="border-b-0"
@@ -348,7 +348,7 @@ export default function PlaceDetailPage() {
         )}
       </div>
 
-      <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] px-5">
+      <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
         <Button onClick={() => navigate(`/place/${id}/review`)}>다녀왔어요</Button>
         <Button variant="secondary">길찾기</Button>
       </div>

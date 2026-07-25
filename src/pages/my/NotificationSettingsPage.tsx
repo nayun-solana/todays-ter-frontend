@@ -86,7 +86,7 @@ function SelectionSheet({
         onClick={onClose}
         className="absolute inset-0 bg-black/60"
       />
-      <section className="relative h-[348px] w-full max-w-[375px] rounded-t-btn bg-white px-5 pt-8 pb-8">
+      <section className="relative h-[348px] w-full max-w-[390px] rounded-t-btn bg-white px-5 pt-8 pb-8">
         <span className="absolute top-4 left-1/2 h-1 w-10 -translate-x-1/2 rounded-lg bg-gray-3" />
         <h2 className="typo-head-2 text-gray-6">{isFrequency ? '알림 주기' : '알림 시간'}</h2>
         <p className="typo-sub-2 mt-2 text-gray-6">
@@ -159,7 +159,7 @@ export default function NotificationSettingsPage() {
   };
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <PageHeader title="알림 설정" backTo="/my" />
 
       <main className="space-y-5 px-5 pt-5 pb-8">

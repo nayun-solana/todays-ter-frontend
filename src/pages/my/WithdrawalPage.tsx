@@ -76,7 +76,7 @@ function WithdrawalCompletePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative mx-auto min-h-dvh max-w-[375px] bg-white">
+    <div className="relative min-h-dvh w-full bg-white">
       <button
         type="button"
         onClick={() => navigate('/login')}
@@ -101,7 +101,7 @@ function WithdrawalCompletePage() {
 
       <Button
         onClick={() => navigate('/login')}
-        className="fixed bottom-[30px] left-1/2 max-w-[335px] -translate-x-1/2"
+        className="fixed bottom-[30px] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         시작 화면으로 돌아가기
       </Button>
@@ -119,7 +119,7 @@ export default function WithdrawalPage() {
   if (completed) return <WithdrawalCompletePage />;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1 pb-24">
+    <div className="min-h-dvh w-full bg-gray-1 pb-24">
       <PageHeader title="회원 탈퇴" backTo="/my" />
 
       <main className="px-5 pt-5">
@@ -219,7 +219,7 @@ export default function WithdrawalPage() {
       <Button
         disabled={!reason || !confirmedNotice}
         onClick={() => setConfirmOpen(true)}
-        className="fixed bottom-[30px] left-1/2 max-w-[335px] -translate-x-1/2"
+        className="fixed bottom-[30px] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         탈퇴 신청하기
       </Button>

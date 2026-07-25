@@ -154,7 +154,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <header
         className={cn(
           'sticky top-0 z-40 flex h-[111px] items-end bg-white px-5 pb-3 transition-shadow',

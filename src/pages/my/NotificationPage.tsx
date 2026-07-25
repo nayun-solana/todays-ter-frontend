@@ -43,7 +43,7 @@ export default function NotificationPage() {
   }, []);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <PageHeader title="알림" leading="close" backTo="/my" />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8">

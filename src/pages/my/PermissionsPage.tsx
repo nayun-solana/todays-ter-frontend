@@ -20,7 +20,7 @@ export default function PermissionsPage() {
   const [permissions, setPermissions] = useState({ location: true, photo: true });
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <PageHeader title="권한 안내" backTo="/my" />
 
       <main className="space-y-5 px-5 pt-[17px]">

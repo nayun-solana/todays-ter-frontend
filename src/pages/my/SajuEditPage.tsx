@@ -260,7 +260,7 @@ export default function SajuEditPage() {
   };
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1 pb-28">
+    <div className="min-h-dvh w-full bg-gray-1 pb-28">
       <PageHeader title="사주 정보 수정" backTo="/my" />
 
       <main className="px-5 pt-5">
@@ -369,7 +369,7 @@ export default function SajuEditPage() {
       <Button
         disabled={!changed}
         onClick={() => navigate('/my/saju/complete')}
-        className="fixed bottom-8 left-1/2 w-[calc(100%-40px)] max-w-[335px] -translate-x-1/2"
+        className="fixed bottom-8 left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         저장하고 리포트 재생성
       </Button>
@@ -381,7 +381,7 @@ export function SajuReportCompletePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative mx-auto min-h-dvh max-w-[375px] bg-white">
+    <div className="relative min-h-dvh w-full bg-white">
       <button
         type="button"
         onClick={() => navigate('/my')}

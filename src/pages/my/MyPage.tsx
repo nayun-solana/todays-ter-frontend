@@ -32,7 +32,7 @@ export default function MyPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1">
+    <div className="min-h-dvh w-full bg-gray-1">
       <header className="flex h-[111px] items-end bg-white px-5 pb-3">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>

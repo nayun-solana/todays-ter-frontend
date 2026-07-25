@@ -248,4 +248,39 @@ export const handlers = [
       isVisited: false,
     });
   }),
+
+  // GET /mypage — 마이페이지 프로필
+  http.get('/mypage', () =>
+    ok({
+      nickname: '계수',
+      profileImageUrl: null,
+      email: 'gyesu@example.com',
+    }),
+  ),
+
+  // GET /mypage/social-connections — 소셜 계정 연동 상태
+  http.get('/mypage/social-connections', () =>
+    ok({
+      connections: [
+        {
+          provider: 'KAKAO',
+          isLinked: true,
+          linkedEmail: 'kakao@email.com',
+          linkedAt: '2026-07-19T10:00:00',
+        },
+        {
+          provider: 'NAVER',
+          isLinked: false,
+          linkedEmail: null,
+          linkedAt: null,
+        },
+        {
+          provider: 'APPLE',
+          isLinked: false,
+          linkedEmail: null,
+          linkedAt: null,
+        },
+      ],
+    }),
+  ),
 ];

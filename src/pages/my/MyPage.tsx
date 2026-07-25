@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import OhaengOrb from '../../components/OhaengOrb';
 import { ChevronRightIcon } from '../../components/icons';
+import { useMyPage } from '../../hooks/my/useMy';
 
 const SETTINGS: { label: string; path?: string }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
@@ -30,6 +31,8 @@ function DefaultAvatar() {
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const myPageQuery = useMyPage();
+  const profile = myPageQuery.data;
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
@@ -40,9 +43,16 @@ export default function MyPage() {
       <main className="px-5 pt-3">
         <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
           <div className="flex flex-col items-center gap-2">
-            <DefaultAvatar />
-            {/* TODO: API 연동 시 사용자 닉네임 */}
-            <p className="typo-head-4 text-gray-5">닉네임</p>
+            {profile?.profileImageUrl ? (
+              <img
+                src={profile.profileImageUrl}
+                alt=""
+                className="size-25 rounded-full object-cover"
+              />
+            ) : (
+              <DefaultAvatar />
+            )}
+            <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
           </div>
           <div className="flex gap-1">
             <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-water px-3 py-2 typo-body-4 text-white">

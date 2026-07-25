@@ -22,6 +22,10 @@ try {
   const placeHooks = (await server.ssrLoadModule(
     '/src/hooks/place/usePlace.ts',
   )) as typeof import('../src/hooks/place/usePlace');
+  const myApi = (await server.ssrLoadModule('/src/api/my.ts')) as typeof import('../src/api/my');
+  const myHooks = (await server.ssrLoadModule(
+    '/src/hooks/my/useMy.ts',
+  )) as typeof import('../src/hooks/my/useMy');
 
   const axiosInstance = axiosModule.default;
   const requests: Array<{ url: string; params?: unknown }> = [];
@@ -70,6 +74,23 @@ try {
                 isSaved: false,
                 isVisited: false,
               }
+            : url === '/mypage'
+              ? {
+                  nickname: '계수',
+                  profileImageUrl: null,
+                  email: 'user@example.com',
+                }
+              : url === '/mypage/social-connections'
+                ? {
+                    connections: [
+                      {
+                        provider: 'KAKAO',
+                        isLinked: true,
+                        linkedEmail: 'user@kakao.com',
+                        linkedAt: '2026-07-19T10:00:00',
+                      },
+                    ],
+                  }
             : {
               appliedFilters: {
                 keyword: null,
@@ -96,6 +117,8 @@ try {
     });
     await searchApi.getEditorPicks(3);
     await placeApi.getPlaceDetail('2');
+    await myApi.getMyPage();
+    await myApi.getSocialConnections();
   } finally {
     axiosInstance.get = originalGet;
   }
@@ -108,6 +131,8 @@ try {
     },
     { url: '/places/editor-picks', params: { limit: 3 } },
     { url: '/places/2', params: undefined },
+    { url: '/mypage', params: undefined },
+    { url: '/mypage/social-connections', params: undefined },
   ]);
   assert.deepEqual(searchHooks.searchKeys.places({ regionCode: 'SEOUL' }), [
     'search',
@@ -115,6 +140,8 @@ try {
     { regionCode: 'SEOUL' },
   ]);
   assert.deepEqual(placeHooks.placeKeys.detail('2'), ['places', 'detail', '2']);
+  assert.deepEqual(myHooks.myKeys.profile(), ['my', 'profile']);
+  assert.deepEqual(myHooks.myKeys.socialConnections(), ['my', 'social-connections']);
 } finally {
   await server.close();
 }

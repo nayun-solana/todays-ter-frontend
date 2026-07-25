@@ -1,0 +1,93 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'vite';
+
+const server = await createServer({
+  appType: 'custom',
+  server: { middlewareMode: true },
+});
+
+try {
+  const axiosModule = (await server.ssrLoadModule(
+    '/src/api/axiosInstance.ts',
+  )) as typeof import('../src/api/axiosInstance');
+  const searchApi = (await server.ssrLoadModule(
+    '/src/api/search.ts',
+  )) as typeof import('../src/api/search');
+  const searchHooks = (await server.ssrLoadModule(
+    '/src/hooks/search/useSearch.ts',
+  )) as typeof import('../src/hooks/search/useSearch');
+
+  const axiosInstance = axiosModule.default;
+  const requests: Array<{ url: string; params?: unknown }> = [];
+  const originalGet = axiosInstance.get;
+
+  axiosInstance.get = (async (url: string, config?: { params?: unknown }) => {
+    requests.push({ url, params: config?.params });
+
+    const result =
+      url === '/places/explore-filters'
+        ? {
+            regions: [{ code: 'ALL', name: '전체', displayOrder: 0 }],
+            themes: [{ code: 'LOVE', name: '연애 터', placeCount: 1, displayOrder: 1 }],
+            elements: [{ code: 'ALL', name: '전체', displayOrder: 0 }],
+          }
+        : url === '/places/editor-picks'
+          ? {
+              content: [
+                {
+                  placeId: 31,
+                  placeName: '북한산 둘레길',
+                  thumbnailUrl: null,
+                  summary: '목기 창작 코스',
+                  description: '창작 슬럼프를 깨는 오행 터',
+                  element: { code: 'WOOD', name: '목' },
+                  theme: { code: 'HEALTH', name: '건강 터' },
+                  averageRating: 4.9,
+                },
+              ],
+            }
+          : {
+              appliedFilters: {
+                keyword: null,
+                regionCode: 'SEOUL',
+                themeType: null,
+                elementType: 'WATER',
+              },
+              content: [],
+              page: { number: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+            };
+
+    return {
+      data: { isSuccess: true, code: 'COMMON200', message: '성공', result },
+    };
+  }) as typeof axiosInstance.get;
+
+  try {
+    await searchApi.getExploreFilters();
+    await searchApi.getPlaces({
+      regionCode: 'SEOUL',
+      elementType: 'WATER',
+      page: 0,
+      size: 20,
+    });
+    await searchApi.getEditorPicks(3);
+  } finally {
+    axiosInstance.get = originalGet;
+  }
+
+  assert.deepEqual(requests, [
+    { url: '/places/explore-filters', params: undefined },
+    {
+      url: '/places',
+      params: { regionCode: 'SEOUL', elementType: 'WATER', page: 0, size: 20 },
+    },
+    { url: '/places/editor-picks', params: { limit: 3 } },
+  ]);
+  assert.deepEqual(searchHooks.searchKeys.places({ regionCode: 'SEOUL' }), [
+    'search',
+    'places',
+    { regionCode: 'SEOUL' },
+  ]);
+} finally {
+  await server.close();
+}

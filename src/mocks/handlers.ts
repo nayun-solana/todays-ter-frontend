@@ -10,6 +10,75 @@ function ok<T>(result: T) {
   return HttpResponse.json({ isSuccess: true, code: 'COMMON200', message: '성공', result });
 }
 
+const SEARCH_PLACES = [
+  {
+    placeId: 25,
+    placeName: '경복궁',
+    thumbnailUrl: null,
+    summary: '안정과 번영의 기운, 토기 충전',
+    element: { code: 'EARTH', name: '토' },
+    theme: { code: 'WEALTH', name: '재물 터' },
+    averageRating: 4.7,
+    distanceKm: 3.5,
+    regionCode: 'SEOUL',
+  },
+  {
+    placeId: 2,
+    placeName: '청계천 모전교',
+    thumbnailUrl: null,
+    summary: '도심 속 힐링 물길, 수기 충전',
+    element: { code: 'WATER', name: '수' },
+    theme: { code: 'HEALTH', name: '건강 터' },
+    averageRating: 4.8,
+    distanceKm: 2.1,
+    regionCode: 'SEOUL',
+  },
+  {
+    placeId: 31,
+    placeName: '북한산 둘레길',
+    thumbnailUrl: null,
+    summary: '새로운 시작의 기운, 목기 충전',
+    element: { code: 'WOOD', name: '목' },
+    theme: { code: 'CAREER', name: '커리어 터' },
+    averageRating: 4.9,
+    distanceKm: 8.3,
+    regionCode: 'SEOUL',
+  },
+] as const;
+
+const EDITOR_PICKS = [
+  {
+    placeId: 31,
+    placeName: '북한산 둘레길',
+    thumbnailUrl: null,
+    summary: '목기 창작 코스',
+    description: '창작 슬럼프를 깨는 최고의 오행 터',
+    element: { code: 'WOOD', name: '목' },
+    theme: { code: 'HEALTH', name: '건강 터' },
+    averageRating: 4.9,
+  },
+  {
+    placeId: 2,
+    placeName: '청계천 모전교',
+    thumbnailUrl: null,
+    summary: '수기 감정 정화 루트',
+    description: '마음이 무거울 때 꼭 가야 하는 곳',
+    element: { code: 'WATER', name: '수' },
+    theme: { code: 'LOVE', name: '연애 터' },
+    averageRating: 4.8,
+  },
+  {
+    placeId: 25,
+    placeName: '경복궁',
+    thumbnailUrl: null,
+    summary: '토기 안정 충전지',
+    description: '결정을 앞둔 날, 중심 잡기 최적 터',
+    element: { code: 'EARTH', name: '토' },
+    theme: { code: 'WEALTH', name: '재물 터' },
+    averageRating: 4.7,
+  },
+] as const;
+
 export const handlers = [
   // GET /home/today-energy — 오늘 나의 기운(오행)
   http.get('/home/today-energy', () =>
@@ -71,4 +140,78 @@ export const handlers = [
       suggestion: '오늘은 30분 정도 물길을 따라 걸으며\n마음을 정리해보세요.',
     }),
   ),
+
+  // GET /places/explore-filters — 탐색 필터와 테마 metadata
+  http.get('/places/explore-filters', () =>
+    ok({
+      regions: [
+        { code: 'ALL', name: '전체', displayOrder: 0 },
+        { code: 'SEOUL', name: '서울', displayOrder: 1 },
+        { code: 'JEJU', name: '제주', displayOrder: 2 },
+        { code: 'BUSAN', name: '부산', displayOrder: 3 },
+        { code: 'GANGWON', name: '강원', displayOrder: 4 },
+        { code: 'CAPITAL', name: '수도권', displayOrder: 5 },
+      ],
+      themes: [
+        { code: 'LOVE', name: '연애 터', placeCount: 3, displayOrder: 1 },
+        { code: 'CAREER', name: '커리어 터', placeCount: 3, displayOrder: 2 },
+        { code: 'WEALTH', name: '재물 터', placeCount: 3, displayOrder: 3 },
+        { code: 'RELATIONSHIP', name: '인간관계 터', placeCount: 3, displayOrder: 4 },
+        { code: 'HEALTH', name: '건강 터', placeCount: 3, displayOrder: 5 },
+        { code: 'ETC', name: '기타', placeCount: 3, displayOrder: 6 },
+      ],
+      elements: [
+        { code: 'ALL', name: '전체', displayOrder: 0 },
+        { code: 'FIRE', name: '화', displayOrder: 1 },
+        { code: 'EARTH', name: '토', displayOrder: 2 },
+        { code: 'WOOD', name: '목', displayOrder: 3 },
+        { code: 'WATER', name: '수', displayOrder: 4 },
+        { code: 'METAL', name: '금', displayOrder: 5 },
+      ],
+    }),
+  ),
+
+  // 동적 /places/:placeId보다 먼저 둬서 editor-picks가 placeId로 잡히지 않게 한다.
+  http.get('/places/editor-picks', ({ request }) => {
+    const limit = Number(new URL(request.url).searchParams.get('limit') ?? 3);
+    return ok({ content: EDITOR_PICKS.slice(0, limit) });
+  }),
+
+  // GET /places — 탐색 장소 목록
+  http.get('/places', ({ request }) => {
+    const url = new URL(request.url);
+    const regionCode = url.searchParams.get('regionCode');
+    const elementType = url.searchParams.get('elementType');
+    const page = Number(url.searchParams.get('page') ?? 0);
+    const size = Number(url.searchParams.get('size') ?? 20);
+    const hasCoordinates =
+      url.searchParams.has('latitude') && url.searchParams.has('longitude');
+    const filtered = SEARCH_PLACES.filter(
+      (place) =>
+        (!regionCode || regionCode === 'ALL' || place.regionCode === regionCode) &&
+        (!elementType || place.element.code === elementType),
+    );
+    const content = filtered.slice(page * size, (page + 1) * size).map((place) => ({
+      ...place,
+      distanceKm: hasCoordinates ? place.distanceKm : null,
+      regionCode: undefined,
+    }));
+
+    return ok({
+      appliedFilters: {
+        keyword: null,
+        regionCode,
+        themeType: null,
+        elementType,
+      },
+      content,
+      page: {
+        number: page,
+        size,
+        totalElements: filtered.length,
+        totalPages: Math.ceil(filtered.length / size),
+        hasNext: (page + 1) * size < filtered.length,
+      },
+    });
+  }),
 ];

@@ -78,7 +78,7 @@ pnpm format
 1. GitHub Issue 생성
 2. Notion 작업 티켓 자동 생성 확인
 3. `dev` 브랜치에서 최신 코드 반영
-4. `feature/todays-ter-이슈번호` 형식으로 작업 브랜치 생성
+4. `<type>/todays-ter-이슈번호` 형식으로 작업 브랜치 생성
 5. 작업 후 커밋 및 push
 6. 작업 브랜치에서 `dev` 브랜치로 PR 생성
 7. 최소 1명 이상 리뷰 후 merge
@@ -94,20 +94,20 @@ git checkout -b feature/todays-ter-12
 
 - `main`: 배포 가능한 안정 버전
 - `dev`: 개발 통합 브랜치
-- `feature/todays-ter-이슈번호`: 작업 브랜치
+- `<type>/todays-ter-이슈번호`: 작업 브랜치
 
 예시:
 
 - `feature/todays-ter-12`
-- `feature/todays-ter-15`
-- `feature/todays-ter-21`
+- `fix/todays-ter-15`
+- `chore/todays-ter-21`
 
-브랜치명은 `feature/todays-ter-숫자` 형식만 허용합니다.
+브랜치명은 `feature`, `fix`, `chore`, `design`, `docs`, `refactor`, `test` 유형의 `<type>/todays-ter-숫자` 형식만 허용합니다.
 
 잘못된 예시:
 
 - `feature/12-login-page`
-- `fix/todays-ter-12`
+- `hotfix/todays-ter-12`
 - `feature/todays-ter-login`
 
 `main` 브랜치는 평가 또는 배포 시점 전까지 직접 작업하지 않습니다. 모든 기능은 `dev`에 먼저 통합하고, 필요한 시점에만 `dev`에서 `main`으로 PR을 생성합니다.
@@ -152,7 +152,7 @@ Closes #12
 
 - `main`: 직접 push 금지, PR 필수, 평가/배포 시점에만 merge
 - `dev`: 직접 push 금지, PR 필수, 리뷰 1명 이상 필수
-- 작업 브랜치: `feature/todays-ter-숫자` 형식만 사용
+- 작업 브랜치: `<type>/todays-ter-숫자` 형식만 사용
 
 ## Issue 라벨
 
@@ -170,7 +170,7 @@ Closes #12
 작업 상태는 Notion 작업 티켓 보드에서 자동으로 관리합니다.
 
 - `이슈`: GitHub Issue가 생성된 상태
-- `진행 중`: `feature/todays-ter-이슈번호` 브랜치가 생성된 상태
+- `진행 중`: `<type>/todays-ter-이슈번호` 브랜치가 생성된 상태
 - `리뷰 중`: PR이 생성된 상태
 - `완료`: PR이 merge된 상태
 

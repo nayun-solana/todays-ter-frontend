@@ -10,6 +10,8 @@ import { ErrorCode, type ApiError, type ApiResponse } from './types';
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10_000,
+  // 게스트 세션 쿠키(guest_id) 전송용. dev는 Vite 프록시로 same-origin 처리(vite.config.ts).
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

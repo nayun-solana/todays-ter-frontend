@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 const NOTION_VERSION = '2026-03-11';
 const TICKET_PREFIX = 'todays-ter';
-const BRANCH_PATTERN = /^feature\/todays-ter-(\d+)$/;
+const BRANCH_PATTERN = /^(?:feature|fix|chore|design|docs|refactor|test)\/todays-ter-(\d+)$/;
 
 const PROPERTY = {
   title: '이름',

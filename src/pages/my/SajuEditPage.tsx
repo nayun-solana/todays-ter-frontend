@@ -149,7 +149,7 @@ function TimeWheel({
       {options.map((option) => (
         <div
           key={option}
-          className="flex h-12 snap-center items-center justify-center text-sm font-bold text-gray-5"
+          className="typo-body-3 flex h-12 snap-center items-center justify-center text-gray-5"
         >
           {format(option)}
         </div>
@@ -265,8 +265,8 @@ export default function SajuEditPage() {
 
       <main className="px-5 pt-5">
         <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-card-soft">
-          <p className="text-sm font-bold text-primary">현재 사주 정보</p>
-          <dl className="mt-3 space-y-2 text-xs leading-4 text-gray-5">
+          <p className="typo-body-3 text-primary">현재 사주 정보</p>
+          <dl className="typo-sub-2 mt-3 space-y-2 text-gray-5">
             <div className="flex gap-1.5">
               <dt className="w-20 font-bold">생년월일</dt>
               <dd>양력 1995.06.15</dd>
@@ -317,7 +317,7 @@ export default function SajuEditPage() {
             onSelect={(value) => updateDate('day', value)}
           />
           <div>
-            <p className="mb-2 text-sm leading-[18px] font-extrabold text-gray-6">시</p>
+            <p className="typo-head-4 mb-2 text-gray-6">시</p>
             <div className="relative">
               <button
                 type="button"
@@ -326,7 +326,7 @@ export default function SajuEditPage() {
                   setOpenField(null);
                   setTimePickerOpen(!timePickerOpen);
                 }}
-                className="flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-sm font-bold text-gray-5 shadow-card"
+                className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-gray-5 shadow-card"
               >
                 {hasSelectedTime ? `${formatHour(pickerTime.hour)} ${pickerTime.minute}분` : '모름'}
                 <ChevronDownIcon className="text-gray-5" />

@@ -57,8 +57,8 @@ export default function NotificationPage() {
                   to="/record"
                   className="relative flex h-[66px] flex-col justify-center rounded-btn bg-white p-4 shadow-[0_2px_5px_rgba(0,0,0,0.05)]"
                 >
-                  <span className="text-sm font-bold text-gray-6">{item.title}</span>
-                  <span className="mt-2 text-[10px] font-bold text-primary">{item.message}</span>
+                  <span className="typo-body-3 text-gray-6">{item.title}</span>
+                  <span className="typo-caption mt-2 text-primary">{item.message}</span>
                   {item.unread && unread ? (
                     <span
                       aria-label="새 알림"

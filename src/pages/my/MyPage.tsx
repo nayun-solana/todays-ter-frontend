@@ -42,13 +42,13 @@ export default function MyPage() {
           <div className="flex flex-col items-center gap-2">
             <DefaultAvatar />
             {/* TODO: API 연동 시 사용자 닉네임 */}
-            <p className="text-sm leading-[18px] font-extrabold text-gray-5">닉네임</p>
+            <p className="typo-head-4 text-gray-5">닉네임</p>
           </div>
           <div className="flex gap-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-water px-3 py-2 text-xs leading-4 font-bold text-white">
+            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-water px-3 py-2 typo-body-4 text-white">
               주 오행 : 수 <OhaengOrb element="water" size={16} />
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-fire px-3 py-2 text-xs leading-4 font-bold text-white">
+            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-fire px-3 py-2 typo-body-4 text-white">
               보완 오행 : 화 <OhaengOrb element="fire" size={16} />
             </span>
           </div>

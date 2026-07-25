@@ -42,7 +42,7 @@ export default function PermissionsPage() {
                   }
                 />
               </div>
-              <p className="mt-3 text-xs leading-4 text-gray-4">{permission.description}</p>
+              <p className="typo-sub-2 mt-3 text-gray-4">{permission.description}</p>
             </section>
           );
         })}

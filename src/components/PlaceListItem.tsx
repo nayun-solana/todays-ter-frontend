@@ -32,7 +32,11 @@ export default function PlaceListItem({
       className="flex w-full overflow-hidden rounded-xl bg-white text-left shadow-card"
     >
       {thumbnailUrl ? (
-        <img src={thumbnailUrl} alt="" className="h-21 w-21 shrink-0 object-cover" />
+        <img
+          src={thumbnailUrl}
+          alt={`${name} 사진`}
+          className="h-21 w-21 shrink-0 object-cover"
+        />
       ) : (
         <div className="h-21 w-21 shrink-0 bg-placeholder" />
       )}

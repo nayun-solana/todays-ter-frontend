@@ -7,15 +7,24 @@ const server = setupServer(...handlers);
 server.listen({ onUnhandledRequest: 'error' });
 
 try {
-  const places = await fetch(
-    'https://today-ter.kr/places?regionCode=ALL&elementType=WATER&page=0&size=20',
-  );
-  const myPage = await fetch('https://today-ter.kr/mypage');
+  const urls = [
+    '/places/explore-filters',
+    '/places/editor-picks?limit=3',
+    '/places?regionCode=ALL&elementType=WATER&page=0&size=20',
+    '/places/2',
+    '/mypage',
+    '/mypage/social-connections',
+  ];
 
-  assert.equal(places.status, 200);
-  assert.equal(myPage.status, 200);
-  assert.equal((await places.json()).isSuccess, true);
-  assert.equal((await myPage.json()).isSuccess, true);
+  for (const url of urls) {
+    const response = await fetch(`https://today-ter.kr${url}`);
+    assert.equal(response.status, 200, url);
+    assert.equal((await response.json()).isSuccess, true, url);
+  }
+
+  const missingPlace = await fetch('https://today-ter.kr/places/999');
+  assert.equal(missingPlace.status, 404);
+  assert.equal((await missingPlace.json()).code, 'PLACE_NOT_FOUND');
 } finally {
   server.close();
 }

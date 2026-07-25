@@ -283,4 +283,101 @@ export const handlers = [
       ],
     }),
   ),
+
+  // GET /my-places/visited/:visitId — 다녀온 터 후기 상세
+  http.get('*/my-places/visited/:visitId', ({ params }) => {
+    const visitId = Number(params.visitId);
+
+    return ok({
+      visitId: Number.isFinite(visitId) ? visitId : 10,
+      placeId: 2,
+      placeName: '청계천 모전교',
+      visitVerifiedAt: '2025-06-28',
+      rating: 4,
+      content:
+        '생각이 많았던 날이었는데, 물길을 따라 걷다 보니 마음이 조금 가라앉았다. 조용히 혼자 있기 좋은 터였다.',
+      imageUrls: [],
+      createdAt: '2026-07-19T10:00:00',
+      updatedAt: '2026-07-19T10:00:00',
+    });
+  }),
+
+  // GET /my-places?type=saved|recordId — 저장한 터 / 다녀온 터 목록
+  http.get('*/my-places', ({ request }) => {
+    const type = new URL(request.url).searchParams.get('type');
+
+    if (type === 'saved') {
+      return ok([
+        {
+          placeId: 1,
+          placeName: '경복궁',
+          thumbnailUrl: null,
+          categories: ['재물', '커리어'],
+          savedDate: '2026-06-29',
+          element: '토',
+        },
+        {
+          placeId: 2,
+          placeName: '청계천',
+          thumbnailUrl: null,
+          categories: ['연애', '건강'],
+          savedDate: '2026-06-28',
+          element: '수',
+        },
+        {
+          placeId: 3,
+          placeName: '용산 호텔 라운지',
+          thumbnailUrl: null,
+          categories: ['커리어'],
+          savedDate: '2026-06-27',
+          element: '화',
+        },
+      ]);
+    }
+
+    if (type === 'recordId') {
+      return ok([
+        {
+          placeId: 10,
+          placeName: '남산타워',
+          thumbnailUrl:
+            'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
+          categories: ['연애'],
+          savedDate: '2026-06-25',
+          element: '토',
+        },
+        {
+          placeId: 11,
+          placeName: '한강공원',
+          thumbnailUrl:
+            'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
+          categories: ['건강'],
+          savedDate: '2026-06-24',
+          element: '수',
+        },
+        {
+          placeId: 12,
+          placeName: '성수동 카페거리',
+          thumbnailUrl:
+            'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
+          categories: ['재물', '커리어'],
+          savedDate: '2026-06-23',
+          element: '화',
+        },
+        {
+          placeId: 13,
+          placeName: '북촌 한옥마을',
+          thumbnailUrl: null,
+          categories: ['건강'],
+          savedDate: '2026-06-22',
+          element: '목',
+        },
+      ]);
+    }
+
+    return HttpResponse.json(
+      { isSuccess: false, code: 'COMMON400', message: 'type이 올바르지 않습니다.' },
+      { status: 400 },
+    );
+  }),
 ];

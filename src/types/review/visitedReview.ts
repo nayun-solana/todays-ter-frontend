@@ -1,3 +1,4 @@
+/** GET /my-places/visited/{visitId} 응답 result */
 export type VisitedReviewDetail = {
   visitId: number;
   placeId: number;

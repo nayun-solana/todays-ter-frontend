@@ -3,8 +3,8 @@ import { EllipsisVertical } from 'lucide-react';
 import { useParams } from 'react-router';
 
 // import type { ApiError } from '../../api/types';
-// import { getVisitedReviewDetail } from './api/getVisitedReviewDetail';
-import type { VisitedReviewDetail } from './api/types';
+// import { getVisitedReviewDetail } from '../../api/record';
+import type { VisitedReviewDetail } from '../../types/review/visitedReview';
 import Button from './components/Button';
 import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';

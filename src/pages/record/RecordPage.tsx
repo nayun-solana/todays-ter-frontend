@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 // import type { ApiError } from '../../api/types';
-// import { getMyPlaces } from './api/getMyPlaces';
-import type { MyPlaceItem } from './api/types';
+// import { getMyPlaces } from '../../api/record';
+import type { MyPlaceItem } from '../../types/record/myPlace';
 import RecordPlaceCard from './components/RecordPlaceCard';
 import { SAVED_PLACES, VISITED_PLACES } from './recordDummyData';
 

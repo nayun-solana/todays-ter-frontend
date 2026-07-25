@@ -1,4 +1,4 @@
-import type { MyPlaceItem } from './api/types';
+import type { MyPlaceItem } from '../../types/record/myPlace';
 
 /** 저장한 터 — API 연동 전 더미 */
 export const SAVED_PLACES: readonly MyPlaceItem[] = [

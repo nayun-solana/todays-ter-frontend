@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
@@ -28,9 +29,12 @@ export default function LoginPage() {
     navigate('/onboarding/step-1', { state: { provider } });
   };
 
+  const initSession = useInitGuestSession();
   const handleGuest = () => {
-    // TODO: 비회원(게스트) 진입 처리. 사주 입력(온보딩)으로 이동.
-    navigate('/onboarding/step-1', { state: { guest: true } });
+    // 비회원 세션 발급(쿠키) 후 온보딩 진입. 실패해도 온보딩1 마운트에서 재보장.
+    initSession.mutate(undefined, {
+      onSettled: () => navigate('/onboarding/step-1', { state: { guest: true } }),
+    });
   };
 
   return (

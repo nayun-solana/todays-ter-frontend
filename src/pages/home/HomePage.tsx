@@ -2,14 +2,19 @@ import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import placeSample from '../../assets/home/place-sample.jpg';
-import type { OhaengKey } from '../../lib/ohaeng';
+import {
+  useEnergyRoutines,
+  useHomeHeader,
+  useRecommendedPlaces,
+  useTodayEnergy,
+} from '../../hooks/home/useHome';
+import { toOhaengKey } from '../../types/home/homeEnergy';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
 import RoutineChips from './components/RoutineChips';
 import { OHAENG_HOME } from './ohaeng';
 
-// TODO: 오행/인사말/추천 터는 사주·서버 데이터 연동 예정. 현재 물(水) variant 고정.
-const HOME_OHAENG: OhaengKey = 'water';
+// BE 미배포라 오늘의 기운은 MSW mock(GET /home/today-energy). 로드 전 fallback = water.
 // TODO: 실제 로그인 상태 연동. true면 첫 카드 이후를 블러+로그인 게이트로 가린다(로그인 전 홈).
 const IS_GUEST = false;
 
@@ -42,10 +47,31 @@ const RECOMMENDED_PLACES = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const theme = OHAENG_HOME[HOME_OHAENG];
+
+  // 홈 데이터 — 서버(mock). 로드 전엔 각 항목 fallback.
+  const { data: energy } = useTodayEnergy();
+  const { data: header } = useHomeHeader();
+  const { data: routines } = useEnergyRoutines();
+  const { data: recommended } = useRecommendedPlaces();
+
+  const ohaengKey = energy ? toOhaengKey(energy.element) : 'water';
+  const theme = OHAENG_HOME[ohaengKey];
+
+  // 서버 추천 목록 → 카드 props (이미지는 실 URL 확정 전이라 샘플 사용). 로드 전엔 하드코딩 fallback.
+  const cards =
+    recommended?.places.map((p) => ({
+      id: p.recommendationId,
+      image: placeSample,
+      badge: p.badge,
+      name: p.name,
+      subtitle: p.subtitle,
+      description: p.description,
+      distance: p.distanceLabel,
+      rating: p.rating,
+    })) ?? RECOMMENDED_PLACES;
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
-  const renderCard = ({ id, ...card }: (typeof RECOMMENDED_PLACES)[number]) => (
+  const renderCard = ({ id, ...card }: (typeof cards)[number]) => (
     <RecommendedPlaceCard {...card} onClick={() => navigate(`/matched-ter/${id}`)} />
   );
 
@@ -61,25 +87,32 @@ export default function HomePage() {
       <div className="relative flex flex-col gap-8 px-5 pb-8 pt-[70px]">
         {/* 인사말 */}
         <header className="flex flex-col gap-5 text-white">
-          <p className="text-base font-bold">2026년 6월 11일 목요일</p>
+          <p className="text-base font-bold">{header?.dateLabel ?? '2026년 6월 11일 목요일'}</p>
           <div className="flex flex-col gap-2">
-            <p className="text-2xl font-extrabold">안녕하세요 윤진님 !</p>
-            <p className="text-[17px] font-bold">오늘도 좋은 기운 충전해요</p>
+            <p className="text-2xl font-extrabold">안녕하세요 {header?.userName ?? '윤진'}님 !</p>
+            <p className="text-[17px] font-bold">{header?.message ?? '오늘도 좋은 기운 충전해요'}</p>
           </div>
         </header>
 
-        <EnergyCard element={theme.key} label={theme.label} desc={theme.energyDesc} />
-        <RoutineChips title={theme.routineTitle} routines={theme.routines} />
+        <EnergyCard
+          element={theme.key}
+          label={energy?.label ?? theme.label}
+          desc={energy?.description ?? theme.energyDesc}
+        />
+        <RoutineChips
+          title={routines?.title ?? theme.routineTitle}
+          routines={routines?.routines ?? theme.routines}
+        />
 
         {/* 오늘 가장 잘 맞는 터 */}
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
           <div className="flex flex-col gap-3">
-            {renderCard(RECOMMENDED_PLACES[0])}
+            {cards[0] && renderCard(cards[0])}
             {IS_GUEST ? (
               // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
               <div className="relative">
-                {renderCard(RECOMMENDED_PLACES[1])}
+                {cards[1] && renderCard(cards[1])}
                 <div
                   aria-hidden
                   className="absolute inset-0 rounded-[20px]"
@@ -105,7 +138,7 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-              renderCard(RECOMMENDED_PLACES[1])
+              cards[1] && renderCard(cards[1])
             )}
           </div>
         </section>

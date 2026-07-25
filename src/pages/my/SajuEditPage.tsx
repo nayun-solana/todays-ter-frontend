@@ -1,7 +1,9 @@
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import iconChevronLeft from '../../assets/icon-chevron-left.svg';
+import Button from '../../components/Button';
+import PageHeader from '../../components/PageHeader';
+import { ChevronDownIcon, CloseIcon } from '../../components/icons';
 
 type DateField = 'year' | 'month' | 'day';
 
@@ -10,7 +12,7 @@ const YEARS = Array.from(
   { length: new Date().getFullYear() - 1900 + 1 },
   (_, index) => new Date().getFullYear() - index,
 );
-const MONTHS = Array.from({ length: 12 }, (_, index) => 12 - index);
+const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 const HOURS = Array.from({ length: 24 }, (_, index) => index);
 const MINUTES = Array.from({ length: 60 }, (_, index) => index);
 const WHEEL_ROW_HEIGHT = 48;
@@ -19,44 +21,8 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate();
 }
 
-function orderedOptions(options: number[], value: number) {
-  const selectedIndex = options.indexOf(value);
-  return [...options.slice(selectedIndex), ...options.slice(0, selectedIndex)];
-}
-
 function formatHour(hour: number) {
   return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
-}
-
-function ChevronDown() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" className="h-2.5 w-5">
-      <path
-        d="M8 1L1 8L8 15"
-        transform="translate(0 16) rotate(-90)"
-        fill="none"
-        stroke="#3f3f46"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg aria-label="공유" viewBox="0 0 24 24" className="size-6">
-      <path
-        d="M14.7381 6.67369C15.0417 7.2012 15.6051 7.55556 16.25 7.55556C17.2165 7.55556 18 6.75962 18 5.77778C18 4.79594 17.2165 4 16.25 4C15.2835 4 14.5 4.79594 14.5 5.77778C14.5 6.10449 14.5868 6.41062 14.7381 6.67369ZM14.7381 6.67369L7.26186 11.1041M7.26186 11.1041C6.9583 10.5766 6.39489 10.2222 5.75 10.2222C4.7835 10.2222 4 11.0182 4 12C4 12.9818 4.7835 13.7778 5.75 13.7778C6.39489 13.7778 6.9583 13.4234 7.26186 12.8959M7.26186 11.1041C7.41324 11.3672 7.5 11.6733 7.5 12C7.5 12.3267 7.41324 12.6328 7.26186 12.8959M7.26186 12.8959L14.7381 17.3263M14.7381 17.3263C15.0417 16.7988 15.6051 16.4444 16.25 16.4444C17.2165 16.4444 18 17.2404 18 18.2222C18 19.2041 17.2165 20 16.25 20C15.2835 20 14.5 19.2041 14.5 18.2222C14.5 17.8955 14.5868 17.5894 14.7381 17.3263Z"
-        fill="none"
-        stroke="#71717a"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 function DateSelect({
@@ -74,33 +40,81 @@ function DateSelect({
   onToggle: () => void;
   onSelect: (value: number) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      initialized.current = false;
+      return;
+    }
+    if (initialized.current) return;
+
+    initialized.current = true;
+    const index = options.indexOf(value);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: Math.max(index, 0) * WHEEL_ROW_HEIGHT });
+    });
+  }, [open, options, value]);
+
   return (
     <div>
-      <p className="mb-2 text-sm leading-[18px] font-extrabold text-gray-6">{label}</p>
-      <div className="relative">
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={onToggle}
-          className="flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-sm font-bold text-gray-5 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
-        >
-          {value}
-          <ChevronDown />
-        </button>
+      <p className="typo-head-4 mb-2 text-gray-6">{label}</p>
+      <div className="relative h-[52px]">
         {open ? (
-          <div className="absolute z-10 max-h-[196px] w-full overflow-y-auto rounded-btn border border-primary-light bg-gray-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            {orderedOptions(options, value).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onSelect(option)}
-                className="flex h-[49px] w-full items-center border-b border-gray-2 px-5 text-left text-sm font-bold text-gray-5 last:border-b-0"
+          <div className="absolute inset-x-0 top-0 z-10 overflow-hidden rounded-btn border border-primary-light bg-gray-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <button
+              type="button"
+              aria-expanded
+              onClick={onToggle}
+              className="typo-body-3 flex h-[52px] w-full items-center justify-between bg-white px-5 text-gray-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+            >
+              {value}
+              <ChevronDownIcon className="text-gray-5" />
+            </button>
+            <div className="relative">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-[7px] top-12 h-12 rounded-btn bg-gray-2"
+              />
+              <div
+                ref={scrollRef}
+                onScroll={(event) => {
+                  const index = Math.max(
+                    0,
+                    Math.min(
+                      options.length - 1,
+                      Math.round(event.currentTarget.scrollTop / WHEEL_ROW_HEIGHT),
+                    ),
+                  );
+                  onSelect(options[index]);
+                }}
+                className="no-scrollbar relative z-10 h-36 snap-y snap-mandatory overflow-y-auto py-12 text-center"
               >
-                {option}
-              </button>
-            ))}
+                {options.map((option) => (
+                  <div
+                    key={option}
+                    aria-selected={option === value}
+                    role="option"
+                    className="typo-body-3 flex h-12 snap-center items-center px-5 text-gray-5"
+                  >
+                    {option}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            aria-expanded={false}
+            onClick={onToggle}
+            className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-gray-5 shadow-card"
+          >
+            {value}
+            <ChevronDownIcon className="text-gray-5" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -130,7 +144,7 @@ function TimeWheel({
         );
         onSelect(options[index]);
       }}
-      className="relative z-10 h-36 snap-y snap-mandatory overflow-y-auto py-12 text-center"
+      className="no-scrollbar relative z-10 h-36 snap-y snap-mandatory overflow-y-auto py-12 text-center"
     >
       {options.map((option) => (
         <div
@@ -215,10 +229,7 @@ export default function SajuEditPage() {
   const hourWheelRef = useRef<HTMLDivElement>(null);
   const minuteWheelRef = useRef<HTMLDivElement>(null);
   const ignoreInitialTimeScroll = useRef(false);
-  const days = Array.from(
-    { length: daysInMonth(date.year, date.month) },
-    (_, index) => daysInMonth(date.year, date.month) - index,
-  );
+  const days = Array.from({ length: daysInMonth(date.year, date.month) }, (_, index) => index + 1);
   const changed =
     date.year !== INITIAL_DATE.year ||
     date.month !== INITIAL_DATE.month ||
@@ -246,26 +257,14 @@ export default function SajuEditPage() {
         day: Math.min(next.day, daysInMonth(next.year, next.month)),
       };
     });
-    setOpenField(null);
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-[390px] bg-gray-1 pb-28">
-      <header className="flex h-[99px] items-end justify-between border-b border-gray-disabled bg-white px-5 pb-3">
-        <button
-          type="button"
-          onClick={() => navigate('/my')}
-          aria-label="마이페이지로 돌아가기"
-          className="flex size-6 items-center justify-center"
-        >
-          <img src={iconChevronLeft} alt="" className="h-3.5 w-[7px]" />
-        </button>
-        <h1 className="text-sm font-bold text-gray-6">사주 정보 수정</h1>
-        <ShareIcon />
-      </header>
+    <div className="mx-auto min-h-dvh max-w-[375px] bg-gray-1 pb-28">
+      <PageHeader title="사주 정보 수정" backTo="/my" />
 
       <main className="px-5 pt-5">
-        <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-[0_2px_2px_rgba(0,0,0,0.05)]">
+        <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-card-soft">
           <p className="text-sm font-bold text-primary">현재 사주 정보</p>
           <dl className="mt-3 space-y-2 text-xs leading-4 text-gray-5">
             <div className="flex gap-1.5">
@@ -278,7 +277,7 @@ export default function SajuEditPage() {
             </div>
           </dl>
         </section>
-        <p className="mt-2.5 px-2.5 text-[10px] leading-[14px] text-[#ff5353]">
+        <p className="typo-sub-3 mt-2.5 px-2.5 text-danger">
           사주 수정 시 기존 방문 기록은 유지되며,
           <br />새 추천 결과부터 변경된 사주 정보가 적용됩니다.
         </p>
@@ -327,10 +326,10 @@ export default function SajuEditPage() {
                   setOpenField(null);
                   setTimePickerOpen(!timePickerOpen);
                 }}
-                className="flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-sm font-bold text-gray-5 shadow-[0_2px_1px_rgba(0,0,0,0.05)]"
+                className="flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-sm font-bold text-gray-5 shadow-card"
               >
                 {hasSelectedTime ? `${formatHour(pickerTime.hour)} ${pickerTime.minute}분` : '모름'}
-                <ChevronDown />
+                <ChevronDownIcon className="text-gray-5" />
               </button>
               {timePickerOpen ? (
                 <div className="absolute z-10 w-full overflow-hidden rounded-btn border border-primary-light bg-gray-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -367,14 +366,13 @@ export default function SajuEditPage() {
         </section>
       </main>
 
-      <button
-        type="button"
+      <Button
         disabled={!changed}
         onClick={() => navigate('/my/saju/complete')}
-        className="fixed bottom-8 left-1/2 h-12 w-[calc(100%-40px)] max-w-[335px] -translate-x-1/2 rounded-btn bg-gray-disabled px-5 text-sm font-bold text-gray-4 disabled:cursor-not-allowed enabled:bg-primary enabled:text-white"
+        className="fixed bottom-8 left-1/2 w-[calc(100%-40px)] max-w-[335px] -translate-x-1/2"
       >
         저장하고 리포트 재생성
-      </button>
+      </Button>
     </div>
   );
 }
@@ -383,29 +381,20 @@ export function SajuReportCompletePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative mx-auto min-h-screen max-w-[390px] bg-white">
+    <div className="relative mx-auto min-h-dvh max-w-[375px] bg-white">
       <button
         type="button"
         onClick={() => navigate('/my')}
         aria-label="닫기"
-        className="absolute top-[60px] right-5 flex size-6 items-center justify-center"
+        className="absolute top-[60px] right-5 flex size-6 items-center justify-center text-gray-5"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6">
-          <path
-            d="M6 6L18 18M6 18L18 6"
-            fill="none"
-            stroke="#3f3f46"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <CloseIcon />
       </button>
-      <main className="flex min-h-screen -translate-y-[27px] flex-col items-center justify-center gap-8 text-center text-gray-6">
+      <main className="flex min-h-dvh -translate-y-[46px] flex-col items-center justify-center gap-8 text-center text-gray-6">
         <CheckIcon />
         <div>
-          <h1 className="text-xl font-extrabold">리포트 재생성 완료</h1>
-          <p className="mt-3 text-xs leading-4">
+          <h1 className="typo-head-2">리포트 재생성 완료</h1>
+          <p className="typo-sub-2 mt-3">
             수정된 사주를 바탕으로
             <br />
             리포트가 재생성되었어요!

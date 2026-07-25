@@ -7,7 +7,9 @@ import RecordPage from '../pages/record/RecordPage';
 import MyPage from '../pages/my/MyPage';
 import AccountLinkPage from '../pages/my/AccountLinkPage';
 import NotificationPage from '../pages/my/NotificationPage';
+import NotificationSettingsPage from '../pages/my/NotificationSettingsPage';
 import PermissionsPage from '../pages/my/PermissionsPage';
+import WithdrawalPage from '../pages/my/WithdrawalPage';
 import SajuEditPage, { SajuReportCompletePage } from '../pages/my/SajuEditPage';
 import OnboardingPage1 from '../pages/onboarding/OnboardingPage1';
 import OnboardingPage2 from '../pages/onboarding/OnboardingPage2';
@@ -83,6 +85,7 @@ export default function AppRoutes() {
         <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
         <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
         <Route path="/place/:id/review" element={<PlaceReviewPage />} />
+        <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
         <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
         <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
 
@@ -92,8 +95,10 @@ export default function AppRoutes() {
         <Route path="/my/saju" element={<SajuEditPage />} />
         <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
         <Route path="/my/notifications" element={<NotificationPage />} />
+        <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
         <Route path="/my/account-links" element={<AccountLinkPage />} />
         <Route path="/my/permissions" element={<PermissionsPage />} />
+        <Route path="/my/withdrawal" element={<WithdrawalPage />} />
 
         {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
         <Route path="/test" element={<TestPage />} />

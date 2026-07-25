@@ -42,6 +42,10 @@
   --color-gray-disabled: #c4c4c4; /* 기존 클래스 호환용. 새 코드는 gray-3 사용 */
   --color-black1: #18181b; /* 기존 클래스 호환용. 새 코드는 gray-6 사용 */
 
+  /* 상태 */
+  --color-danger: #ff5353; /* 알림 배지·경고 문구 */
+  --color-placeholder: #d9d9d9; /* 이미지 미확보 placeholder (Figma #d9d9d9) */
+
   /* 브랜드 */
   --color-kakao: #fee500; /* 카카오 로그인 버튼 */
 
@@ -58,8 +62,13 @@
   /* Radius */
   --radius-btn: 20px;
 
-  /* Shadow */
-  --shadow-btn: 0 2px 2px rgba(0, 0, 0, 0.1);
+  /* Shadow — Figma effects 실측값 (node 전수 확인) */
+  --shadow-card: 0 2px 2px rgba(0, 0, 0, 0.05); /* 기본 카드·칩·리스트행 */
+  --shadow-card-soft: 0 2px 4px rgba(0, 0, 0, 0.05); /* 사주·계정연동·탈퇴 안내 카드 */
+  --shadow-card-lg: 0 4px 4px rgba(0, 0, 0, 0.05); /* 마이 프로필 카드·리포트 버튼 */
+  --shadow-dialog: 0 1px 10px rgba(0, 0, 0, 0.1); /* 확인 다이얼로그 */
+  --shadow-popover: 0 4px 4px rgba(0, 0, 0, 0.1); /* 후기 수정/삭제 팝오버 */
+  --shadow-btn: 0 2px 2px rgba(0, 0, 0, 0.1); /* 기존 클래스 호환용(온보딩·기록). 새 코드는 shadow-card 사용 */
 
   /* Font */
   --font-sans: 'NanumSquare Neo', system-ui, 'Apple SD Gothic Neo', sans-serif;
@@ -136,6 +145,15 @@
   font-size: 10px;
   font-weight: 700;
   line-height: 11px;
+}
+
+/* 가로 스크롤 영역의 스크롤바 숨김 (칩·카드 행이 위아래 선처럼 보이는 것 방지) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 body {

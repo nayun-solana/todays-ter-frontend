@@ -1,12 +1,14 @@
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { X } from 'lucide-react';
 
 type ReviewHeaderProps = {
   title: string;
   onClose?: () => void;
+  rightSlot?: ReactNode;
 };
 
-export default function ReviewHeader({ title, onClose }: ReviewHeaderProps) {
+export default function ReviewHeader({ title, onClose, rightSlot }: ReviewHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -20,7 +22,7 @@ export default function ReviewHeader({ title, onClose }: ReviewHeaderProps) {
         <X size={24} aria-hidden />
       </button>
       <h1 className="flex-1 text-center text-sm font-bold text-gray-6">{title}</h1>
-      <div className="size-6 shrink-0" aria-hidden />
+      {rightSlot ?? <div className="size-6 shrink-0" aria-hidden />}
     </header>
   );
 }

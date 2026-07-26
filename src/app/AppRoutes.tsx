@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
-
 import BottomNavBar, { type NavTabKey } from '../components/BottomNavBar';
 
 // 라우트별 코드 스플리팅: 방문하는 화면 청크만 로드된다.
@@ -26,6 +25,7 @@ const ReportDetailPage = lazy(() => import('../pages/onboarding/ReportDetailPage
 const PlaceDetailPage = lazy(() => import('../pages/place/PlaceDetailPage'));
 const PlaceReviewPage = lazy(() => import('../pages/review/PlaceReviewPage'));
 const ReviewCompletePage = lazy(() => import('../pages/review/ReviewCompletePage'));
+const ReviewDetailPage = lazy(() => import('../pages/review/ReviewDetailPage'));
 const ReviewPage = lazy(() => import('../pages/review/ReviewPage'));
 const MatchedTerPage = lazy(() => import('../pages/matched-ter/MatchedTerPage'));
 const LoginPage = lazy(() => import('../pages/login/LoginPage'));
@@ -100,8 +100,8 @@ export default function AppRoutes() {
           <Route path="/place/:id/review" element={<PlaceReviewPage />} />
           <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
           <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
+          <Route path="/review/:visitId" element={<ReviewDetailPage />} />
           <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
-
           <Route path="/report/:id" element={<ReportPage />} />
           <Route path="/report/:id/detail" element={<ReportDetailPage />} />
 

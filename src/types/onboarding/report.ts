@@ -52,7 +52,7 @@ export type OverallTendency = z.infer<typeof OverallTendency>;
 // ── 사주 리포트 응답 ──
 
 export const SajuReportResponse = z.object({
-  reportId: z.string(),
+  reportId: z.number().int(),
   reportType: ReportType,
   headline: z.string(),
   sajuTypeName: z.string(),
@@ -114,7 +114,7 @@ export const RecommendationItem = z.object({
 export type RecommendationItem = z.infer<typeof RecommendationItem>;
 
 export const CategorySajuReportResponse = z.object({
-  reportId: z.string(),
+  reportId: z.number().int(),
   category: SajuReportCategory,
   summary: SajuReportSummary,
   sajuCore: z.array(SajuCoreItem),

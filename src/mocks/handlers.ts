@@ -82,14 +82,14 @@ export const handlers = [
   // GET /saju-reports/:reportid/summary - 사주 리포트 조회
   http.get('/saju-reports/:reportid/summary', () =>
     ok({
-      reportId: 'report_12345',
+      reportId: 1,
       reportType: 'BASIC',
       headline: '깊게 느끼고 천천히 움직이는',
       sajuTypeName: '수목형',
       elementAnalysis: {
         summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
         primaryElements: ['WATER', 'WOOD'],
-        complementaryElement: 'FIRE',
+        complementaryElements: ['FIRE'],
         distribution: [
           {
             code: 'WOOD',
@@ -145,7 +145,7 @@ export const handlers = [
   // GET /saju-reports/:reportid/detail - 사주 리포트 상세 조회
   http.get('/saju-reports/:reportid/detail', () =>
     ok({
-      reportId: 'report_12345',
+      reportId: 1,
       category: 'GENERAL',
       summary: {
         description: '생각은 깊고 감정은 섬세하지만, 실행의 타이밍에서는 망설임이 생기기 쉬워요.',

@@ -9,8 +9,8 @@ import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
 /** GET /api/saju-reports/{reportId}/summary — 사주 리포트 조회 */
-export async function getSajuReportSummary(reportId: string): Promise<SajuReportResponse> {
-  const res = await axiosInstance.get<ApiResponse>(`/api/saju-reports/${reportId}/summary`);
+export async function getSajuReportSummary(reportId: number): Promise<SajuReportResponse> {
+  const res = await axiosInstance.get<ApiResponse>(`/saju-reports/${reportId}/summary`);
   return SajuReportResponse.parse(getResult(res));
 }
 
@@ -19,10 +19,10 @@ export async function getCategorySajuReport({
   reportId,
   category,
 }: {
-  reportId: string;
+  reportId: number;
   category: SajuReportCategory;
 }): Promise<CategorySajuReportResponse> {
-  const res = await axiosInstance.get<ApiResponse>(`/api/saju-reports/${reportId}/detail`, {
+  const res = await axiosInstance.get<ApiResponse>(`/saju-reports/${reportId}/detail`, {
     params: { category },
   });
   return CategorySajuReportResponse.parse(getResult(res));
@@ -32,8 +32,8 @@ export async function getCategorySajuReport({
 export async function createSajuReportShare({
   reportId,
 }: {
-  reportId: string;
+  reportId: number;
 }): Promise<SajuReportShareResult> {
-  const res = await axiosInstance.post<ApiResponse>(`/api/saju-reports/${reportId}/share`);
+  const res = await axiosInstance.post<ApiResponse>(`/saju-reports/${reportId}/share`);
   return SajuReportShareResult.parse(getResult(res));
 }

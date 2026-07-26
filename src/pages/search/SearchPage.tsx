@@ -159,6 +159,7 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [region, setRegion] = useState('ALL');
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
   const selected = ohaengByKey(params.get('element'));
   const elementType = selected ? (selected.key.toUpperCase() as ElementCode) : undefined;
@@ -241,24 +242,43 @@ export default function SearchPage() {
         <section className="mt-5 pl-5">
           <h2 className="typo-body-2 text-gray-6">테마별 터 컬렉션</h2>
           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto py-1.5 pr-5">
-            {themes.map((theme) => (
-              <div
-                key={theme.code}
-                className="flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border border-gray-2 bg-white py-3 pr-10 pl-4 shadow-card"
-              >
-                <img
-                  src={THEME_ICONS[theme.code] ?? themeOther}
-                  alt=""
-                  className="size-[30px] shrink-0"
-                />
-                <div className="flex flex-col gap-1.5 whitespace-nowrap">
-                  <p className="text-sm leading-none font-bold text-gray-5">{theme.name}</p>
-                  <p className="mt-1 text-[10px] leading-none text-gray-4">
-                    장소 {theme.placeCount}개
-                  </p>
-                </div>
-              </div>
-            ))}
+            {themes.map((theme) => {
+              const isSelected = selectedTheme === theme.code;
+
+              return (
+                <button
+                  key={theme.code}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedTheme(isSelected ? null : theme.code)}
+                  className={cn(
+                    'flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border py-3 pr-10 pl-4 text-left transition active:scale-[0.98]',
+                    isSelected
+                      ? 'border-primary bg-primary-bg shadow-none'
+                      : 'border-gray-2 bg-white shadow-card',
+                  )}
+                >
+                  <img
+                    src={THEME_ICONS[theme.code] ?? themeOther}
+                    alt=""
+                    className="size-[30px] shrink-0"
+                  />
+                  <div className="flex flex-col gap-1.5 whitespace-nowrap">
+                    <p
+                      className={cn(
+                        'text-sm leading-none font-bold',
+                        isSelected ? 'text-primary' : 'text-gray-5',
+                      )}
+                    >
+                      {theme.name}
+                    </p>
+                    <p className="mt-1 text-[10px] leading-none text-gray-4">
+                      장소 {theme.placeCount}개
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 

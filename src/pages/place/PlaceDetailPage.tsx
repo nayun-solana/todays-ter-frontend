@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
+import placeSampleImage from '../../assets/home/place-sample.jpg';
 import placeImage from '../../assets/place-cheonggyecheon.png';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
@@ -39,30 +40,35 @@ type Review = {
 const REVIEWS: Review[] = [
   {
     id: 'mine',
-    writer: '내 닉네임',
-    date: '2025.06.28',
-    rating: 4,
-    content: '',
-    photoCount: 3,
+    writer: '계수',
+    date: '2026.07.24',
+    rating: 5,
+    content:
+      '퇴근 후 물길을 따라 천천히 걸었어요. 복잡했던 생각이 정리되고 마음도 한결 편안해졌습니다.',
+    photoCount: 2,
     isMine: true,
   },
   {
     id: 'r1',
-    writer: '리뷰 작성자 닉네임',
-    date: '2025.06.28',
-    rating: 4,
-    content: '리뷰 작성 내용',
-    photoCount: 3,
+    writer: '산책하는물고기',
+    date: '2026.07.21',
+    rating: 5,
+    content:
+      '비 온 다음 날 방문했는데 물소리가 시원하고 산책로도 깨끗했어요. 혼자 조용히 걷기 좋았습니다.',
+    photoCount: 2,
   },
   {
     id: 'r2',
-    writer: '리뷰 작성자 닉네임',
-    date: '2025.06.28',
+    writer: '서울뚜벅이',
+    date: '2026.07.18',
     rating: 4,
-    content: '리뷰 작성 내용',
-    photoCount: 3,
+    content:
+      '광화문 근처에서 잠깐 쉬고 싶을 때 들르기 좋아요. 저녁에는 조명이 켜져 분위기가 더 좋았습니다.',
+    photoCount: 1,
   },
 ];
+
+const REVIEW_IMAGES = [placeImage, placeSampleImage];
 
 /** Figma: 별 18×17, 활성 #ffd310 / 비활성 gray-3 */
 function StarRow({ rating }: { rating: number }) {
@@ -84,8 +90,12 @@ function ReviewPhotos({ count }: { count: number }) {
   return (
     <div className="flex gap-1 overflow-x-auto">
       {Array.from({ length: count }, (_, index) => (
-        // ponytail: 후기 사진 asset 미확보 → placeholder. API 연동 시 <img>로 교체
-        <div key={index} className="size-[120px] shrink-0 rounded-btn bg-placeholder" />
+        <img
+          key={index}
+          src={REVIEW_IMAGES[index % REVIEW_IMAGES.length]}
+          alt={`후기 사진 ${index + 1}`}
+          className="size-[120px] shrink-0 rounded-btn object-cover"
+        />
       ))}
     </div>
   );

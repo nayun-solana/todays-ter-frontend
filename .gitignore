@@ -27,3 +27,6 @@ dist-ssr
 
 # Claude Code 개인 설정 및 작업 참고용 문서 (커밋 제외)
 .claude/
+
+# 개인 에이전트 작업 지침 (커밋 제외)
+AGENTS.md

@@ -1,5 +1,7 @@
 // libraries
 import { useNavigate } from 'react-router';
+// hooks
+import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
 // asstets
 import RightIcon from '../../assets/onboarding/right.svg';
 // components
@@ -8,55 +10,67 @@ import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
 import ElementRadarChart from './components/ElementRadarChart';
 //types
-import type { SajuReport, ElementCode } from '../../types/onboarding/report';
+import type { ElementCode, SajuReportResponse } from '../../types/onboarding/report';
 
 export default function ReportPage() {
   const navigate = useNavigate();
 
-  const data = {
-    reportId: 'report_12345',
-    reportType: 'BASIC',
-    headline: '깊게 느끼고 천천히 움직이는',
-    sajuTypeName: '수목형',
-    elementAnalysis: {
-      summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
-      primaryElements: ['WATER', 'WOOD'],
-      complementaryElements: ['FIRE'],
-      distribution: [
-        { code: 'WOOD', percentage: 28 },
-        { code: 'FIRE', percentage: 12 },
-        { code: 'EARTH', percentage: 18 },
-        { code: 'METAL', percentage: 17 },
-        { code: 'WATER', percentage: 25 },
-      ],
-    },
-    overallTendency: {
-      title: '전반적인 성향',
-      items: [
-        {
-          code: 'EMOTION_THOUGHT',
-          title: '감정과 생각의 흐름',
-          description:
-            '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
-          displayOrder: 1,
-        },
-        {
-          code: 'CHOICE_ACTION',
-          title: '선택과 행동 방식',
-          description:
-            '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
-          displayOrder: 2,
-        },
-        {
-          code: 'RECOVERY',
-          title: '회복 방식',
-          description:
-            '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
-          displayOrder: 3,
-        },
-      ],
-    },
-  } satisfies SajuReport;
+  const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
+
+  if (isPending) {
+    return <div>리포트를 불러오는 중입니다.</div>;
+  }
+
+  if (isError) {
+    console.error('사주 리포트 조회 실패:', error);
+
+    return <div>리포트를 불러오지 못했습니다.</div>;
+  }
+
+  // const sajuReportData = {
+  //   reportId: 'report_12345',
+  //   reportType: 'BASIC',
+  //   headline: '깊게 느끼고 천천히 움직이는',
+  //   sajuTypeName: '수목형',
+  //   elementAnalysis: {
+  //     summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
+  //     primaryElements: ['WATER', 'WOOD'],
+  //     complementaryElements: ['FIRE'],
+  //     distribution: [
+  //       { code: 'WOOD', percentage: 28 },
+  //       { code: 'FIRE', percentage: 12 },
+  //       { code: 'EARTH', percentage: 18 },
+  //       { code: 'METAL', percentage: 17 },
+  //       { code: 'WATER', percentage: 25 },
+  //     ],
+  //   },
+  //   overallTendency: {
+  //     title: '전반적인 성향',
+  //     items: [
+  //       {
+  //         code: 'EMOTION_THOUGHT',
+  //         title: '감정과 생각의 흐름',
+  //         description:
+  //           '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
+  //         displayOrder: 1,
+  //       },
+  //       {
+  //         code: 'CHOICE_ACTION',
+  //         title: '선택과 행동 방식',
+  //         description:
+  //           '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
+  //         displayOrder: 2,
+  //       },
+  //       {
+  //         code: 'RECOVERY',
+  //         title: '회복 방식',
+  //         description:
+  //           '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
+  //         displayOrder: 3,
+  //       },
+  //     ],
+  //   },
+  // } satisfies SajuReportResponse;
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {
@@ -84,20 +98,22 @@ export default function ReportPage() {
           <p className="text-[10px]font-bold text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
             {/* Body 2 */}
-            <p className="text-base font-bold text-white">{data.headline}</p>
+            <p className="text-base font-bold text-white">{sajuReportData!.headline}</p>
             {/* Head 1 */}
-            <p className="text-2xl font-extrabold text-white">{data.sajuTypeName}</p>
+            <p className="text-2xl font-extrabold text-white">{sajuReportData!.sajuTypeName}</p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <ContentBox>
             {/* 부가설명폰트 */}
-            <p className="text-[10px] font-bold text-gray-5">{data.elementAnalysis.summary}</p>
+            <p className="text-[10px] font-bold text-gray-5">
+              {sajuReportData!.elementAnalysis.summary}
+            </p>
             <div className="flex flex-wrap gap-1.5">
-              {data.elementAnalysis.primaryElements.map((element: ElementCode) => (
+              {sajuReportData!.elementAnalysis.primaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="primary" />
               ))}
-              {data.elementAnalysis.complementaryElements.map((element: ElementCode) => (
+              {sajuReportData!.elementAnalysis.complementaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="complementary" />
               ))}
             </div>
@@ -106,12 +122,12 @@ export default function ReportPage() {
             <div className="flex items-center gap-4">
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
-                <ElementRadarChart elementAnalysis={data.elementAnalysis} />
+                <ElementRadarChart elementAnalysis={sajuReportData!.elementAnalysis} />
               </div>
 
               {/* 오른쪽 오행 분포 */}
               <div className="flex w-[160px] shrink-0 flex-col gap-3">
-                {data.elementAnalysis.distribution.map((item) => {
+                {sajuReportData!.elementAnalysis.distribution.map((item) => {
                   const { label, color } = parseElementCodeandColor(item.code);
 
                   const percentage = Math.min(Math.max(item.percentage, 0), 100);
@@ -151,7 +167,7 @@ export default function ReportPage() {
           </ContentBox>
           <ContentBox title="전반적인 성향">
             <div className="flex flex-col gap-3">
-              {data.overallTendency.items.map((item) => (
+              {sajuReportData!.overallTendency.items.map((item) => (
                 <div key={item.code} className="flex flex-col gap-1">
                   {/* 부가설명폰트 */}
                   <p className="text-[10px] font-bold text-primary">{item.title}</p>

@@ -256,7 +256,6 @@ export default function OnboardingPage1() {
 
       <Button
         variant="primary"
-        fullWidth
         disabled={!canSubmit || saveSaju.isPending}
         className="mt-auto"
         onClick={submitSaju}

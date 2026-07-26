@@ -165,7 +165,6 @@ export default function ReportPage() {
         <div className="flex flex-col gap-2">
           <Button
             variant="primary"
-            fullWidth
             onClick={() => {}}
             className="flex items-center justify-center gap-3"
           >
@@ -175,7 +174,6 @@ export default function ReportPage() {
           </Button>
           <Button
             variant="secondary"
-            fullWidth
             onClick={() => {
               navigate('/onboarding/step-3');
             }}

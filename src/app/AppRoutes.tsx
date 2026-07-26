@@ -100,9 +100,8 @@ export default function AppRoutes() {
           <Route path="/place/:id/review" element={<PlaceReviewPage />} />
           <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
           <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
-          <Route path="/matched-ter/:id/:reviewId" element={<ReviewDetailPage />} />
+          <Route path="/review/:visitId" element={<ReviewDetailPage />} />
           <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
-
           <Route path="/report/:id" element={<ReportPage />} />
           <Route path="/report/:id/detail" element={<ReportDetailPage />} />
 

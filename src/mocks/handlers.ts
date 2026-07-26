@@ -287,16 +287,62 @@ export const handlers = [
   // GET /my-places/visited/:visitId — 다녀온 터 후기 상세
   http.get('*/my-places/visited/:visitId', ({ params }) => {
     const visitId = Number(params.visitId);
+    const VISITED_REVIEWS: Record<
+      number,
+      {
+        placeId: number;
+        placeName: string;
+        visitVerifiedAt: string;
+        rating: number;
+        content: string;
+        imageUrls: string[];
+      }
+    > = {
+      101: {
+        placeId: 25,
+        placeName: '남산타워',
+        visitVerifiedAt: '2026-06-25',
+        rating: 5,
+        content: '오늘은 흙의 기운 받으러 남산타워로!',
+        imageUrls: [],
+      },
+      102: {
+        placeId: 2,
+        placeName: '한강공원',
+        visitVerifiedAt: '2026-06-24',
+        rating: 4,
+        content:
+          '생각이 많았던 날이었는데, 물길을 따라 걷다 보니 마음이 조금 가라앉았다. 조용히 혼자 있기 좋은 터였다.',
+        imageUrls: [],
+      },
+      103: {
+        placeId: 31,
+        placeName: '성수동 카페거리',
+        visitVerifiedAt: '2026-06-23',
+        rating: 4,
+        content: '오늘은 불의 기운 받으러 성수동으로!',
+        imageUrls: [],
+      },
+      104: {
+        placeId: 13,
+        placeName: '북촌 한옥마을',
+        visitVerifiedAt: '2026-06-22',
+        rating: 3,
+        content: '골목을 걸으며 목의 기운을 충전했다.',
+        imageUrls: [],
+      },
+    };
+
+    const review = VISITED_REVIEWS[visitId] ?? VISITED_REVIEWS[102];
 
     return ok({
-      visitId: Number.isFinite(visitId) ? visitId : 10,
-      placeId: 2,
-      placeName: '청계천 모전교',
-      visitVerifiedAt: '2025-06-28',
-      rating: 4,
-      content:
-        '생각이 많았던 날이었는데, 물길을 따라 걷다 보니 마음이 조금 가라앉았다. 조용히 혼자 있기 좋은 터였다.',
-      imageUrls: [],
+      visitId: Number.isFinite(visitId) ? visitId : 102,
+      placeId: review.placeId,
+      placeName: review.placeName,
+      visitVerifiedAt: review.visitVerifiedAt,
+      rating: review.rating,
+      content: review.content,
+      imageUrls: review.imageUrls,
       createdAt: '2026-07-19T10:00:00',
       updatedAt: '2026-07-19T10:00:00',
     });
@@ -338,7 +384,8 @@ export const handlers = [
     if (type === 'recordId') {
       return ok([
         {
-          placeId: 10,
+          placeId: 25,
+          visitId: 101,
           placeName: '남산타워',
           thumbnailUrl:
             'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
@@ -347,7 +394,8 @@ export const handlers = [
           element: '토',
         },
         {
-          placeId: 11,
+          placeId: 2,
+          visitId: 102,
           placeName: '한강공원',
           thumbnailUrl:
             'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
@@ -356,7 +404,8 @@ export const handlers = [
           element: '수',
         },
         {
-          placeId: 12,
+          placeId: 31,
+          visitId: 103,
           placeName: '성수동 카페거리',
           thumbnailUrl:
             'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
@@ -366,6 +415,7 @@ export const handlers = [
         },
         {
           placeId: 13,
+          visitId: 104,
           placeName: '북촌 한옥마을',
           thumbnailUrl: null,
           categories: ['건강'],

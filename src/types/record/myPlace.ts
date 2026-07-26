@@ -11,6 +11,7 @@ export type MyPlaceElement = z.infer<typeof MyPlaceElement>;
 /** GET /my-places?type= 응답 result 항목 */
 export const MyPlaceItem = z.object({
   placeId: z.number().int().positive(),
+  visitId: z.number().int().positive().optional(),
   placeName: z.string().min(1),
   thumbnailUrl: z.string().url().nullable(),
   categories: z.array(z.string()),

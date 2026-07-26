@@ -15,7 +15,7 @@ function formatVerifiedAt(date: string) {
 }
 
 export default function ReviewDetailPage() {
-  const { id: visitId } = useParams();
+  const { visitId } = useParams();
   const reviewQuery = useVisitedReviewDetail(visitId);
   const review = reviewQuery.data;
   const photos = review?.imageUrls ?? [];

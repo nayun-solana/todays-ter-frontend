@@ -48,7 +48,7 @@ export default function RecordPage() {
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
             {places.map((place) => (
-              <li key={place.placeId}>
+              <li key={place.visitId ?? place.placeId}>
                 <RecordPlaceCard
                   name={place.placeName}
                   categories={place.categories}
@@ -56,8 +56,8 @@ export default function RecordPage() {
                   day={place.element}
                   imageUrl={place.thumbnailUrl ?? undefined}
                   onClick={
-                    activeTab === 'visited'
-                      ? () => navigate(`/review/${place.placeId}`)
+                    activeTab === 'visited' && place.visitId != null
+                      ? () => navigate(`/review/${place.visitId}`)
                       : undefined
                   }
                 />

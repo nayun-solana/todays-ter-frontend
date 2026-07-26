@@ -21,9 +21,11 @@ jobs:
             const body = pr.body || '';
             const errors = [];
 
-            const titlePattern = /^(feat|fix|docs|style|refactor|chore|design|test): .+/;
+            const titlePattern = /^(feat|fix|docs|style|refactor|chore|design|test)\s*:\s+\S.*/i;
             if (!titlePattern.test(title)) {
-              errors.push('PR 제목은 "feat: 내용" 형식으로 작성해 주세요.');
+              errors.push(
+                'PR 제목은 "type: 내용" 형식으로 작성해 주세요. 허용 type: feat, fix, docs, style, refactor, chore, design, test',
+              );
             }
 
             const requiredSections = ['## 작업 내용', '## 관련 이슈', '## 확인 사항'];

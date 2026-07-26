@@ -10,7 +10,7 @@ import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
 import ElementRadarChart from './components/ElementRadarChart';
 //types
-import type { ElementCode, SajuReportResponse } from '../../types/onboarding/report';
+import type { ElementCode } from '../../types/onboarding/report';
 
 export default function ReportPage() {
   const navigate = useNavigate();

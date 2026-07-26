@@ -90,7 +90,7 @@ export default function ReportPage() {
   };
 
   return (
-    <div className="bg-primary-bg max-w-[390px] mx-auto relative">
+    <div className="bg-primary-bg mx-auto relative">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
       <div className="relative z-10 flex flex-col gap-5 px-5 pt-5.5 pb-10">
         <div className="flex flex-col gap-3">

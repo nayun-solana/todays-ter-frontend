@@ -18,15 +18,13 @@ https://todays-ter-frontend.vercel.app
 
 ## 기술 스택
 
-| 구분 | 사용 기술 |
-| --- | --- |
-| UI | React 19, TypeScript, Tailwind CSS 4, `clsx`, `tailwind-merge` |
-| 라우팅 | React Router 8, 라우트 단위 lazy loading |
-| 서버 상태·통신 | TanStack Query, Axios, Zod |
-| 시각화·모션 | Recharts, Motion, Lucide React |
-| 개발 환경 | Vite, MSW, ESLint, Prettier |
-
-`react-hook-form`, `zustand`는 현재 소스에서 사용하지 않으므로 기술 스택 설명에서 제외했습니다.
+| 구분         | 사용 기술                                                      |
+| ------------ | -------------------------------------------------------------- |
+| UI           | React 19, TypeScript, Tailwind CSS 4, `clsx`, `tailwind-merge` |
+| 라우팅       | React Router 8, 라우트 단위 lazy loading                       |
+| 상태·폼·통신 | TanStack Query, Zustand, React Hook Form, Axios, Zod           |
+| 시각화·모션  | Recharts, Motion, Lucide React                                 |
+| 개발 환경    | Vite, MSW, ESLint, Prettier                                    |
 
 ## 프로젝트 구조
 

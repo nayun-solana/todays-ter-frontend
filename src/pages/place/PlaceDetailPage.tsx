@@ -8,8 +8,9 @@ import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
+import { usePlaceDetail } from '../../hooks/place/usePlace';
 import { cn } from '../../lib/cn';
-import { ohaengByKey } from '../../lib/ohaeng';
+import { ohaengByKey, ohaengByLabel } from '../../lib/ohaeng';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
@@ -240,7 +241,14 @@ export default function PlaceDetailPage() {
   const [tab, setTab] = useState<Tab>('지도');
   const [reviews, setReviews] = useState(REVIEWS);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const element = ohaengByKey(PLACE.element)!;
+  const placeQuery = usePlaceDetail(id);
+  const place = placeQuery.data;
+  const placeName = place?.placeName ?? PLACE.name;
+  const element = place ? ohaengByLabel(place.element)! : ohaengByKey(PLACE.element)!;
+  const theme = place?.hashtags[0] ?? PLACE.theme;
+  const featureQuestion = place?.description.question ?? '이 터의 특징은 무엇인가요?';
+  const feature = place?.description.answer ?? PLACE.feature;
+  const address = place?.address ?? PLACE.address;
 
   const myReview = reviews.find((review) => review.isMine);
   const otherReviews = reviews.filter((review) => !review.isMine);
@@ -262,12 +270,12 @@ export default function PlaceDetailPage() {
       />
 
       <img
-        src={placeImage}
-        alt={PLACE.name}
+        src={place?.imageUrl ?? placeImage}
+        alt={placeName}
         className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
       />
 
-      <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{PLACE.name}</h2>
+      <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{placeName}</h2>
 
       <div className="mt-2 flex gap-1 px-5">
         <span className={cn('flex h-8 items-center gap-1 rounded-btn px-3', element.bg)}>
@@ -276,13 +284,13 @@ export default function PlaceDetailPage() {
         </span>
         <span className="typo-body-4 flex h-8 items-center gap-1 rounded-btn border border-gray-2 bg-white px-3 text-gray-5">
           <span>#</span>
-          <span>{PLACE.theme}</span>
+          <span>{theme}</span>
         </span>
       </div>
 
       <div className="mx-5 mt-2 flex flex-col gap-2.5 rounded-btn border border-gray-2 px-4 py-3">
-        <p className="typo-body-4 text-primary">이 터의 특징은 무엇인가요?</p>
-        <p className="typo-sub-3 text-gray-5">{PLACE.feature}</p>
+        <p className="typo-body-4 text-primary">{featureQuestion}</p>
+        <p className="typo-sub-3 text-gray-5">{feature}</p>
       </div>
 
       <nav className="mt-4 flex gap-[30px] px-8">
@@ -315,8 +323,10 @@ export default function PlaceDetailPage() {
           <div className="px-5 pt-4">
             {/* ponytail: 지도 SDK는 새 dependency라 금지, SDK 결정 후 교체 */}
             <div className="h-40 rounded-btn bg-placeholder" />
-            <p className="typo-body-3 mt-2.5 pl-2.5 text-gray-6">{PLACE.address}</p>
-            <p className="typo-sub-3 mt-1.5 pl-2.5 text-gray-6">{PLACE.addressDetail}</p>
+            <p className="typo-body-3 mt-2.5 pl-2.5 text-gray-6">{address}</p>
+            {!place ? (
+              <p className="typo-sub-3 mt-1.5 pl-2.5 text-gray-6">{PLACE.addressDetail}</p>
+            ) : null}
           </div>
         )}
 

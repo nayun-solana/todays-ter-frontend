@@ -1,5 +1,6 @@
 // libraries
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 // components
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
@@ -32,6 +33,8 @@ const CONCERNS: Concern[] = [
 
 /** 온보딩3 — 고민 유형 선택 (다중 선택). */
 export default function OnboardingPage3() {
+  const navigate = useNavigate();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const toggle = (id: string) => {
@@ -74,7 +77,7 @@ export default function OnboardingPage3() {
         disabled={selectedIds.length === 0}
         className="mt-auto"
         onClick={() => {
-          // TODO: 선택 고민 유형 저장 후 다음 플로우로 이동 (라우팅/상태 연동은 후속 작업)
+          navigate('/home', { state: { selectedConcerns: selectedIds } });
         }}
       >
         오늘의 터 시작하기

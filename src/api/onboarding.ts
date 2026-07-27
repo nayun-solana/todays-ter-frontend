@@ -25,9 +25,7 @@ export async function saveGuestSaju(body: GuestSajuRequest): Promise<GuestSajuRe
 }
 
 /** PUT /api/guest-onboarding/concerns — 고민 유형 저장·수정 (온보딩3) */
-export async function saveGuestConcerns(
-  body: GuestConcernRequest,
-): Promise<GuestConcernResponse> {
+export async function saveGuestConcerns(body: GuestConcernRequest): Promise<GuestConcernResponse> {
   const res = await axiosInstance.put<ApiResponse>('/api/guest-onboarding/concerns', body);
   return GuestConcernResponse.parse(getResult(res));
 }

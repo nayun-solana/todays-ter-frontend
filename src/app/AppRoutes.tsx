@@ -29,7 +29,6 @@ const ReviewDetailPage = lazy(() => import('../pages/review/ReviewDetailPage'));
 const ReviewPage = lazy(() => import('../pages/review/ReviewPage'));
 const MatchedTerPage = lazy(() => import('../pages/matched-ter/MatchedTerPage'));
 const LoginPage = lazy(() => import('../pages/login/LoginPage'));
-const TestPage = lazy(() => import('../pages/test'));
 const PlaceReviewCompletePage = lazy(() => import('../pages/review/PlaceReviewCompletePage'));
 
 const TAB_PATHS: Record<NavTabKey, string> = {
@@ -113,8 +112,6 @@ export default function AppRoutes() {
           <Route path="/my/permissions" element={<PermissionsPage />} />
           <Route path="/my/withdrawal" element={<WithdrawalPage />} />
 
-          {/* ponytail: 화면 확인용 임시 라우트. PR 전 삭제 */}
-          <Route path="/test" element={<TestPage />} />
         </Route>
 
         {/* 없는 주소는 임시로 홈으로 */}

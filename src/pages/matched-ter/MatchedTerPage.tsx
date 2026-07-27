@@ -54,12 +54,11 @@ export default function MatchedTerPage() {
       <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-white px-5 py-4">
         <Button
           variant="primary"
-          fullWidth
           onClick={() => navigate(`/matched-ter/${id}/review`)}
         >
           다녀왔어요
         </Button>
-        <Button variant="secondary" fullWidth>
+        <Button variant="secondary">
           길찾기
         </Button>
       </div>

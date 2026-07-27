@@ -4,11 +4,6 @@ import { cn } from '../lib/cn';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary';
-  /**
-   * @deprecated 아무 효과 없음 — 기본 스타일에 이미 w-full이 있다.
-   * 기존 호출부(온보딩·matched-ter) 호환용으로만 남겨둔 값.
-   */
-  fullWidth?: boolean;
 }
 
 /**
@@ -17,13 +12,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 export default function Button({
   variant = 'primary',
-  fullWidth,
   disabled,
   className,
   ...rest
 }: ButtonProps) {
-  void fullWidth; // deprecated — DOM으로 새어나가지 않게 구조분해만 하고 버린다
-
   return (
     <button
       type="button"

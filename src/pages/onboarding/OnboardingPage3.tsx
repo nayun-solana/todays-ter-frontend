@@ -72,7 +72,6 @@ export default function OnboardingPage3() {
 
       <Button
         variant="primary"
-        fullWidth
         disabled={selectedIds.length === 0}
         className="mt-auto"
         onClick={() => {

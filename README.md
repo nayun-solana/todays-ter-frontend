@@ -2,57 +2,49 @@
 
 ## 프로젝트 소개
 
-오늘의 터 FE 레포지토리입니다.
+오늘의 터 웹 서비스의 프론트엔드 레포지토리입니다. 오행 기반 홈, 장소 탐색·상세, 온보딩·리포트, 방문 기록, 마이페이지를 제공합니다.
 
 ## 배포 주소
 
 https://todays-ter-frontend.vercel.app
 
+## 주요 기능
+
+- 홈: 오늘의 기운, 에너지 루틴, 추천 장소
+- 탐색: 지역·오행 필터, 에디터 픽, 장소 상세 이동
+- 온보딩: 비회원 사주 입력, 고민 선택, 분석 리포트
+- 기록·후기: 방문 기록과 장소·추천 터 후기 작성 UI
+- 마이: 프로필, 계정 연결, 알림·권한·사주·탈퇴 화면
+
 ## 기술 스택
 
-- React
-- TypeScript
-- Vite
-- React Router
-- TanStack Query
-- Zustand
-- Tailwind CSS
-- React Hook Form
-- Zod
-- Axios
-- ESLint
-- Prettier
+| 구분         | 사용 기술                                                      |
+| ------------ | -------------------------------------------------------------- |
+| UI           | React 19, TypeScript, Tailwind CSS 4, `clsx`, `tailwind-merge` |
+| 라우팅       | React Router 8, 라우트 단위 lazy loading                       |
+| 상태·폼·통신 | TanStack Query, Zustand, React Hook Form, Axios, Zod           |
+| 시각화·모션  | Recharts, Motion, Lucide React                                 |
+| 개발 환경    | Vite, MSW, ESLint, Prettier                                    |
 
-## 주요 라이브러리 역할
+## 프로젝트 구조
 
-프로젝트에서 사용하는 주요 라이브러리와 역할은 아래와 같습니다.
+```text
+src/
+├── app/          # 라우팅과 앱 레이아웃
+├── components/   # 버튼, 헤더, 입력, 네비게이션 등 공용 UI
+├── pages/        # 화면 단위 기능
+├── api/          # Axios 기반 API 호출과 공통 응답 처리
+├── hooks/        # TanStack Query 도메인 훅
+├── types/        # Zod 스키마와 API 타입
+└── mocks/        # 개발 환경 MSW 핸들러
+```
 
-| 라이브러리      | 역할                                          | 사용 예시                                    |
-| --------------- | --------------------------------------------- | -------------------------------------------- |
-| React           | 화면을 컴포넌트 단위로 만드는 UI 라이브러리   | 버튼, 헤더, 페이지 구성                      |
-| TypeScript      | JavaScript에 타입을 추가해 오류를 줄이는 도구 | props 타입, API 응답 타입 정의               |
-| Vite            | 빠른 개발 서버와 빌드 도구                    | `pnpm dev`, `pnpm build`                     |
-| React Router    | 페이지 이동과 라우팅 관리                     | 로그인 페이지, 메인 페이지, 상세 페이지 이동 |
-| TanStack Query  | 서버 API 데이터 상태 관리                     | 게시글 목록 조회, 사용자 정보 조회           |
-| Zustand         | 전역 상태 관리                                | 로그인 사용자 정보, 모달 열림 상태           |
-| Tailwind CSS    | CSS 클래스로 빠르게 UI 스타일 작성            | 여백, 색상, 반응형 레이아웃                  |
-| clsx            | 조건에 따라 `className` 조합                  | 선택된 탭 스타일 변경                        |
-| tailwind-merge  | Tailwind 클래스 충돌 정리                     | `bg-black`과 `bg-red-500` 중 마지막 값 적용  |
-| React Hook Form | 입력 폼 상태 관리                             | 로그인, 회원가입, 글 작성 폼                 |
-| Zod             | 입력값 검증                                   | 이메일 형식, 비밀번호 길이, 필수값 확인      |
-| Axios           | API 요청 관리                                 | 로그인 요청, 데이터 조회, 공통 에러 처리     |
-| ESLint          | 코드 문제 검사                                | 사용하지 않는 변수, React Hook 규칙 검사     |
-| Prettier        | 코드 포맷 자동 정리                           | 들여쓰기, 따옴표, 줄바꿈 통일                |
+## API와 개발 모킹
 
-### 라이브러리 사용 기준
-
-- 화면 이동이 필요한 경우 `React Router`를 사용합니다.
-- 서버에서 데이터를 가져오거나 저장하는 경우 `TanStack Query`를 사용합니다.
-- 여러 화면에서 공유해야 하는 클라이언트 상태는 `Zustand`를 사용합니다.
-- 입력 폼은 `React Hook Form`으로 관리하고, 검증은 `Zod`를 사용합니다.
-- API 요청 공통 설정이 필요하면 `Axios`를 사용합니다.
-- UI 스타일은 `Tailwind CSS`를 기본으로 사용합니다.
-- 조건부 클래스 조합은 `clsx`, Tailwind 클래스 충돌 정리는 `tailwind-merge`를 사용합니다.
+- 홈, 탐색, 마이페이지, 장소 상세, 온보딩, 추천 상세 API를 도메인별 API 함수와 Query 훅으로 연결합니다.
+- 응답은 `ApiResponse.result`를 꺼낸 뒤 Zod로 검증합니다.
+- 개발 환경에서는 MSW가 미배포 API를 모킹하고, 처리하지 않은 요청은 그대로 통과시킵니다.
+- 비회원 온보딩은 쿠키 기반 세션을 사용하며, 개발 서버에서 `/api`, `/auth` 요청을 운영 API로 프록시합니다.
 
 ## 실행 방법
 
@@ -74,6 +66,13 @@ pnpm format
 - `pnpm lint`: 코드 규칙 검사
 - `pnpm build`: 배포 가능한 상태로 빌드되는지 확인
 - `pnpm format`: Prettier 기준으로 코드 포맷 정리
+
+배포 전에는 아래 명령으로 타입 검사와 프로덕션 빌드를 확인합니다.
+
+```bash
+pnpm lint
+pnpm build
+```
 
 ## 협업 흐름
 

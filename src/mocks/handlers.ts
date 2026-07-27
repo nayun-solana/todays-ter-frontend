@@ -10,11 +10,17 @@ function ok<T>(result: T) {
   return HttpResponse.json({ isSuccess: true, code: 'COMMON200', message: '성공', result });
 }
 
+const CHEONGGYECHEON_IMAGE_URL = new URL(
+  '../assets/place-cheonggyecheon.png',
+  import.meta.url,
+).href;
+const PLACE_SAMPLE_IMAGE_URL = new URL('../assets/home/place-sample.jpg', import.meta.url).href;
+
 const SEARCH_PLACES = [
   {
     placeId: 25,
     placeName: '경복궁',
-    thumbnailUrl: null,
+    thumbnailUrl: PLACE_SAMPLE_IMAGE_URL,
     summary: '안정과 번영의 기운, 토기 충전',
     element: { code: 'EARTH', name: '토' },
     theme: { code: 'WEALTH', name: '재물 터' },
@@ -25,7 +31,7 @@ const SEARCH_PLACES = [
   {
     placeId: 2,
     placeName: '청계천 모전교',
-    thumbnailUrl: null,
+    thumbnailUrl: CHEONGGYECHEON_IMAGE_URL,
     summary: '도심 속 힐링 물길, 수기 충전',
     element: { code: 'WATER', name: '수' },
     theme: { code: 'HEALTH', name: '건강 터' },
@@ -36,12 +42,34 @@ const SEARCH_PLACES = [
   {
     placeId: 31,
     placeName: '북한산 둘레길',
-    thumbnailUrl: null,
+    thumbnailUrl: PLACE_SAMPLE_IMAGE_URL,
     summary: '새로운 시작의 기운, 목기 충전',
     element: { code: 'WOOD', name: '목' },
     theme: { code: 'CAREER', name: '커리어 터' },
     averageRating: 4.9,
     distanceKm: 8.3,
+    regionCode: 'SEOUL',
+  },
+  {
+    placeId: 41,
+    placeName: '남산서울타워',
+    thumbnailUrl: CHEONGGYECHEON_IMAGE_URL,
+    summary: '활력과 열정의 기운, 화기 충전',
+    element: { code: 'FIRE', name: '화' },
+    theme: { code: 'LOVE', name: '연애 터' },
+    averageRating: 4.6,
+    distanceKm: 4.2,
+    regionCode: 'SEOUL',
+  },
+  {
+    placeId: 52,
+    placeName: '동대문디자인플라자',
+    thumbnailUrl: PLACE_SAMPLE_IMAGE_URL,
+    summary: '정돈과 결단의 기운, 금기 충전',
+    element: { code: 'METAL', name: '금' },
+    theme: { code: 'CAREER', name: '커리어 터' },
+    averageRating: 4.5,
+    distanceKm: 5.1,
     regionCode: 'SEOUL',
   },
 ] as const;

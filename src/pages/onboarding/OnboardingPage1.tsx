@@ -88,12 +88,14 @@ export default function OnboardingPage1() {
     birthTimeUnknown: unknownTime,
   });
 
-  /** 사주 저장 후 분석(온보딩2)으로 이동. */
+  /** 사주 저장 후 리포트로 이동. */
   const submitSaju = () => {
     if (saveSaju.isPending) return; // 중복 제출 방지
+    // 데모: 프로덕션은 cross-site라 게스트 쿠키(SameSite=Lax)가 안 실려 저장이 실패할 수 있음.
+    // 흐름이 멈추지 않도록 성공/실패 무관 진행(onSettled). 로그인 '비회원 시작' 버튼과 동일 패턴.
+    // 실서비스(BE SameSite=None;Secure/CORS 또는 동일도메인 배포) 시 onSuccess로 복원.
     saveSaju.mutate(buildSajuRequest(), {
-      onSuccess: () => navigate('/report/1'),
-      // TODO: 에러 UX(토스트) — 현재는 버튼 재시도 가능 상태 유지
+      onSettled: () => navigate('/report/1'),
     });
   };
 

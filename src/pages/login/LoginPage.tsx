@@ -5,7 +5,6 @@ import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
-type Provider = 'kakao' | 'apple' | 'google';
 
 function prefersReducedMotion(): boolean {
   return (
@@ -24,11 +23,7 @@ export default function LoginPage() {
   // 모션 최소화 설정이면 인트로를 건너뛰고 바로 로그인 화면을 보여준다.
   const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? 'login' : 'intro'));
 
-  const handleLogin = (provider: Provider) => {
-    // TODO: 소셜 로그인 연동. 성공 시 사주 입력(온보딩)으로 이동.
-    navigate('/onboarding/step-1', { state: { provider } });
-  };
-
+  // 소셜 로그인은 BE 미구현 → 데모에서 버튼 비활성화. 연동 시 handleLogin 복원.
   const initSession = useInitGuestSession();
   const handleGuest = () => {
     // 비회원 세션 발급(쿠키) 후 온보딩 진입. 실패해도 온보딩1 마운트에서 재보장.
@@ -40,7 +35,7 @@ export default function LoginPage() {
   return (
     <div className="relative mx-auto h-screen w-full max-w-[375px] overflow-hidden bg-primary">
       {phase === 'intro' && <BallIntro onDone={() => setPhase('login')} />}
-      {phase === 'login' && <LoginContent onLogin={handleLogin} onGuest={handleGuest} />}
+      {phase === 'login' && <LoginContent onGuest={handleGuest} />}
     </div>
   );
 }
@@ -219,13 +214,7 @@ function BallIntro({ onDone }: { onDone: () => void }) {
   );
 }
 
-function LoginContent({
-  onLogin,
-  onGuest,
-}: {
-  onLogin: (provider: Provider) => void;
-  onGuest: () => void;
-}) {
+function LoginContent({ onGuest }: { onGuest: () => void }) {
   return (
     <div className="absolute inset-0">
       {/* 흰 헤더 원 (Figma 551px, 상단 곡선 헤더) */}
@@ -264,29 +253,33 @@ function LoginContent({
 
         <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />
 
+        {/* 소셜 로그인: BE 미구현 → 데모에서 비활성화(회색). 연동 시 disabled 제거 */}
         <button
           type="button"
-          onClick={() => onLogin('kakao')}
-          className="mt-2.5 flex h-12 items-center justify-center gap-2.5 rounded-full bg-kakao"
+          disabled
+          aria-disabled
+          className="mt-2.5 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
         >
-          <KakaoIcon className="size-5" />
-          <span className="text-sm font-bold text-black/85">카카오로 로그인</span>
+          <KakaoIcon className="size-5 grayscale" />
+          <span className="text-sm font-bold text-white">카카오로 로그인</span>
         </button>
         <button
           type="button"
-          onClick={() => onLogin('apple')}
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
+          disabled
+          aria-disabled
+          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
         >
-          <AppleIcon className="h-5 w-4" />
-          <span className="text-sm font-bold text-black/85">Apple로 로그인</span>
+          <AppleIcon className="h-5 w-4 grayscale" />
+          <span className="text-sm font-bold text-white">Apple로 로그인</span>
         </button>
         <button
           type="button"
-          onClick={() => onLogin('google')}
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-white"
+          disabled
+          aria-disabled
+          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
         >
-          <GoogleIcon className="size-5" />
-          <span className="text-sm font-bold text-black/85">구글로 로그인</span>
+          <GoogleIcon className="size-5 grayscale" />
+          <span className="text-sm font-bold text-white">구글로 로그인</span>
         </button>
       </div>
 

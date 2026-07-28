@@ -18,7 +18,6 @@ const SajuReportCompletePage = lazy(() =>
   import('../pages/my/SajuEditPage').then((m) => ({ default: m.SajuReportCompletePage })),
 );
 const OnboardingPage1 = lazy(() => import('../pages/onboarding/OnboardingPage1'));
-const OnboardingPage2 = lazy(() => import('../pages/onboarding/OnboardingPage2'));
 const OnboardingPage3 = lazy(() => import('../pages/onboarding/OnboardingPage3'));
 const ReportPage = lazy(() => import('../pages/onboarding/ReportPage'));
 const ReportDetailPage = lazy(() => import('../pages/onboarding/ReportDetailPage'));
@@ -73,8 +72,9 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        {/* TODO(Step 4): 로그인 연동 후 /login 또는 /onboarding 분기 */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
+        {/* 데모 진입점: 서비스 흐름(로그인→온보딩→홈)을 보여주기 위해 로그인으로 시작.
+            실서비스 배포 시 인증(토큰/게스트 세션) 유무에 따라 /home 또는 /login으로 분기 예정. */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* 하단바 있는 메인 탭 */}
         <Route element={<MainTabsLayout />}>
@@ -90,7 +90,6 @@ export default function AppRoutes() {
           <Route path="/onboarding">
             <Route index element={<Navigate to="/onboarding/step-1" replace />} />
             <Route path="step-1" element={<OnboardingPage1 />} />
-            <Route path="step-2" element={<OnboardingPage2 />} />
             <Route path="step-3" element={<OnboardingPage3 />} />
           </Route>
           <Route path="/place/:id" element={<PlaceDetailPage />} />

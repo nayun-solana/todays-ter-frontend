@@ -92,7 +92,7 @@ export default function OnboardingPage1() {
   const submitSaju = () => {
     if (saveSaju.isPending) return; // 중복 제출 방지
     saveSaju.mutate(buildSajuRequest(), {
-      onSuccess: () => navigate('/onboarding/step-2'),
+      onSuccess: () => navigate('/report/1'),
       // TODO: 에러 UX(토스트) — 현재는 버튼 재시도 가능 상태 유지
     });
   };

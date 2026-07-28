@@ -1,10 +1,6 @@
 import { z } from 'zod';
 
-/** POST /auth/kakao/login 요청 */
-export const KakaoLoginRequest = z.object({
-  authorizationCode: z.string().min(1),
-});
-export type KakaoLoginRequest = z.infer<typeof KakaoLoginRequest>;
+/** POST /auth/kakao/login 요청: `{ authorizationCode: string }` (api 함수 파라미터로 전달) */
 
 /** POST /auth/kakao/login 응답 result */
 export const KakaoLoginResponse = z.object({

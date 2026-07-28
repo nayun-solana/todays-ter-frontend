@@ -225,7 +225,13 @@ export default function OnboardingPage1() {
         {dateConfirmed && !dateError && (
           <WheelSelect
             label="태어난 시간"
-            display={unknownTime ? '시간 모름' : timeTouched ? `${pad(time.hour)}:${pad(time.minute)}` : '00:00'}
+            display={
+              unknownTime
+                ? '시간 모름'
+                : timeTouched
+                  ? `${formatHour(time.hour)} ${time.minute}분`
+                  : '00:00'
+            }
             filled={timeFilled}
             open={openField === 'time'}
             onToggle={toggleTime}
@@ -235,8 +241,8 @@ export default function OnboardingPage1() {
                 type="button"
                 onClick={openSkipSheet}
                 className={cn(
-                  'flex shrink-0 items-center gap-1 pb-2 text-xs font-bold',
-                  unknownTime ? 'text-primary' : 'text-gray-disabled',
+                  'flex shrink-0 items-center gap-1 text-xs font-bold',
+                  unknownTime ? 'text-primary' : 'text-gray-3',
                 )}
               >
                 <span

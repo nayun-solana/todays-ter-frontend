@@ -123,9 +123,7 @@ export default function WheelSelect({
             onClick={onToggle}
             className="flex w-full items-center justify-between bg-white px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
           >
-            <span className={cn('text-sm font-bold', filled ? 'text-gray-5' : 'text-gray-disabled')}>
-              {display}
-            </span>
+            <span className="text-sm font-bold text-gray-5">{display}</span>
             <ChevronDown className="text-gray-5" />
           </button>
           <div className="relative">
@@ -145,24 +143,23 @@ export default function WheelSelect({
         </div>
       ) : (
         <div className={cn(shake && 'animate-onboarding-shake')}>
-          <div className="flex items-end justify-between gap-3">
-            <button
-              type="button"
-              onClick={onToggle}
-              className={cn(
-                'flex min-w-0 flex-1 border-b pb-2 text-left text-sm font-bold outline-none',
-                error
-                  ? 'border-[#ff5353] text-[#ff5353]'
-                  : filled
-                    ? 'border-primary text-primary'
-                    : 'border-gray-3 text-gray-disabled',
-              )}
-            >
+          {/* 접힘 = 박스형 입력 (Figma 2417:3786/3890). 값 왼쪽 + 화살표 오른쪽. */}
+          <button
+            type="button"
+            onClick={onToggle}
+            className={cn(
+              'flex w-full items-center justify-between rounded-[20px] border bg-white px-5 py-4 text-left shadow-[0_2px_1px_rgba(0,0,0,0.05)] outline-none',
+              error ? 'border-[#ff5353]' : filled ? 'border-primary-light' : 'border-gray-2',
+            )}
+          >
+            <span className={cn('text-sm font-bold', error ? 'text-[#ff5353]' : 'text-gray-5')}>
               {display}
-            </button>
-            {trailing}
-          </div>
+            </span>
+            <ChevronDown className="text-gray-5" />
+          </button>
           {error ? <p className="mt-2 text-[10px] font-bold text-gray-4">{error}</p> : null}
+          {/* 우측 하단 슬롯 (예: '시간 모름') */}
+          {trailing ? <div className="mt-3 flex justify-end">{trailing}</div> : null}
         </div>
       )}
     </section>

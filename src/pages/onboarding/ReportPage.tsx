@@ -1,7 +1,9 @@
 // libraries
 import { useNavigate } from 'react-router';
 // hooks
-import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
+// import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
+//type
+import type { SajuReportResponse } from '../../types/onboarding/report';
 // asstets
 import RightIcon from '../../assets/onboarding/right.svg';
 // components
@@ -15,62 +17,62 @@ import type { ElementCode } from '../../types/onboarding/report';
 export default function ReportPage() {
   const navigate = useNavigate();
 
-  const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
+  // const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
 
-  if (isPending) {
-    return <div>리포트를 불러오는 중입니다.</div>;
-  }
+  // if (isPending) {
+  //   return <div>리포트를 불러오는 중입니다.</div>;
+  // }
 
-  if (isError) {
-    console.error('사주 리포트 조회 실패:', error);
+  // if (isError) {
+  //   console.error('사주 리포트 조회 실패:', error);
 
-    return <div>리포트를 불러오지 못했습니다.</div>;
-  }
+  //   return <div>리포트를 불러오지 못했습니다.</div>;
+  // }
 
-  // const sajuReportData = {
-  //   reportId: 'report_12345',
-  //   reportType: 'BASIC',
-  //   headline: '깊게 느끼고 천천히 움직이는',
-  //   sajuTypeName: '수목형',
-  //   elementAnalysis: {
-  //     summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
-  //     primaryElements: ['WATER', 'WOOD'],
-  //     complementaryElements: ['FIRE'],
-  //     distribution: [
-  //       { code: 'WOOD', percentage: 28 },
-  //       { code: 'FIRE', percentage: 12 },
-  //       { code: 'EARTH', percentage: 18 },
-  //       { code: 'METAL', percentage: 17 },
-  //       { code: 'WATER', percentage: 25 },
-  //     ],
-  //   },
-  //   overallTendency: {
-  //     title: '전반적인 성향',
-  //     items: [
-  //       {
-  //         code: 'EMOTION_THOUGHT',
-  //         title: '감정과 생각의 흐름',
-  //         description:
-  //           '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
-  //         displayOrder: 1,
-  //       },
-  //       {
-  //         code: 'CHOICE_ACTION',
-  //         title: '선택과 행동 방식',
-  //         description:
-  //           '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
-  //         displayOrder: 2,
-  //       },
-  //       {
-  //         code: 'RECOVERY',
-  //         title: '회복 방식',
-  //         description:
-  //           '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
-  //         displayOrder: 3,
-  //       },
-  //     ],
-  //   },
-  // } satisfies SajuReportResponse;
+  const sajuReportData = {
+    reportId: 1,
+    reportType: 'BASIC',
+    headline: '깊게 느끼고 천천히 움직이는',
+    sajuTypeName: '수목형',
+    elementAnalysis: {
+      summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
+      primaryElements: ['WATER', 'WOOD'],
+      complementaryElements: ['FIRE'],
+      distribution: [
+        { code: 'WOOD', percentage: 28 },
+        { code: 'FIRE', percentage: 12 },
+        { code: 'EARTH', percentage: 18 },
+        { code: 'METAL', percentage: 17 },
+        { code: 'WATER', percentage: 25 },
+      ],
+    },
+    overallTendency: {
+      title: '전반적인 성향',
+      items: [
+        {
+          code: 'EMOTION_THOUGHT',
+          title: '감정과 생각의 흐름',
+          description:
+            '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
+          displayOrder: 1,
+        },
+        {
+          code: 'CHOICE_ACTION',
+          title: '선택과 행동 방식',
+          description:
+            '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
+          displayOrder: 2,
+        },
+        {
+          code: 'RECOVERY',
+          title: '회복 방식',
+          description:
+            '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
+          displayOrder: 3,
+        },
+      ],
+    },
+  } satisfies SajuReportResponse;
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {

@@ -15,6 +15,15 @@ export default function OnboardingStep2Page() {
   const [progress, setProgress] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // progress 내용
+  const progressContent = [
+    { title: '사주 정보 관리', description: '생년월일시 기반 데이터 구조화' },
+    { title: '일간/일지 해석', description: '천간·지지 오행 분석' },
+    { title: '오행 분포 계산', description: '목·화·토·금·수 비율 산출' },
+    { title: '고민 유형별 분석 생성', description: '연애·커리어·재물·인간관계 흐름 정리' },
+    { title: '리포트 정리', description: '기본 터 리포트 완성' },
+  ];
+
   // status bar 색상 변경 (iOS Safari, Android Chrome)
   useEffect(() => {
     const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -50,15 +59,23 @@ export default function OnboardingStep2Page() {
       document.body.style.backgroundColor = previousBodyBackground;
     };
   }, []);
+  // 임시 progress 증가용 effect (1초마다 1씩 증가)
+  useEffect(() => {
+    // 모든 단계가 완료되면 모달 열기
+    if (progress >= progressContent.length) {
+      setIsModalOpen(true);
+      return;
+    }
 
-  // progress 내용
-  const progressContent = [
-    { title: '사주 정보 관리', description: '생년월일시 기반 데이터 구조화' },
-    { title: '일간/일지 해석', description: '천간·지지 오행 분석' },
-    { title: '오행 분포 계산', description: '목·화·토·금·수 비율 산출' },
-    { title: '고민 유형별 분석 생성', description: '연애·커리어·재물·인간관계 흐름 정리' },
-    { title: '리포트 정리', description: '기본 터 리포트 완성' },
-  ];
+    // 1초 후 다음 단계 진행
+    const timer = window.setTimeout(() => {
+      setProgress((prev) => Math.min(prev + 1, progressContent.length));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [progress, progressContent.length]);
 
   return (
     <main
@@ -87,12 +104,6 @@ export default function OnboardingStep2Page() {
             isSuccess={progress > index}
             title={content.title}
             description={content.description}
-            onClick={() => {
-              setProgress((prev) => (prev < progressContent.length ? prev + 1 : prev));
-              if (progress + 1 === progressContent.length) {
-                setIsModalOpen(true);
-              }
-            }}
           />
         ))}
       </div>

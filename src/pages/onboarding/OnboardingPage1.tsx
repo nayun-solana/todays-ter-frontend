@@ -4,10 +4,7 @@ import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
-import {
-  useInitGuestSession,
-  useSaveGuestSaju,
-} from '../../hooks/onboarding/useGuestOnboarding';
+import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
 import type { GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
 import WheelSelect, { type WheelColumnSpec } from './components/WheelSelect';
@@ -96,7 +93,7 @@ export default function OnboardingPage1() {
     // 실서비스(BE SameSite=None;Secure/CORS 또는 동일도메인 배포) 시 onSuccess로 복원.
     // 리포트(/report/:id)는 reportId를 저장 응답에서 받아야 하고 BE 미배포(401)라 여기서 직접 보내지 않는다.
     saveSaju.mutate(buildSajuRequest(), {
-      onSettled: () => navigate('/onboarding/step-3'),
+      onSettled: () => navigate('/onboarding/step-2'),
     });
   };
 
@@ -144,8 +141,18 @@ export default function OnboardingPage1() {
   };
 
   const dateColumns: WheelColumnSpec[] = [
-    { options: YEARS, value: date.year, format: (v) => `${v}년`, onChange: (v) => patchDate({ year: v }) },
-    { options: MONTHS, value: date.month, format: (v) => `${v}월`, onChange: (v) => patchDate({ month: v }) },
+    {
+      options: YEARS,
+      value: date.year,
+      format: (v) => `${v}년`,
+      onChange: (v) => patchDate({ year: v }),
+    },
+    {
+      options: MONTHS,
+      value: date.month,
+      format: (v) => `${v}월`,
+      onChange: (v) => patchDate({ month: v }),
+    },
     {
       options: Array.from({ length: daysInMonth(date.year, date.month) }, (_, i) => i + 1),
       value: date.day,
@@ -155,8 +162,18 @@ export default function OnboardingPage1() {
   ];
 
   const timeColumns: WheelColumnSpec[] = [
-    { options: HOURS, value: time.hour, format: formatHour, onChange: (v) => patchTime({ hour: v }) },
-    { options: MINUTES, value: time.minute, format: (v) => `${v}분`, onChange: (v) => patchTime({ minute: v }) },
+    {
+      options: HOURS,
+      value: time.hour,
+      format: formatHour,
+      onChange: (v) => patchTime({ hour: v }),
+    },
+    {
+      options: MINUTES,
+      value: time.minute,
+      format: (v) => `${v}분`,
+      onChange: (v) => patchTime({ minute: v }),
+    },
   ];
 
   return (
@@ -212,7 +229,11 @@ export default function OnboardingPage1() {
         {calendarType !== null && (
           <WheelSelect
             label="생년월일"
-            display={dateTouched ? `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일` : '0000년 00월 00일'}
+            display={
+              dateTouched
+                ? `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일`
+                : '0000년 00월 00일'
+            }
             filled={dateTouched}
             open={openField === 'date'}
             onToggle={toggleDate}

@@ -71,7 +71,7 @@ export default function OnboardingStep2Page() {
       if (nextProgress === progressContent.length) {
         setIsModalOpen(true);
       }
-    }, 2000);
+    }, 1000);
 
     return () => {
       window.clearTimeout(timer);

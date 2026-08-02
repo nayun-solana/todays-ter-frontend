@@ -18,6 +18,7 @@ const SajuReportCompletePage = lazy(() =>
   import('../pages/my/SajuEditPage').then((m) => ({ default: m.SajuReportCompletePage })),
 );
 const OnboardingPage1 = lazy(() => import('../pages/onboarding/OnboardingPage1'));
+const OnboardingPage2 = lazy(() => import('../pages/onboarding/OnboardingPage2'));
 const OnboardingPage3 = lazy(() => import('../pages/onboarding/OnboardingPage3'));
 const ReportPage = lazy(() => import('../pages/onboarding/ReportPage'));
 const ReportDetailPage = lazy(() => import('../pages/onboarding/ReportDetailPage'));
@@ -90,6 +91,7 @@ export default function AppRoutes() {
           <Route path="/onboarding">
             <Route index element={<Navigate to="/onboarding/step-1" replace />} />
             <Route path="step-1" element={<OnboardingPage1 />} />
+            <Route path="step-2" element={<OnboardingPage2 />} />
             <Route path="step-3" element={<OnboardingPage3 />} />
           </Route>
           <Route path="/place/:id" element={<PlaceDetailPage />} />
@@ -110,7 +112,6 @@ export default function AppRoutes() {
           <Route path="/my/account-links" element={<AccountLinkPage />} />
           <Route path="/my/permissions" element={<PermissionsPage />} />
           <Route path="/my/withdrawal" element={<WithdrawalPage />} />
-
         </Route>
 
         {/* 없는 주소는 임시로 홈으로 */}

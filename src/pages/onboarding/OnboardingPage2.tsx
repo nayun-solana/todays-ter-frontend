@@ -61,16 +61,17 @@ export default function OnboardingStep2Page() {
   }, []);
   // 임시 progress 증가용 effect (1초마다 1씩 증가)
   useEffect(() => {
-    // 모든 단계가 완료되면 모달 열기
-    if (progress >= progressContent.length) {
-      setIsModalOpen(true);
-      return;
-    }
+    if (progress >= progressContent.length) return;
 
-    // 1초 후 다음 단계 진행
     const timer = window.setTimeout(() => {
-      setProgress((prev) => Math.min(prev + 1, progressContent.length));
-    }, 1000);
+      const nextProgress = Math.min(progress + 1, progressContent.length);
+
+      setProgress(nextProgress);
+
+      if (nextProgress === progressContent.length) {
+        setIsModalOpen(true);
+      }
+    }, 2000);
 
     return () => {
       window.clearTimeout(timer);

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 import BottomNavBar, { type NavTabKey } from '../components/BottomNavBar';
+import { RequireMember, RequireRecommendationAccess } from './RequireAuth';
 
 // 라우트별 코드 스플리팅: 방문하는 화면 청크만 로드된다.
 const HomePage = lazy(() => import('../pages/home/HomePage'));
@@ -76,12 +77,15 @@ export default function AppRoutes() {
             실서비스 배포 시 인증(토큰/게스트 세션) 유무에 따라 /home 또는 /login으로 분기 예정. */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* 하단바 있는 메인 탭 */}
+        {/* 하단바 있는 메인 탭. 홈만 게스트 공개, 나머지 탭은 회원 전용.
+            ⚠️ /search는 성원 담당 화면 — 게스트 탐색 허용 여부 팀 확인 필요. */}
         <Route element={<MainTabsLayout />}>
           <Route path="/home" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/record" element={<RecordPage />} />
-          <Route path="/my" element={<MyPage />} />
+          <Route element={<RequireMember />}>
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/record" element={<RecordPage />} />
+            <Route path="/my" element={<MyPage />} />
+          </Route>
         </Route>
 
         {/* 하단바 없는 화면 */}
@@ -92,25 +96,32 @@ export default function AppRoutes() {
             <Route path="step-1" element={<OnboardingPage1 />} />
             <Route path="step-3" element={<OnboardingPage3 />} />
           </Route>
-          <Route path="/place/:id" element={<PlaceDetailPage />} />
-          <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
-          <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
-          <Route path="/place/:id/review" element={<PlaceReviewPage />} />
-          <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
-          <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
-          <Route path="/review/:visitId" element={<ReviewDetailPage />} />
-          <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+          {/* 게스트 조건부: 홈에서 노출이 허용된 추천 카드로 들어온 경우에만 진입 가능 */}
+          <Route element={<RequireRecommendationAccess />}>
+            <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+          </Route>
+
           <Route path="/report/:id" element={<ReportPage />} />
           <Route path="/report/:id/detail" element={<ReportDetailPage />} />
 
-          <Route path="/my/saju" element={<SajuEditPage />} />
-          <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
-          <Route path="/my/notifications" element={<NotificationPage />} />
-          <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
-          <Route path="/my/account-links" element={<AccountLinkPage />} />
-          <Route path="/my/permissions" element={<PermissionsPage />} />
-          <Route path="/my/withdrawal" element={<WithdrawalPage />} />
+          {/* 회원 전용 */}
+          <Route element={<RequireMember />}>
+            <Route path="/place/:id" element={<PlaceDetailPage />} />
+            <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
+            <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
+            <Route path="/place/:id/review" element={<PlaceReviewPage />} />
+            <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
+            <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
+            <Route path="/review/:visitId" element={<ReviewDetailPage />} />
 
+            <Route path="/my/saju" element={<SajuEditPage />} />
+            <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
+            <Route path="/my/notifications" element={<NotificationPage />} />
+            <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
+            <Route path="/my/account-links" element={<AccountLinkPage />} />
+            <Route path="/my/permissions" element={<PermissionsPage />} />
+            <Route path="/my/withdrawal" element={<WithdrawalPage />} />
+          </Route>
         </Route>
 
         {/* 없는 주소는 임시로 홈으로 */}

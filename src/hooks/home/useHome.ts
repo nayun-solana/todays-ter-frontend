@@ -29,7 +29,14 @@ export function useEnergyRoutines() {
   return useQuery({ queryKey: homeKeys.routines, queryFn: getEnergyRoutines });
 }
 
-/** 오늘 가장 잘 맞는 터 */
-export function useRecommendedPlaces() {
-  return useQuery({ queryKey: homeKeys.recommended, queryFn: getRecommendedPlaces });
+/**
+ * 오늘 가장 잘 맞는 터.
+ * 라우트 가드에서도 같은 캐시를 재사용한다 — 홈을 거쳐 왔으면 즉시, 직접 진입이면 이때 조회된다.
+ */
+export function useRecommendedPlaces(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: homeKeys.recommended,
+    queryFn: getRecommendedPlaces,
+    enabled: options?.enabled ?? true,
+  });
 }

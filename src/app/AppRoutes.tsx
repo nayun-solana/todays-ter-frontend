@@ -19,6 +19,7 @@ const SajuReportCompletePage = lazy(() =>
   import('../pages/my/SajuEditPage').then((m) => ({ default: m.SajuReportCompletePage })),
 );
 const OnboardingPage1 = lazy(() => import('../pages/onboarding/OnboardingPage1'));
+const OnboardingPage2 = lazy(() => import('../pages/onboarding/OnboardingPage2'));
 const OnboardingPage3 = lazy(() => import('../pages/onboarding/OnboardingPage3'));
 const ReportPage = lazy(() => import('../pages/onboarding/ReportPage'));
 const ReportDetailPage = lazy(() => import('../pages/onboarding/ReportDetailPage'));
@@ -94,6 +95,7 @@ export default function AppRoutes() {
           <Route path="/onboarding">
             <Route index element={<Navigate to="/onboarding/step-1" replace />} />
             <Route path="step-1" element={<OnboardingPage1 />} />
+            <Route path="step-2" element={<OnboardingPage2 />} />
             <Route path="step-3" element={<OnboardingPage3 />} />
           </Route>
           {/* 게스트 조건부: 홈에서 노출이 허용된 추천 카드로 들어온 경우에만 진입 가능 */}

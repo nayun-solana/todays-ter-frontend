@@ -8,6 +8,8 @@ type MatchedTerAppBarProps = {
   title: string;
   /** 공유 실행. 없으면(사주 리포트 미보유 등) 공유 버튼을 비활성화한다. */
   onShare?: () => void;
+  /** 공유 의사가 보일 때(포인터 접근·포커스) 링크를 미리 받아두기 위한 훅. */
+  onSharePrefetch?: () => void;
   /** 공유받은 화면에서는 북마크·공유 액션을 감춘다. */
   showActions?: boolean;
 };
@@ -16,6 +18,7 @@ type MatchedTerAppBarProps = {
 export default function MatchedTerAppBar({
   title,
   onShare,
+  onSharePrefetch,
   showActions = true,
 }: MatchedTerAppBarProps) {
   const navigate = useNavigate();
@@ -36,6 +39,11 @@ export default function MatchedTerAppBar({
               type="button"
               aria-label="공유"
               onClick={onShare}
+              // 클릭보다 먼저 오는 이벤트에서 링크를 받아둔다 — 클릭 때 await가 없어야
+              // navigator.share가 사용자 제스처를 유지한다.
+              onPointerEnter={onSharePrefetch}
+              onPointerDown={onSharePrefetch}
+              onFocus={onSharePrefetch}
               disabled={!onShare}
               className="disabled:opacity-40"
             >

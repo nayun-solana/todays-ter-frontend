@@ -39,30 +39,39 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
   const sharedQuery = useSharedRecommendation(isShared ? token : undefined);
   const { data, isError } = isShared ? sharedQuery : detailQuery;
 
-  // 공유 링크는 화면 진입 시 미리 발급받는다 — 클릭 시점에 await가 끼면
+  // 공유 링크는 버튼에 포인터·포커스가 닿을 때 미리 받아둔다 — 클릭 시점에 await가 끼면
   // navigator.share가 사용자 제스처를 잃어 iOS에서 막힌다.
-  const { shareUrl, isError: shareUnavailable } = useShareLink(id, { enabled: !isShared });
+  // 프리페치보다 클릭이 먼저 오면 ensureShareUrl()로 받아온다(그 경우 클립보드로 폴백될 수 있음).
+  const {
+    shareUrl,
+    prefetchShareLink,
+    ensureShareUrl,
+    isError: shareUnavailable,
+  } = useShareLink(id, { enabled: !isShared });
   const { share, result: shareResult } = useShareAction();
 
   if (isShared && isError) return <SharedNotFound onHome={() => navigate('/home')} />;
 
   const meta = ohaengByLabel(data?.primaryElement ?? '') ?? ohaengByKey('water')!;
-  const canShare = !isShared && !!shareUrl && !shareUnavailable;
+  const canShare = !isShared && !shareUnavailable;
+
+  const handleShare = async () => {
+    const url = shareUrl ?? (await ensureShareUrl());
+    if (!url) return;
+
+    await share({
+      url,
+      title: `${data?.placeName ?? '오늘의 터'} — 나와 어울리는 터`,
+      text: '오늘의 터에서 받은 추천이에요.',
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-white pb-28">
       <MatchedTerAppBar
         title="나와 어울리는 터"
-        onShare={
-          canShare
-            ? () =>
-                share({
-                  url: shareUrl,
-                  title: `${data?.placeName ?? '오늘의 터'} — 나와 어울리는 터`,
-                  text: '오늘의 터에서 받은 추천이에요.',
-                })
-            : undefined
-        }
+        onShare={canShare ? handleShare : undefined}
+        onSharePrefetch={canShare ? prefetchShareLink : undefined}
         showActions={!isShared}
       />
 

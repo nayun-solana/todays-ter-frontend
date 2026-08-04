@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import {
   createRecommendationShare,
@@ -33,27 +34,44 @@ export function useSharedRecommendation(shareToken: string | undefined) {
 }
 
 /**
- * 공유 링크 **선발급**.
+ * 공유 링크 발급.
  *
  * navigator.share는 사용자 제스처 직후(transient activation)에만 호출할 수 있어서
  * 클릭 → 네트워크 대기 → share() 순서로 가면 iOS Safari에서 NotAllowedError가 난다.
- * 그래서 화면 진입 시점에 토큰을 미리 받아두고, 클릭 때는 대기 없이 바로 공유한다.
- * 서버 발급은 멱등이라(같은 스냅샷이면 같은 토큰) 미리 불러도 안전하다.
+ * 그렇다고 화면 진입마다 발급하면 공유할 생각이 없는 사용자까지 서버에 토큰을 만들게 된다.
+ *
+ * 그래서 **공유 의사가 보일 때**(버튼에 포인터가 닿거나 포커스가 갈 때) 미리 받아두고,
+ * 그 사이에 클릭이 먼저 오면 `ensureShareUrl()`로 받아온다. 서버 발급은 멱등이라
+ * (같은 스냅샷이면 같은 토큰) 여러 번 불려도 안전하다.
  *
  * 사주 리포트가 없으면 서버가 PLACE409_1로 거절한다 → isError로 공유 버튼을 잠근다.
  */
 export function useShareLink(placeId: string | undefined, options?: { enabled?: boolean }) {
-  const query = useQuery({
+  const queryClient = useQueryClient();
+  const [intent, setIntent] = useState(false);
+  const enabled = !!placeId && (options?.enabled ?? true);
+
+  const queryOptions = {
     queryKey: recommendationKeys.share(placeId ?? ''),
     queryFn: () => createRecommendationShare(placeId!),
-    enabled: !!placeId && (options?.enabled ?? true),
     retry: false,
     staleTime: Infinity, // 같은 화면에 머무는 동안 재발급할 이유가 없다
-  });
+  };
+
+  const query = useQuery({ ...queryOptions, enabled: enabled && intent });
 
   return {
     ...query,
-    /** 공유할 절대 URL. BE가 준 shareUrl은 FE에 없는 경로라 토큰으로 직접 만든다. */
+    /** 공유 버튼에 포인터·포커스가 닿는 시점에 호출 — 클릭 전에 토큰을 준비한다. */
+    prefetchShareLink: () => setIntent(true),
+    /** 이미 받아둔 URL. 준비됐으면 클릭 핸들러가 await 없이 바로 공유할 수 있다. */
     shareUrl: query.data ? shareLinkFrom(query.data.shareToken) : null,
+    /** 아직 준비 전이면 여기서 받아온다(캐시에 있으면 즉시 반환). */
+    ensureShareUrl: async () => {
+      if (!enabled) return null;
+      setIntent(true);
+      const link = await queryClient.fetchQuery(queryOptions);
+      return shareLinkFrom(link.shareToken);
+    },
   };
 }

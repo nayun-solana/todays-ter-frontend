@@ -30,3 +30,6 @@ dist-ssr
 
 # 개인 에이전트 작업 지침 (커밋 제외)
 AGENTS.md
+
+# Codex 작업 중 생성되는 개인 설계·계획 문서 (커밋 제외)
+docs/superpowers/

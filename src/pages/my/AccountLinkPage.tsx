@@ -43,6 +43,11 @@ export default function AccountLinkPage() {
             <button
               key={label}
               type="button"
+              onClick={
+                label === '연동 정책 보기' && connectionsQuery.data?.policyUrl
+                  ? () => window.open(connectionsQuery.data.policyUrl, '_blank', 'noopener,noreferrer')
+                  : undefined
+              }
               className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-left text-gray-5 shadow-card-soft"
             >
               {label}

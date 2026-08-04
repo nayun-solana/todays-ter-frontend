@@ -1,7 +1,6 @@
-import { useState } from 'react';
-
 import PageHeader from '../../components/PageHeader';
 import Toggle from '../../components/Toggle';
+import { usePermissionSettings, useUpdatePermissionSettings } from '../../hooks/my/useMy';
 
 const PERMISSIONS = [
   {
@@ -17,7 +16,24 @@ const PERMISSIONS = [
 ] as const;
 
 export default function PermissionsPage() {
-  const [permissions, setPermissions] = useState({ location: true, photo: true });
+  const permissionSettingsQuery = usePermissionSettings();
+  const updatePermissionSettings = useUpdatePermissionSettings();
+  const permissionSettings = permissionSettingsQuery.data;
+  const permissions = {
+    location: permissionSettings?.isLocationAllowed ?? true,
+    photo: permissionSettings?.isPhotoLibraryAllowed ?? true,
+  };
+
+  const togglePermission = (key: keyof typeof permissions) => {
+    const current = permissionSettings;
+    if (!current) return;
+
+    const next = !permissions[key];
+    updatePermissionSettings.mutate({
+      ...current,
+      ...(key === 'location' ? { isLocationAllowed: next } : { isPhotoLibraryAllowed: next }),
+    });
+  };
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
@@ -34,12 +50,7 @@ export default function PermissionsPage() {
                 <Toggle
                   checked={enabled}
                   label={permission.title}
-                  onChange={() =>
-                    setPermissions((current) => ({
-                      ...current,
-                      [permission.key]: !current[permission.key],
-                    }))
-                  }
+                  onChange={() => togglePermission(permission.key)}
                 />
               </div>
               <p className="typo-sub-2 mt-3 text-gray-4">{permission.description}</p>

@@ -66,7 +66,7 @@ export default function MyPage() {
 
         <button
           type="button"
-          onClick={() => navigate('/report/1')}
+          onClick={() => navigate(`/report/${profile?.reportId ?? 1}`)}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg"
         >
           계수님의 사주리포트 다시보기

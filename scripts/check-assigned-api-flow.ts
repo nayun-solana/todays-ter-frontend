@@ -28,11 +28,12 @@ try {
   )) as typeof import('../src/hooks/my/useMy');
 
   const axiosInstance = axiosModule.default;
-  const requests: Array<{ url: string; params?: unknown }> = [];
+  const requests: Array<{ method: 'GET' | 'PATCH'; url: string; params?: unknown; body?: unknown }> = [];
   const originalGet = axiosInstance.get;
+  const originalPatch = axiosInstance.patch;
 
   axiosInstance.get = (async (url: string, config?: { params?: unknown }) => {
-    requests.push({ url, params: config?.params });
+    requests.push({ method: 'GET', url, params: config?.params });
 
     const result =
       url === '/places/explore-filters'
@@ -76,12 +77,13 @@ try {
               }
             : url === '/mypage'
               ? {
+                  reportId: 83721,
                   nickname: '계수',
                   profileImageUrl: null,
-                  email: 'user@example.com',
                 }
               : url === '/mypage/social-connections'
                 ? {
+                    policyUrl: 'https://example.com/policies/account-linkage',
                     connections: [
                       {
                         provider: 'KAKAO',
@@ -91,6 +93,31 @@ try {
                       },
                     ],
                   }
+                : url === '/mypage/notification-settings'
+                  ? {
+                      isPushEnabled: true,
+                      isMarketingEnabled: false,
+                      isNightMarketingEnabled: false,
+                    }
+                  : url === '/mypage/permissions'
+                    ? {
+                        isCameraAllowed: true,
+                        isPhotoLibraryAllowed: false,
+                        isLocationAllowed: false,
+                      }
+                    : url === '/mypage/policies'
+                      ? {
+                          policies: [
+                            {
+                              type: 'TERMS_OF_SERVICE',
+                              title: '서비스 이용약관',
+                              url: 'https://example.com/policies/terms',
+                              isRequired: true,
+                              isAgreed: true,
+                              agreedAt: '2025-01-01T10:00:00',
+                            },
+                          ],
+                        }
             : {
               appliedFilters: {
                 keyword: null,
@@ -107,6 +134,18 @@ try {
     };
   }) as typeof axiosInstance.get;
 
+  axiosInstance.patch = (async (url: string, body: unknown) => {
+    requests.push({ method: 'PATCH', url, body });
+    return {
+      data: {
+        isSuccess: true,
+        code: 'COMMON200',
+        message: '성공',
+        result: { updatedAt: '2026-07-19T19:03:00' },
+      },
+    };
+  }) as typeof axiosInstance.patch;
+
   try {
     await searchApi.getExploreFilters();
     await searchApi.getPlaces({
@@ -119,20 +158,48 @@ try {
     await placeApi.getPlaceDetail('2');
     await myApi.getMyPage();
     await myApi.getSocialConnections();
+    await myApi.getNotificationSettings();
+    await myApi.updateNotificationSettings({
+      isPushEnabled: true,
+      isMarketingEnabled: true,
+      isNightMarketingEnabled: false,
+    });
+    await myApi.getPermissionSettings();
+    await myApi.updatePermissionSettings({
+      isCameraAllowed: true,
+      isPhotoLibraryAllowed: true,
+      isLocationAllowed: false,
+    });
+    await myApi.getPolicies();
   } finally {
     axiosInstance.get = originalGet;
+    axiosInstance.patch = originalPatch;
   }
 
   assert.deepEqual(requests, [
-    { url: '/places/explore-filters', params: undefined },
+    { method: 'GET', url: '/places/explore-filters', params: undefined },
     {
+      method: 'GET',
       url: '/places',
       params: { regionCode: 'SEOUL', elementType: 'WATER', page: 0, size: 20 },
     },
-    { url: '/places/editor-picks', params: { limit: 3 } },
-    { url: '/places/2', params: undefined },
-    { url: '/mypage', params: undefined },
-    { url: '/mypage/social-connections', params: undefined },
+    { method: 'GET', url: '/places/editor-picks', params: { limit: 3 } },
+    { method: 'GET', url: '/places/2', params: undefined },
+    { method: 'GET', url: '/mypage', params: undefined },
+    { method: 'GET', url: '/mypage/social-connections', params: undefined },
+    { method: 'GET', url: '/mypage/notification-settings', params: undefined },
+    {
+      method: 'PATCH',
+      url: '/mypage/notification-settings',
+      body: { isPushEnabled: true, isMarketingEnabled: true, isNightMarketingEnabled: false },
+    },
+    { method: 'GET', url: '/mypage/permissions', params: undefined },
+    {
+      method: 'PATCH',
+      url: '/mypage/permissions',
+      body: { isCameraAllowed: true, isPhotoLibraryAllowed: true, isLocationAllowed: false },
+    },
+    { method: 'GET', url: '/mypage/policies', params: undefined },
   ]);
   assert.deepEqual(searchHooks.searchKeys.places({ regionCode: 'SEOUL' }), [
     'search',

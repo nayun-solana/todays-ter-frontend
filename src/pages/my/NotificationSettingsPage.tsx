@@ -4,6 +4,10 @@ import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import Toggle from '../../components/Toggle';
 import { ChevronRightIcon } from '../../components/icons';
+import {
+  useNotificationSettings,
+  useUpdateNotificationSettings,
+} from '../../hooks/my/useMy';
 import { cn } from '../../lib/cn';
 
 type Sheet = 'frequency' | 'time' | null;
@@ -122,15 +126,27 @@ function SelectionSheet({
 }
 
 export default function NotificationSettingsPage() {
-  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const notificationSettingsQuery = useNotificationSettings();
+  const updateNotificationSettings = useUpdateNotificationSettings();
   const [savedPlaceEnabled, setSavedPlaceEnabled] = useState(true);
   const [serviceEnabled, setServiceEnabled] = useState(true);
-  const [marketingEnabled, setMarketingEnabled] = useState(true);
   const [frequency, setFrequency] = useState<(typeof FREQUENCIES)[number]>('2일마다');
   const [time, setTime] = useState<TimeOption>(TIME_OPTIONS[2]);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draftFrequency, setDraftFrequency] = useState(frequency);
   const [draftTime, setDraftTime] = useState(time);
+
+  const notificationSettings = notificationSettingsQuery.data;
+  const reminderEnabled = notificationSettings?.isPushEnabled ?? true;
+  const marketingEnabled = notificationSettings?.isMarketingEnabled ?? true;
+
+  const updateSettings = (next: Partial<{ isPushEnabled: boolean; isMarketingEnabled: boolean }>) => {
+    const current = notificationSettings;
+    if (!current) return;
+
+    const body = { ...current, ...next };
+    updateNotificationSettings.mutate(body);
+  };
 
   useEffect(() => {
     if (!sheet) return;
@@ -177,7 +193,7 @@ export default function NotificationSettingsPage() {
                 <Toggle
                   checked={reminderEnabled}
                   label="오늘의 터 리마인드"
-                  onChange={() => setReminderEnabled((enabled) => !enabled)}
+                  onChange={() => updateSettings({ isPushEnabled: !reminderEnabled })}
                   showState
                 />
               </div>
@@ -248,7 +264,7 @@ export default function NotificationSettingsPage() {
             <NotificationToggleCard
               title="마케팅 정보 수신"
               checked={marketingEnabled}
-              onChange={() => setMarketingEnabled((enabled) => !enabled)}
+              onChange={() => updateSettings({ isMarketingEnabled: !marketingEnabled })}
             />
           </div>
         </section>

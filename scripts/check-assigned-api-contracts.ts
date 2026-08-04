@@ -6,7 +6,14 @@ import {
   PlaceListResponse,
 } from '../src/types/search/search';
 import { PlaceDetailResponse } from '../src/types/place/place';
-import { MyPageResponse, SocialConnectionsResponse } from '../src/types/my/my';
+import {
+  MyPageResponse,
+  NotificationSettingsResponse,
+  PermissionSettingsResponse,
+  PoliciesResponse,
+  SocialConnectionsResponse,
+  UpdatedAtResponse,
+} from '../src/types/my/my';
 
 const filters = ExploreFiltersResponse.parse({
   regions: [{ code: 'ALL', name: '전체', displayOrder: 0 }],
@@ -20,7 +27,7 @@ const filters = ExploreFiltersResponse.parse({
 const places = PlaceListResponse.parse({
   appliedFilters: {
     keyword: null,
-    regionCode: 'ALL',
+    regionCode: null,
     themeType: null,
     elementType: 'WATER',
   },
@@ -73,18 +80,46 @@ PlaceDetailResponse.parse({
 });
 
 MyPageResponse.parse({
+  reportId: 83721,
   nickname: '계수',
-  profileImageUrl: null,
-  email: 'user@example.com',
+  profileImageUrl: 'https://example.com/profile.png',
 });
 
 SocialConnectionsResponse.parse({
+  policyUrl: 'https://example.com/policies/account-linkage',
   connections: [
     {
       provider: 'KAKAO',
       isLinked: true,
       linkedEmail: 'user@kakao.com',
       linkedAt: '2026-07-19T10:00:00',
+    },
+  ],
+});
+
+NotificationSettingsResponse.parse({
+  isPushEnabled: true,
+  isMarketingEnabled: false,
+  isNightMarketingEnabled: false,
+});
+
+PermissionSettingsResponse.parse({
+  isCameraAllowed: true,
+  isPhotoLibraryAllowed: false,
+  isLocationAllowed: false,
+});
+
+UpdatedAtResponse.parse({ updatedAt: '2026-07-19T19:03:00' });
+
+PoliciesResponse.parse({
+  policies: [
+    {
+      type: 'TERMS_OF_SERVICE',
+      title: '서비스 이용약관',
+      url: 'https://example.com/policies/terms',
+      isRequired: true,
+      isAgreed: true,
+      agreedAt: '2025-01-01T10:00:00',
     },
   ],
 });

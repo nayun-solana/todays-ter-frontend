@@ -19,6 +19,7 @@ import {
   toOhaengKey,
   type ElementCode,
 } from '../../types/home/homeEnergy';
+import { type RegionCode, type ThemeType } from '../../types/search/search';
 
 const REGIONS = [
   { code: 'ALL', name: '전체' },
@@ -26,7 +27,7 @@ const REGIONS = [
   { code: 'JEJU', name: '제주' },
   { code: 'BUSAN', name: '부산' },
   { code: 'GANGWON', name: '강원' },
-  { code: 'CAPITAL', name: '수도권' },
+  { code: 'CAPITAL_AREA', name: '수도권' },
 ];
 
 const THEMES = [
@@ -158,13 +159,19 @@ const EDITOR_PICKS: {
 export default function SearchPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const [region, setRegion] = useState('ALL');
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [region, setRegion] = useState<RegionCode | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeType | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
   const selected = ohaengByKey(params.get('element'));
   const elementType = selected ? (selected.key.toUpperCase() as ElementCode) : undefined;
   const filtersQuery = useExploreFilters();
-  const placesQuery = usePlaces({ regionCode: region, elementType, page: 0, size: 20 });
+  const placesQuery = usePlaces({
+    regionCode: region ?? undefined,
+    themeType: selectedTheme ?? undefined,
+    elementType,
+    page: 0,
+    size: 20,
+  });
   const editorPicksQuery = useEditorPicks();
   const regions = filtersQuery.data?.regions ?? REGIONS;
   const themes = filtersQuery.data?.themes ?? THEMES;
@@ -230,8 +237,8 @@ export default function SearchPage() {
           {regions.map((item) => (
             <Chip
               key={item.code}
-              selected={region === item.code}
-              onClick={() => setRegion(item.code)}
+              selected={item.code === 'ALL' ? region === null : region === item.code}
+              onClick={() => setRegion(item.code === 'ALL' ? null : (item.code as RegionCode))}
               className="h-8 px-4 text-xs"
             >
               {item.name}
@@ -250,7 +257,7 @@ export default function SearchPage() {
                   key={theme.code}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedTheme(isSelected ? null : theme.code)}
+                  onClick={() => setSelectedTheme(isSelected ? null : (theme.code as ThemeType))}
                   className={cn(
                     'flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border py-3 pr-10 pl-4 text-left transition active:scale-[0.98]',
                     isSelected

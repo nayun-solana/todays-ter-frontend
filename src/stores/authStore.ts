@@ -2,6 +2,18 @@ import { create } from 'zustand';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 
+function getStoredAccessToken() {
+  return typeof localStorage?.getItem === 'function' ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+}
+
+function persistAccessToken(token: string) {
+  if (typeof localStorage?.setItem === 'function') localStorage.setItem(ACCESS_TOKEN_KEY, token);
+}
+
+function removeStoredAccessToken() {
+  if (typeof localStorage?.removeItem === 'function') localStorage.removeItem(ACCESS_TOKEN_KEY);
+}
+
 type AuthState = {
   /** 회원 accessToken. null이면 비회원(게스트) 또는 로그아웃 상태. */
   accessToken: string | null;
@@ -16,15 +28,15 @@ type AuthState = {
  * (refresh 토큰은 BE가 HttpOnly 쿠키로만 내려주므로 FE가 보관하지 않는다.)
  */
 export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: localStorage.getItem(ACCESS_TOKEN_KEY),
+  accessToken: getStoredAccessToken(),
 
   setAccessToken: (token) => {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    persistAccessToken(token);
     set({ accessToken: token });
   },
 
   clearAccessToken: () => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    removeStoredAccessToken();
     set({ accessToken: null });
   },
 }));

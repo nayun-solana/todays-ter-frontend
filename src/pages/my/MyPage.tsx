@@ -10,7 +10,7 @@ const SETTINGS: { label: string; path?: string }[] = [
   { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
-  { label: '개인정보 및 약관' },
+  { label: '개인정보 및 약관', path: '/my/policies' },
   { label: '회원 탈퇴', path: '/my/withdrawal' },
 ] as const;
 
@@ -66,12 +66,18 @@ export default function MyPage() {
 
         <button
           type="button"
-          onClick={() => navigate('/report/1')}
-          className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg"
+          disabled={!profile}
+          onClick={() => profile && navigate(`/report/${profile.reportId}`)}
+          className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          계수님의 사주리포트 다시보기
+          {profile ? `${profile.nickname}님의 사주리포트 다시보기` : '사주리포트 불러오는 중'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
+        {myPageQuery.isError ? (
+          <p className="typo-sub-2 mt-2 text-gray-4">
+            마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        ) : null}
 
         <section className="mt-6">
           <h2 className="typo-head-3 text-gray-6">설정</h2>

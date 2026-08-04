@@ -1,9 +1,13 @@
-import { useState } from 'react';
-
 import PageHeader from '../../components/PageHeader';
 import Toggle from '../../components/Toggle';
+import { usePermissionSettings, useUpdatePermissionSettings } from '../../hooks/my/useMy';
 
 const PERMISSIONS = [
+  {
+    key: 'camera',
+    title: '카메라 권한',
+    description: '후기 사진을 바로 촬영할 때만 사용합니다.',
+  },
   {
     key: 'location',
     title: '위치 권한',
@@ -17,13 +21,41 @@ const PERMISSIONS = [
 ] as const;
 
 export default function PermissionsPage() {
-  const [permissions, setPermissions] = useState({ location: true, photo: true });
+  const permissionSettingsQuery = usePermissionSettings();
+  const updatePermissionSettings = useUpdatePermissionSettings();
+  const permissionSettings = permissionSettingsQuery.data;
+  const permissions = {
+    camera: permissionSettings?.isCameraAllowed ?? false,
+    location: permissionSettings?.isLocationAllowed ?? false,
+    photo: permissionSettings?.isPhotoLibraryAllowed ?? false,
+  };
+
+  const togglePermission = (key: keyof typeof permissions) => {
+    const current = permissionSettings;
+    if (!current) return;
+
+    const next = !permissions[key];
+    updatePermissionSettings.mutate({
+      ...current,
+      ...(key === 'camera'
+        ? { isCameraAllowed: next }
+        : key === 'location'
+          ? { isLocationAllowed: next }
+          : { isPhotoLibraryAllowed: next }),
+    });
+  };
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
       <PageHeader title="권한 안내" backTo="/my" />
 
       <main className="space-y-5 px-5 pt-[17px]">
+        {permissionSettingsQuery.isPending ? (
+          <p className="typo-sub-2 text-gray-4">권한 설정을 불러오는 중입니다.</p>
+        ) : null}
+        {permissionSettingsQuery.isError ? (
+          <p className="typo-sub-2 text-gray-4">권한 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+        ) : null}
         {PERMISSIONS.map((permission) => {
           const enabled = permissions[permission.key];
 
@@ -34,12 +66,8 @@ export default function PermissionsPage() {
                 <Toggle
                   checked={enabled}
                   label={permission.title}
-                  onChange={() =>
-                    setPermissions((current) => ({
-                      ...current,
-                      [permission.key]: !current[permission.key],
-                    }))
-                  }
+                  onChange={() => togglePermission(permission.key)}
+                  disabled={!permissionSettings || updatePermissionSettings.isPending}
                 />
               </div>
               <p className="typo-sub-2 mt-3 text-gray-4">{permission.description}</p>

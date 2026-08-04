@@ -12,6 +12,7 @@ const AccountLinkPage = lazy(() => import('../pages/my/AccountLinkPage'));
 const NotificationPage = lazy(() => import('../pages/my/NotificationPage'));
 const NotificationSettingsPage = lazy(() => import('../pages/my/NotificationSettingsPage'));
 const PermissionsPage = lazy(() => import('../pages/my/PermissionsPage'));
+const PoliciesPage = lazy(() => import('../pages/my/PoliciesPage'));
 const WithdrawalPage = lazy(() => import('../pages/my/WithdrawalPage'));
 const SajuEditPage = lazy(() => import('../pages/my/SajuEditPage'));
 // SajuReportCompletePage는 SajuEditPage 모듈의 named export → default로 매핑
@@ -133,6 +134,7 @@ export default function AppRoutes() {
             <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
             <Route path="/my/account-links" element={<AccountLinkPage />} />
             <Route path="/my/permissions" element={<PermissionsPage />} />
+            <Route path="/my/policies" element={<PoliciesPage />} />
             <Route path="/my/withdrawal" element={<WithdrawalPage />} />
           </Route>
         </Route>

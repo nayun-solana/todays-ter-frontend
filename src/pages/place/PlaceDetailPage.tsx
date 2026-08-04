@@ -11,20 +11,10 @@ import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
 import { usePlaceDetail } from '../../hooks/place/usePlace';
 import { cn } from '../../lib/cn';
-import { ohaengByKey, ohaengByLabel } from '../../lib/ohaeng';
+import { ohaengByLabel } from '../../lib/ohaeng';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
-
-// TODO: API 연동 시 교체 (Figma 시안 데이터)
-const PLACE = {
-  name: '청계전 모전교',
-  element: 'water' as const,
-  theme: '감정 회복',
-  address: '서울 중구 무교동',
-  addressDetail: '광화문역 5번 출구에서 223m',
-  feature: '수(水) 기운이 강해 감정 정리와 회복에 좋고 오늘의 흐름과 잘 맞아요.',
-};
 
 type Review = {
   id: string;
@@ -253,12 +243,36 @@ export default function PlaceDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const placeQuery = usePlaceDetail(id);
   const place = placeQuery.data;
-  const placeName = place?.placeName ?? PLACE.name;
-  const element = place ? ohaengByLabel(place.element)! : ohaengByKey(PLACE.element)!;
-  const theme = place?.hashtags[0] ?? PLACE.theme;
-  const featureQuestion = place?.description.question ?? '이 터의 특징은 무엇인가요?';
-  const feature = place?.description.answer ?? PLACE.feature;
-  const address = place?.address ?? PLACE.address;
+
+  if (placeQuery.isPending) {
+    return (
+      <div className="min-h-dvh w-full bg-white">
+        <PageHeader title="장소 상세" />
+        <p className="px-5 py-8 text-sm text-gray-4">장소 정보를 불러오는 중입니다.</p>
+      </div>
+    );
+  }
+
+  if (placeQuery.isError || !place) {
+    return (
+      <div className="min-h-dvh w-full bg-white">
+        <PageHeader title="장소 상세" />
+        <div className="px-5 py-8">
+          <p className="text-sm text-gray-4">장소 정보를 불러오지 못했습니다.</p>
+          <Button variant="secondary" onClick={() => placeQuery.refetch()} className="mt-4">
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const placeName = place.placeName;
+  const element = ohaengByLabel(place.element)!;
+  const theme = place.hashtags[0] ?? '터';
+  const featureQuestion = place.description.question;
+  const feature = place.description.answer;
+  const address = place.address;
 
   const myReview = reviews.find((review) => review.isMine);
   const otherReviews = reviews.filter((review) => !review.isMine);
@@ -280,7 +294,7 @@ export default function PlaceDetailPage() {
       />
 
       <img
-        src={place?.imageUrl ?? placeImage}
+        src={place.imageUrl ?? placeImage}
         alt={placeName}
         className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
       />
@@ -334,9 +348,6 @@ export default function PlaceDetailPage() {
             {/* ponytail: 지도 SDK는 새 dependency라 금지, SDK 결정 후 교체 */}
             <div className="h-40 rounded-btn bg-placeholder" />
             <p className="typo-body-3 mt-2.5 pl-2.5 text-gray-6">{address}</p>
-            {!place ? (
-              <p className="typo-sub-3 mt-1.5 pl-2.5 text-gray-6">{PLACE.addressDetail}</p>
-            ) : null}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 // libraries
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 // hooks
 // import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
 //type
@@ -16,6 +16,9 @@ import type { ElementCode } from '../../types/onboarding/report';
 
 export default function ReportPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isMyReport = searchParams.get('from') === 'my';
 
   // const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
 
@@ -183,7 +186,7 @@ export default function ReportPage() {
         <div className="flex flex-col gap-2">
           <Button
             variant="primary"
-            onClick={() => {}}
+            onClick={() => navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`)}
             className="flex items-center justify-center gap-3"
           >
             <p>상세 분석 보기</p>
@@ -193,10 +196,10 @@ export default function ReportPage() {
           <Button
             variant="secondary"
             onClick={() => {
-              navigate('/onboarding/step-3');
+              navigate(isMyReport ? '/my' : '/onboarding/step-3');
             }}
           >
-            상세 분석 없이 고민유형 선택하기
+            {isMyReport ? '마이페이지로 돌아가기' : '상세 분석 없이 고민유형 선택하기'}
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
@@ -238,7 +238,10 @@ function DeleteReviewDialog({
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [tab, setTab] = useState<Tab>('지도');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() =>
+    searchParams.get('tab') === 'reviews' ? '후기' : '지도',
+  );
   const [reviews, setReviews] = useState(REVIEWS);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const placeQuery = usePlaceDetail(id);

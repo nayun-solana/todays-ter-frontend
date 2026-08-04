@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, passthrough } from 'msw';
 
 /**
  * MSW mock 핸들러 — BE 미배포 엔드포인트 선개발용. dev 전용(main.tsx에서 dev만 로드).
@@ -151,7 +151,14 @@ const EDITOR_PICKS = [
 ] as const;
 
 export const handlers = [
-  // ── 인증 (BE main에 배포됨. 서버 502 동안 흐름 검증용 목) ──
+  // ── 추천 상세·공유: BE 배포 완료 → 항상 실 API로 통과 ──
+  // 아래쪽 `*/places/:placeId` 목이 와일드카드라 `/recommendations/places/1`까지 잡아먹는다.
+  // MSW는 먼저 등록된 핸들러가 이기므로, 여기서 명시적으로 passthrough 시킨다.
+  http.get('/recommendations/places/shared/:shareToken', () => passthrough()),
+  http.get('/recommendations/places/:placeId', () => passthrough()),
+  http.post('/recommendations/places/:placeId/share', () => passthrough()),
+
+  // ── 인증 (BE 배포됨. 만료·세션종료 시나리오 재현용 목) ──
   // POST /auth/dev/token — 개발용 회원 토큰 발급
   http.post('/auth/dev/token', () => ok({ memberId: 1, accessToken: issueAccessToken() })),
 
@@ -202,11 +209,13 @@ export const handlers = [
     isStaleToken(request)
       ? unauthorized()
       : ok({
+          // ⚠️ recommendationId는 실제 placeId와 맞춰둔다 — 상세·공유가 placeId 기준이라
+          //    목 id로 두면 카드를 눌렀을 때 실 API가 404를 준다.
           places: [
             {
               recommendationId: '1',
               badge: '최고 궁합',
-              name: '경복궁',
+              name: '북촌한옥마을',
               subtitle: '안정과 번영의 기운, 토기 충전',
               description:
                 '왕궁의 터는 수백 년 동안 토기를 축적해왔습니다.\n안정과 중심을 잡아주는 기운이 강해\n재물과 사업에 큰 도움이 됩니다.',
@@ -216,7 +225,7 @@ export const handlers = [
             {
               recommendationId: '2',
               badge: '최고 궁합',
-              name: '창덕궁',
+              name: '삼청동길',
               subtitle: '고요와 회복의 기운, 수기 충전',
               description:
                 '후원의 깊은 숲과 물길이\n마음을 가라앉히고 생각을 정리해줍니다.\n지친 하루의 회복에 좋은 터입니다.',
@@ -227,19 +236,7 @@ export const handlers = [
         }),
   ),
 
-  // GET /recommendations/:id — 추천 장소 상세(나와 어울리는 터)
-  http.get('/recommendations/:id', () =>
-    ok({
-      element: 'WATER',
-      placeName: '청계천 모전교',
-      matchRate: 87,
-      hashtag: '감정 회복',
-      reason:
-        '계수님은 수(水)와 목(木)의 흐름이 강하고,\n오늘은 감정 정리와 회복이 필요한 날이에요.\n이 터는 수기(水氣)가 강해 현재 흐름과 잘 맞습니다.',
-      points: ['주 오행 水', '오늘 흐름 안정', '연애운 회복'],
-      suggestion: '오늘은 30분 정도 물길을 따라 걸으며\n마음을 정리해보세요.',
-    }),
-  ),
+  // 추천 상세·공유(/recommendations/places/**)는 BE 배포 완료 → 목 제거, 실 API로 통과시킨다.
 
   // GET /saju-reports/:reportid/summary - 사주 리포트 조회
   http.get('/saju-reports/:reportid/summary', () =>

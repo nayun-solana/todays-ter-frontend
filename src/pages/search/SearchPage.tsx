@@ -19,6 +19,7 @@ import {
   toOhaengKey,
   type ElementCode,
 } from '../../types/home/homeEnergy';
+import { type RegionCode, type ThemeType } from '../../types/search/search';
 
 const REGIONS = [
   { code: 'ALL', name: '전체' },
@@ -26,7 +27,7 @@ const REGIONS = [
   { code: 'JEJU', name: '제주' },
   { code: 'BUSAN', name: '부산' },
   { code: 'GANGWON', name: '강원' },
-  { code: 'CAPITAL', name: '수도권' },
+  { code: 'CAPITAL_AREA', name: '수도권' },
 ];
 
 const THEMES = [
@@ -67,104 +68,22 @@ interface Place {
   element: OhaengKey;
 }
 
-// TODO: API 연동 시 교체 (Figma 시안 데이터)
-const PLACES: Place[] = [
-  {
-    id: 'gyeongbokgung',
-    name: '경복궁',
-    description: '안정과 번영의 기운, 토기 충전',
-    tags: ['재물', '커리어'],
-    rating: 4.7,
-    distance: '3.5km',
-    element: 'earth',
-  },
-  {
-    id: 'cheonggyecheon',
-    name: '청계천',
-    description: '도심 속 힐링 물길, 수기 충전',
-    tags: ['연애', '건강'],
-    rating: 4.8,
-    distance: '2.1km',
-    element: 'water',
-  },
-  {
-    id: 'bukhansan',
-    name: '북한산 둘레길',
-    description: '새로운 시작의 기운, 목기 충전',
-    tags: ['건강', '커리어'],
-    rating: 4.9,
-    distance: '8.3km',
-    element: 'wood',
-  },
-  {
-    id: 'yeouido',
-    name: '한강공원 여의도',
-    description: '광활한 수기로 마음 열기',
-    tags: ['연애', '인간관계'],
-    rating: 4.6,
-    distance: '5.2km',
-    element: 'water',
-  },
-  {
-    id: 'jingwansa',
-    name: '진관사',
-    description: '천년의 기운, 명상과 치유의 성지',
-    tags: ['건강', '기타'],
-    rating: 4.8,
-    distance: '11.4km',
-    element: 'wood',
-  },
-  {
-    id: 'namsan',
-    name: '남산공원',
-    description: '서울 중심의 화기, 열정 충전',
-    tags: ['연애', '인간관계'],
-    rating: 4.5,
-    distance: '4.1km',
-    element: 'fire',
-  },
-];
-
-const EDITOR_PICKS: {
-  id: string;
-  name: string;
-  course: string;
-  description: string;
-  element: OhaengKey;
-}[] = [
-  {
-    id: 'bukhansan',
-    name: '북한산 둘레길',
-    course: '목기 창작 코스',
-    description: '창작 슬럼프를 깨는 최고의 오행 터',
-    element: 'wood',
-  },
-  {
-    id: 'cheonggyecheon',
-    name: '청계천',
-    course: '수기 감정 정화 루트',
-    description: '마음이 무거울 때 꼭 가야 하는 곳',
-    element: 'water',
-  },
-  {
-    id: 'gyeongbokgung',
-    name: '경복궁',
-    course: '토기 안정 충전지',
-    description: '결정을 앞둔 날, 중심 잡기 최적 터',
-    element: 'earth',
-  },
-];
-
 export default function SearchPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const [region, setRegion] = useState('ALL');
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [region, setRegion] = useState<RegionCode | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeType | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
   const selected = ohaengByKey(params.get('element'));
   const elementType = selected ? (selected.key.toUpperCase() as ElementCode) : undefined;
   const filtersQuery = useExploreFilters();
-  const placesQuery = usePlaces({ regionCode: region, elementType, page: 0, size: 20 });
+  const placesQuery = usePlaces({
+    regionCode: region ?? undefined,
+    themeType: selectedTheme ?? undefined,
+    elementType,
+    page: 0,
+    size: 20,
+  });
   const editorPicksQuery = useEditorPicks();
   const regions = filtersQuery.data?.regions ?? REGIONS;
   const themes = filtersQuery.data?.themes ?? THEMES;
@@ -173,9 +92,6 @@ export default function SearchPage() {
       label: element.name,
       key: element.code === 'ALL' ? undefined : toOhaengKey(element.code),
     })) ?? ELEMENT_CHIPS;
-  const fallbackPlaces = selected
-    ? PLACES.filter((place) => place.element === selected.key)
-    : PLACES;
   const places: Place[] =
     placesQuery.data?.content.map((place) => ({
       id: String(place.placeId),
@@ -186,7 +102,7 @@ export default function SearchPage() {
       rating: place.averageRating,
       distance: place.distanceKm === null ? undefined : `${place.distanceKm}km`,
       element: toOhaengKey(place.element.code),
-    })) ?? fallbackPlaces;
+    })) ?? [];
   const editorPicks =
     editorPicksQuery.data?.content.map((pick) => ({
       id: String(pick.placeId),
@@ -194,7 +110,7 @@ export default function SearchPage() {
       course: pick.summary,
       description: pick.description,
       element: toOhaengKey(pick.element.code),
-    })) ?? EDITOR_PICKS;
+    })) ?? [];
 
   useEffect(() => {
     const updateHeaderShadow = () => setHasScrolled(window.scrollY > 0);
@@ -230,8 +146,8 @@ export default function SearchPage() {
           {regions.map((item) => (
             <Chip
               key={item.code}
-              selected={region === item.code}
-              onClick={() => setRegion(item.code)}
+              selected={item.code === 'ALL' ? region === null : region === item.code}
+              onClick={() => setRegion(item.code === 'ALL' ? null : (item.code as RegionCode))}
               className="h-8 px-4 text-xs"
             >
               {item.name}
@@ -250,7 +166,7 @@ export default function SearchPage() {
                   key={theme.code}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedTheme(isSelected ? null : theme.code)}
+                  onClick={() => setSelectedTheme(isSelected ? null : (theme.code as ThemeType))}
                   className={cn(
                     'flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border py-3 pr-10 pl-4 text-left transition active:scale-[0.98]',
                     isSelected
@@ -303,7 +219,13 @@ export default function SearchPage() {
           </div>
 
           <div className="mt-3 flex flex-col gap-2">
-            {places.map((place) => (
+            {placesQuery.isPending ? (
+              <p className="typo-sub-2 py-4 text-gray-4">장소를 불러오는 중입니다.</p>
+            ) : placesQuery.isError ? (
+              <p className="typo-sub-2 py-4 text-gray-4">장소를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+            ) : places.length === 0 ? (
+              <p className="typo-sub-2 py-4 text-gray-4">조건에 맞는 장소가 없습니다.</p>
+            ) : places.map((place) => (
               <PlaceListItem
                 key={place.id}
                 name={place.name}
@@ -322,7 +244,13 @@ export default function SearchPage() {
         <section className="mt-5 px-5">
           <h2 className="typo-body-2 text-gray-6">에디터 오행 픽</h2>
           <div className="mt-3 flex flex-col gap-2">
-            {editorPicks.map((pick) => {
+            {editorPicksQuery.isPending ? (
+              <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오는 중입니다.</p>
+            ) : editorPicksQuery.isError ? (
+              <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오지 못했습니다.</p>
+            ) : editorPicks.length === 0 ? (
+              <p className="typo-sub-2 py-4 text-gray-4">등록된 에디터 픽이 없습니다.</p>
+            ) : editorPicks.map((pick) => {
               const meta = ohaengByKey(pick.element)!;
               return (
                 <button

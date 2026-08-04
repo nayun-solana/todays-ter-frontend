@@ -1,4 +1,13 @@
-import { MyPageResponse, SocialConnectionsResponse } from '../types/my/my';
+import {
+  MyPageResponse,
+  NotificationSettingsResponse,
+  PermissionSettingsResponse,
+  PoliciesResponse,
+  SocialConnectionsResponse,
+  UpdatedAtResponse,
+  type NotificationSettingsRequest,
+  type PermissionSettingsRequest,
+} from '../types/my/my';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
@@ -11,4 +20,33 @@ export async function getMyPage(): Promise<MyPageResponse> {
 export async function getSocialConnections(): Promise<SocialConnectionsResponse> {
   const response = await axiosInstance.get<ApiResponse>('/mypage/social-connections');
   return SocialConnectionsResponse.parse(getResult(response));
+}
+
+export async function getNotificationSettings(): Promise<NotificationSettingsResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/mypage/notification-settings');
+  return NotificationSettingsResponse.parse(getResult(response));
+}
+
+export async function updateNotificationSettings(
+  body: NotificationSettingsRequest,
+): Promise<UpdatedAtResponse> {
+  const response = await axiosInstance.patch<ApiResponse>('/mypage/notification-settings', body);
+  return UpdatedAtResponse.parse(getResult(response));
+}
+
+export async function getPermissionSettings(): Promise<PermissionSettingsResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/mypage/permissions');
+  return PermissionSettingsResponse.parse(getResult(response));
+}
+
+export async function updatePermissionSettings(
+  body: PermissionSettingsRequest,
+): Promise<UpdatedAtResponse> {
+  const response = await axiosInstance.patch<ApiResponse>('/mypage/permissions', body);
+  return UpdatedAtResponse.parse(getResult(response));
+}
+
+export async function getPolicies(): Promise<PoliciesResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/mypage/policies');
+  return PoliciesResponse.parse(getResult(response));
 }

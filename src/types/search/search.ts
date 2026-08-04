@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { ElementCode } from '../home/homeEnergy';
 
 const ElementFilterCode = z.union([z.literal('ALL'), ElementCode]);
+export const RegionCode = z.enum(['SEOUL', 'JEJU', 'BUSAN', 'GANGWON', 'CAPITAL_AREA']);
+export type RegionCode = z.infer<typeof RegionCode>;
+export const ThemeType = z.enum(['LOVE', 'CAREER', 'WEALTH', 'RELATIONSHIP', 'HEALTH', 'ETC']);
+export type ThemeType = z.infer<typeof ThemeType>;
 const NamedCode = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
@@ -80,9 +84,12 @@ export const EditorPicksResponse = z.object({
 export type EditorPicksResponse = z.infer<typeof EditorPicksResponse>;
 
 export type PlaceListParams = {
-  regionCode?: string;
-  themeType?: string;
+  keyword?: string;
+  regionCode?: RegionCode;
+  themeType?: ThemeType;
   elementType?: z.infer<typeof ElementCode>;
+  latitude?: number;
+  longitude?: number;
   page?: number;
   size?: number;
 };

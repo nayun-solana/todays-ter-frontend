@@ -109,6 +109,18 @@ const EDITOR_PICKS = [
   },
 ] as const;
 
+let notificationSettings = {
+  isPushEnabled: true,
+  isMarketingEnabled: false,
+  isNightMarketingEnabled: false,
+};
+
+let permissionSettings = {
+  isCameraAllowed: true,
+  isPhotoLibraryAllowed: false,
+  isLocationAllowed: false,
+};
+
 export const handlers = [
   // GET /home/today-energy — 오늘 나의 기운(오행)
   http.get('/home/today-energy', () =>
@@ -327,7 +339,7 @@ export const handlers = [
         { code: 'JEJU', name: '제주', displayOrder: 2 },
         { code: 'BUSAN', name: '부산', displayOrder: 3 },
         { code: 'GANGWON', name: '강원', displayOrder: 4 },
-        { code: 'CAPITAL', name: '수도권', displayOrder: 5 },
+        { code: 'CAPITAL_AREA', name: '수도권', displayOrder: 5 },
       ],
       themes: [
         { code: 'LOVE', name: '연애 터', placeCount: 3, displayOrder: 1 },
@@ -358,6 +370,7 @@ export const handlers = [
   http.get('*/places', ({ request }) => {
     const url = new URL(request.url);
     const regionCode = url.searchParams.get('regionCode');
+    const themeType = url.searchParams.get('themeType');
     const elementType = url.searchParams.get('elementType');
     const page = Number(url.searchParams.get('page') ?? 0);
     const size = Number(url.searchParams.get('size') ?? 20);
@@ -365,6 +378,7 @@ export const handlers = [
     const filtered = SEARCH_PLACES.filter(
       (place) =>
         (!regionCode || regionCode === 'ALL' || place.regionCode === regionCode) &&
+        (!themeType || place.theme.code === themeType) &&
         (!elementType || place.element.code === elementType),
     );
     const content = filtered.slice(page * size, (page + 1) * size).map((place) => ({
@@ -377,7 +391,7 @@ export const handlers = [
       appliedFilters: {
         keyword: null,
         regionCode,
-        themeType: null,
+        themeType,
         elementType,
       },
       content,
@@ -428,15 +442,16 @@ export const handlers = [
   // GET /mypage — 마이페이지 프로필
   http.get('*/mypage', () =>
     ok({
+      reportId: 83721,
       nickname: '계수',
-      profileImageUrl: null,
-      email: 'gyesu@example.com',
+      profileImageUrl: PLACE_SAMPLE_IMAGE_URL,
     }),
   ),
 
   // GET /mypage/social-connections — 소셜 계정 연동 상태
   http.get('*/mypage/social-connections', () =>
     ok({
+      policyUrl: 'https://example.com/policies/account-linkage',
       connections: [
         {
           provider: 'KAKAO',
@@ -455,6 +470,33 @@ export const handlers = [
           isLinked: false,
           linkedEmail: null,
           linkedAt: null,
+        },
+      ],
+    }),
+  ),
+
+  http.get('*/mypage/notification-settings', () => ok(notificationSettings)),
+  http.patch('*/mypage/notification-settings', async ({ request }) => {
+    notificationSettings = await request.json() as typeof notificationSettings;
+    return ok({ updatedAt: '2026-08-04T22:00:00' });
+  }),
+
+  http.get('*/mypage/permissions', () => ok(permissionSettings)),
+  http.patch('*/mypage/permissions', async ({ request }) => {
+    permissionSettings = await request.json() as typeof permissionSettings;
+    return ok({ updatedAt: '2026-08-04T22:00:00' });
+  }),
+
+  http.get('*/mypage/policies', () =>
+    ok({
+      policies: [
+        {
+          type: 'TERMS_OF_SERVICE',
+          title: '서비스 이용약관',
+          url: 'https://example.com/policies/terms',
+          isRequired: true,
+          isAgreed: true,
+          agreedAt: '2025-01-01T10:00:00',
         },
       ],
     }),

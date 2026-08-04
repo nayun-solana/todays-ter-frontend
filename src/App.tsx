@@ -1,4 +1,5 @@
 import AppRoutes from './app/AppRoutes';
+import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 
 function App() {
   return (
@@ -6,6 +7,7 @@ function App() {
     <div className="min-h-screen bg-gray-100">
       <div className="mx-auto min-h-screen w-full max-w-[400px] bg-white shadow-xl relative">
         <AppRoutes />
+        <PwaUpdatePrompt />
       </div>
     </div>
   );

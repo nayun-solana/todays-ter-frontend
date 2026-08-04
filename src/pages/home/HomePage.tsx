@@ -2,6 +2,7 @@ import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import placeSample from '../../assets/home/place-sample.jpg';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -15,8 +16,6 @@ import RoutineChips from './components/RoutineChips';
 import { OHAENG_HOME } from './ohaeng';
 
 // BE 미배포라 오늘의 기운은 MSW mock(GET /home/today-energy). 로드 전 fallback = water.
-// TODO: 실제 로그인 상태 연동. true면 첫 카드 이후를 블러+로그인 게이트로 가린다(로그인 전 홈).
-const IS_GUEST = false;
 
 const RECOMMENDED_DESC =
   '왕궁의 터는 수백 년 동안 토기를 축적해왔습니다.\n안정과 중심을 잡아주는 기운이 강해\n재물과 사업에 큰 도움이 됩니다.';
@@ -47,6 +46,9 @@ const RECOMMENDED_PLACES = [
 
 export default function HomePage() {
   const navigate = useNavigate();
+  // 게스트는 첫 카드만 보이고 나머지는 블러 + 로그인 게이트로 가린다.
+  // TODO: BE 배포 후 /home/recommended-place의 userType·isLimited·visibleCount·loginPrompt로 교체.
+  const { isMember } = useAuthStatus();
 
   // 홈 데이터 — 서버(mock). 로드 전엔 각 항목 fallback.
   const { data: energy } = useTodayEnergy();
@@ -109,7 +111,7 @@ export default function HomePage() {
           <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
           <div className="flex flex-col gap-3">
             {cards[0] && renderCard(cards[0])}
-            {IS_GUEST ? (
+            {!isMember ? (
               // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
               <div className="relative">
                 {cards[1] && renderCard(cards[1])}

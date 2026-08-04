@@ -99,6 +99,17 @@ export default function AppRoutes() {
             <Route path="step-2" element={<OnboardingPage2 />} />
             <Route path="step-3" element={<OnboardingPage3 />} />
           </Route>
+          {/* 공유 링크 진입 — 인증·가드 없이 열려야 한다(받는 사람은 우리 사용자가 아닐 수 있다) */}
+          <Route path="/matched-ter/shared/:token" element={<MatchedTerPage variant="shared" />} />
+          {/* BE가 지금 내려주는 shareUrl 경로(API 경로 그대로). 위 경로로 정리해달라고 요청해둔 상태라
+              그 사이에 뿌려진 링크도 열리도록 같이 받아준다.
+              ⚠️ dev에서는 확인 불가 — vite.config의 `/recommendations` 프록시가 이 주소를 가로채
+              API JSON을 돌려준다. 실제 동작은 배포본(Vercel rewrite)에서만 확인된다. */}
+          <Route
+            path="/recommendations/places/shared/:token"
+            element={<MatchedTerPage variant="shared" />}
+          />
+
           {/* 게스트 조건부: 홈에서 노출이 허용된 추천 카드로 들어온 경우에만 진입 가능 */}
           <Route element={<RequireRecommendationAccess />}>
             <Route path="/matched-ter/:id" element={<MatchedTerPage />} />

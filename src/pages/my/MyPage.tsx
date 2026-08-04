@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router';
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import OhaengOrb from '../../components/OhaengOrb';
 import { ChevronRightIcon } from '../../components/icons';
+import { useLogout } from '../../hooks/auth/useAuth';
 import { useMyPage } from '../../hooks/my/useMy';
 
-const SETTINGS: { label: string; path?: string }[] = [
+const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
   { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
   { label: '개인정보 및 약관', path: '/my/policies' },
+  { label: '로그아웃', action: 'logout' },
   { label: '회원 탈퇴', path: '/my/withdrawal' },
 ] as const;
 
@@ -32,6 +34,7 @@ function DefaultAvatar() {
 export default function MyPage() {
   const navigate = useNavigate();
   const myPageQuery = useMyPage();
+  const logoutMutation = useLogout();
   const profile = myPageQuery.data;
 
   return (
@@ -67,7 +70,7 @@ export default function MyPage() {
         <button
           type="button"
           disabled={!profile}
-          onClick={() => profile && navigate(`/report/${profile.reportId}`)}
+          onClick={() => profile && navigate(`/report/${profile.reportId}?from=my`)}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
           {profile ? `${profile.nickname}님의 사주리포트 다시보기` : '사주리포트 불러오는 중'}
@@ -88,7 +91,14 @@ export default function MyPage() {
                 {index > 0 ? <span className="h-px bg-gray-2" /> : null}
                 <button
                   type="button"
-                  onClick={setting.path ? () => navigate(setting.path!) : undefined}
+                  disabled={setting.action === 'logout' && logoutMutation.isPending}
+                  onClick={
+                    setting.path
+                      ? () => navigate(setting.path!)
+                      : setting.action === 'logout'
+                        ? () => logoutMutation.mutate()
+                        : undefined
+                  }
                   className="typo-body-3 flex h-5 w-full items-center justify-between text-left text-gray-5"
                 >
                   {setting.label}

@@ -32,8 +32,8 @@ interface BottomNavBarProps {
 export default function BottomNavBar({ active, onChange }: BottomNavBarProps) {
   return (
     <nav className="fixed bottom-5 left-1/2 z-50 h-[62px] w-[332px] -translate-x-1/2">
-      <div className="absolute inset-y-0 left-0 right-[74px] rounded-[30px] bg-white/90" />
-      <div className="absolute inset-y-0 right-0 w-[61px] rounded-[30px] bg-white/90" />
+      <div className="absolute inset-y-0 left-0 right-[74px] rounded-[30px] border border-white/60 bg-white/65 shadow-[0_8px_24px_rgba(47,72,148,0.12)] backdrop-blur-xl" />
+      <div className="absolute inset-y-0 right-0 w-[61px] rounded-[30px] border border-white/60 bg-white/65 shadow-[0_8px_24px_rgba(47,72,148,0.12)] backdrop-blur-xl" />
       {active !== 'my' && (
         <span
           aria-hidden="true"

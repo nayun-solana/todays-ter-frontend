@@ -10,50 +10,9 @@ function ok<T>(result: T) {
   return HttpResponse.json({ isSuccess: true, code: 'COMMON200', message: '성공', result });
 }
 
-/** 401 응답 (BE ExceptionAdvice 형식) */
-function unauthorized() {
-  return HttpResponse.json(
-    { isSuccess: false, code: 'COMMON401', message: '인증이 필요합니다.', result: null },
-    { status: 401 },
-  );
-}
-
-// ── 인증 목 상태 ──────────────────────────────────────────────
-// 서버가 502라 토큰 만료 → 재발급 → 원요청 재시도 흐름을 실서버로 검증할 수 없다.
-// 목이 "현재 유효한 accessToken"을 들고 있다가, 콘솔에서 window.__expireToken()을 호출하면
-// 토큰을 갈아치워 다음 요청이 401을 맞게 한다. 그 뒤 재발급이 도는지 보면 된다.
-let validAccessToken = 'mock-access-1';
-let issuedCount = 1;
-
-function issueAccessToken(): string {
-  issuedCount += 1;
-  validAccessToken = `mock-access-${issuedCount}`;
-  return validAccessToken;
-}
-
-/** Authorization 헤더가 있는데 값이 최신 토큰이 아니면 만료로 본다(헤더가 없으면 게스트로 통과). */
-function isStaleToken(request: Request): boolean {
-  const header = request.headers.get('Authorization');
-  if (!header?.startsWith('Bearer ')) return false;
-  return header.slice('Bearer '.length) !== validAccessToken;
-}
-
-/** refresh까지 만료된 상태(세션 종료) 시뮬레이션 스위치. */
-let reissueBroken = false;
-
-if (typeof window !== 'undefined') {
-  const devTools = window as unknown as { __expireToken: () => void; __breakReissue: () => void };
-
-  devTools.__expireToken = () => {
-    validAccessToken = `mock-access-expired-${issuedCount}`;
-    console.info('[msw] accessToken을 만료시켰습니다. 다음 요청은 401 → 재발급을 타야 합니다.');
-  };
-
-  devTools.__breakReissue = () => {
-    reissueBroken = true;
-    console.info('[msw] 이제 재발급도 401입니다. 세션 종료 → 로그인 리다이렉트를 확인하세요.');
-  };
-}
+// ⚠️ 인증(/auth/**)은 절대 목으로 가리지 말 것.
+// 목이 발급한 가짜 토큰은 실서버에서 무효 JWT로 취급돼 게스트로 폴백되고,
+// 그러면 로그인했는데 게스트 데이터가 보이는 것처럼 착각하게 된다.
 
 const CHEONGGYECHEON_IMAGE_URL = new URL('../assets/place-cheonggyecheon.png', import.meta.url)
   .href;
@@ -151,80 +110,59 @@ const EDITOR_PICKS = [
 ] as const;
 
 export const handlers = [
-  // ── 인증 (BE main에 배포됨. 서버 502 동안 흐름 검증용 목) ──
-  // POST /auth/dev/token — 개발용 회원 토큰 발급
-  http.post('/auth/dev/token', () => ok({ memberId: 1, accessToken: issueAccessToken() })),
-
-  // POST /auth/reissue — refresh 쿠키로 재발급. 실서버는 회전식이라 FE가 single-flight로 한 번만 불러야 한다.
-  http.post('/auth/reissue', () => {
-    console.info('[msw] /auth/reissue 호출됨');
-    return reissueBroken ? unauthorized() : ok({ accessToken: issueAccessToken() });
-  }),
-
-  // POST /auth/logout
-  http.post('/auth/logout', () => ok(null)),
-
   // GET /home/today-energy — 오늘 나의 기운(오행)
-  http.get('/home/today-energy', ({ request }) =>
-    isStaleToken(request)
-      ? unauthorized()
-      : ok({
-          element: 'WATER',
-          label: '수',
-          description:
-            '안정과 균형의 기운. 중심을 잡고\n주변 사람들과의 관계가 조화롭게 이어집니다.',
-        }),
+  http.get('/home/today-energy', () =>
+    ok({
+      element: 'WATER',
+      label: '수',
+      description: '안정과 균형의 기운. 중심을 잡고\n주변 사람들과의 관계가 조화롭게 이어집니다.',
+    }),
   ),
 
-  // GET /home/header — 인사 헤더
-  http.get('/home/header', ({ request }) =>
-    isStaleToken(request)
-      ? unauthorized()
-      : ok({
-          dateLabel: '2026년 6월 11일 목요일',
-          userName: '윤진',
-          message: '오늘도 좋은 기운 충전해요',
-        }),
+  // GET /home/header — 인사 헤더. ⚠️ BE 배포됐지만 응답 형태가 FE 스키마와 달라 아직 목 유지
+  // (BE: {userType,date,dayOfWeek,nickname,greeting,subGreeting} / FE: {dateLabel,userName,message})
+  http.get('/home/header', () =>
+    ok({
+      dateLabel: '2026년 6월 11일 목요일',
+      userName: '윤진',
+      message: '오늘도 좋은 기운 충전해요',
+    }),
   ),
 
   // GET /home/energy-routines — 오늘 에너지 루틴
-  http.get('/home/energy-routines', ({ request }) =>
-    isStaleToken(request)
-      ? unauthorized()
-      : ok({
-          title: '토기 에너지 루틴',
-          routines: ['10분 명상하기', '계획 정리하기', '맨발로 땅 밟기'],
-        }),
+  http.get('/home/energy-routines', () =>
+    ok({
+      title: '토기 에너지 루틴',
+      routines: ['10분 명상하기', '계획 정리하기', '맨발로 땅 밟기'],
+    }),
   ),
 
-  // GET /home/recommended-place — 오늘 가장 잘 맞는 터
-  http.get('/home/recommended-place', ({ request }) =>
-    isStaleToken(request)
-      ? unauthorized()
-      : ok({
-          places: [
-            {
-              recommendationId: '1',
-              badge: '최고 궁합',
-              name: '경복궁',
-              subtitle: '안정과 번영의 기운, 토기 충전',
-              description:
-                '왕궁의 터는 수백 년 동안 토기를 축적해왔습니다.\n안정과 중심을 잡아주는 기운이 강해\n재물과 사업에 큰 도움이 됩니다.',
-              distanceLabel: '3.5km',
-              rating: 4.7,
-            },
-            {
-              recommendationId: '2',
-              badge: '최고 궁합',
-              name: '창덕궁',
-              subtitle: '고요와 회복의 기운, 수기 충전',
-              description:
-                '후원의 깊은 숲과 물길이\n마음을 가라앉히고 생각을 정리해줍니다.\n지친 하루의 회복에 좋은 터입니다.',
-              distanceLabel: '4.2km',
-              rating: 4.8,
-            },
-          ],
-        }),
+  // GET /home/recommended-place — 오늘 가장 잘 맞는 터 (BE 미배포)
+  http.get('/home/recommended-place', () =>
+    ok({
+      places: [
+        {
+          recommendationId: '1',
+          badge: '최고 궁합',
+          name: '경복궁',
+          subtitle: '안정과 번영의 기운, 토기 충전',
+          description:
+            '왕궁의 터는 수백 년 동안 토기를 축적해왔습니다.\n안정과 중심을 잡아주는 기운이 강해\n재물과 사업에 큰 도움이 됩니다.',
+          distanceLabel: '3.5km',
+          rating: 4.7,
+        },
+        {
+          recommendationId: '2',
+          badge: '최고 궁합',
+          name: '창덕궁',
+          subtitle: '고요와 회복의 기운, 수기 충전',
+          description:
+            '후원의 깊은 숲과 물길이\n마음을 가라앉히고 생각을 정리해줍니다.\n지친 하루의 회복에 좋은 터입니다.',
+          distanceLabel: '4.2km',
+          rating: 4.8,
+        },
+      ],
+    }),
   ),
 
   // GET /recommendations/:id — 추천 장소 상세(나와 어울리는 터)

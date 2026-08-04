@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
+import { useDevLogin } from '../../hooks/auth/useAuth';
 import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
 
@@ -281,9 +282,12 @@ function LoginContent({ onGuest }: { onGuest: () => void }) {
           <GoogleIcon className="size-5 grayscale" />
           <span className="text-sm font-bold text-white">구글로 로그인</span>
         </button>
+
+        {/* 개발용 로그인 — dev 빌드에만 렌더된다(카카오 키 대기 중 회원 상태 테스트용, #72) */}
+        {import.meta.env.DEV && <DevLoginButton />}
       </div>
 
-      {/* 약관 */}
+      {/* 약관 (개발용 버튼은 위 블록 안) */}
       <p
         className="absolute inset-x-0 text-center text-[10px] leading-none text-white"
         style={{ bottom: 38, animation: 'login-rise-in 0.5s ease-out 0.7s both' }}
@@ -291,5 +295,33 @@ function LoginContent({ onGuest }: { onGuest: () => void }) {
         시작하면 이용약관 및 개인정보 처리방침에 동의하게 됩니다
       </p>
     </div>
+  );
+}
+
+/**
+ * 개발용 로그인 버튼 — POST /auth/dev/token으로 회원 토큰을 받아 홈으로 간다.
+ * 시안에 없는 개발 도구라 dev 빌드에서만 렌더된다(prod 번들에서는 조건이 false).
+ */
+function DevLoginButton() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const devLogin = useDevLogin();
+  // 가드가 보낸 경우 원래 가려던 곳으로 되돌려준다.
+  const from = (location.state as { from?: string } | null)?.from ?? '/home';
+
+  return (
+    <button
+      type="button"
+      disabled={devLogin.isPending}
+      onClick={() =>
+        devLogin.mutate(
+          { email: 'dev@todays-ter.kr', nickname: '개발자' },
+          { onSuccess: () => navigate(from, { replace: true }) },
+        )
+      }
+      className="mt-4 flex h-10 items-center justify-center rounded-full border border-dashed border-white/60 text-xs font-bold text-white/80"
+    >
+      {devLogin.isPending ? '발급 중…' : '개발용 로그인 (dev 전용)'}
+    </button>
   );
 }

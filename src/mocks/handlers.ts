@@ -10,10 +10,12 @@ function ok<T>(result: T) {
   return HttpResponse.json({ isSuccess: true, code: 'COMMON200', message: '성공', result });
 }
 
-const CHEONGGYECHEON_IMAGE_URL = new URL(
-  '../assets/place-cheonggyecheon.png',
-  import.meta.url,
-).href;
+// ⚠️ 인증(/auth/**)은 절대 목으로 가리지 말 것.
+// 목이 발급한 가짜 토큰은 실서버에서 무효 JWT로 취급돼 게스트로 폴백되고,
+// 그러면 로그인했는데 게스트 데이터가 보이는 것처럼 착각하게 된다.
+
+const CHEONGGYECHEON_IMAGE_URL = new URL('../assets/place-cheonggyecheon.png', import.meta.url)
+  .href;
 const PLACE_SAMPLE_IMAGE_URL = new URL('../assets/home/place-sample.jpg', import.meta.url).href;
 
 const SEARCH_PLACES = [
@@ -117,7 +119,8 @@ export const handlers = [
     }),
   ),
 
-  // GET /home/header — 인사 헤더
+  // GET /home/header — 인사 헤더. ⚠️ BE 배포됐지만 응답 형태가 FE 스키마와 달라 아직 목 유지
+  // (BE: {userType,date,dayOfWeek,nickname,greeting,subGreeting} / FE: {dateLabel,userName,message})
   http.get('/home/header', () =>
     ok({
       dateLabel: '2026년 6월 11일 목요일',
@@ -134,7 +137,7 @@ export const handlers = [
     }),
   ),
 
-  // GET /home/recommended-place — 오늘 가장 잘 맞는 터
+  // GET /home/recommended-place — 오늘 가장 잘 맞는 터 (BE 미배포)
   http.get('/home/recommended-place', () =>
     ok({
       places: [
@@ -358,8 +361,7 @@ export const handlers = [
     const elementType = url.searchParams.get('elementType');
     const page = Number(url.searchParams.get('page') ?? 0);
     const size = Number(url.searchParams.get('size') ?? 20);
-    const hasCoordinates =
-      url.searchParams.has('latitude') && url.searchParams.has('longitude');
+    const hasCoordinates = url.searchParams.has('latitude') && url.searchParams.has('longitude');
     const filtered = SEARCH_PLACES.filter(
       (place) =>
         (!regionCode || regionCode === 'ALL' || place.regionCode === regionCode) &&
@@ -561,8 +563,7 @@ export const handlers = [
           placeId: 25,
           visitId: 101,
           placeName: '남산타워',
-          thumbnailUrl:
-            'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
           categories: ['연애'],
           savedDate: '2026-06-25',
           element: '토',
@@ -571,8 +572,7 @@ export const handlers = [
           placeId: 2,
           visitId: 102,
           placeName: '한강공원',
-          thumbnailUrl:
-            'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
           categories: ['건강'],
           savedDate: '2026-06-24',
           element: '수',
@@ -581,8 +581,7 @@ export const handlers = [
           placeId: 31,
           visitId: 103,
           placeName: '성수동 카페거리',
-          thumbnailUrl:
-            'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
           categories: ['재물', '커리어'],
           savedDate: '2026-06-23',
           element: '화',

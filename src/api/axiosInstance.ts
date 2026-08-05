@@ -79,13 +79,10 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(apiError);
     }
 
+    // try는 재발급만 감싼다. 재시도까지 넣으면 재시도의 실패(예: 500)가 "재발급 실패"로 처리돼
+    // 호출자에게 원래의 401이 대신 전달된다.
     try {
       await reissueOnce();
-
-      // 헤더는 요청 인터셉터가 새 토큰으로 다시 넣는다(여기서 손대지 않는다).
-      config._retry = true;
-
-      return await axiosInstance.request(config);
     } catch (reissueError) {
       // 세션이 실제로 끝난 것은 재발급이 401/403일 때뿐이다.
       // 타임아웃·오프라인·5xx까지 로그아웃으로 처리하면 신호가 잠깐 끊긴 것만으로 세션이 날아간다.
@@ -98,6 +95,11 @@ axiosInstance.interceptors.response.use(
 
       return Promise.reject(apiError);
     }
+
+    // 헤더는 요청 인터셉터가 새 토큰으로 다시 넣는다(여기서 손대지 않는다).
+    config._retry = true;
+
+    return axiosInstance.request(config);
   },
 );
 

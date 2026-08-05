@@ -112,6 +112,17 @@ describe('401 응답 처리', () => {
     expect(getAccessToken()).toBeNull();
   });
 
+  it('재시도가 다른 이유로 실패하면 그 실패를 그대로 전한다 (401로 뭉뚱그리지 않는다)', async () => {
+    setAccessToken('old-token');
+    mockedReissueOnce.mockResolvedValue('new-token');
+    adapterReturning(401, 500);
+
+    // 재시도의 500이 "재발급 실패"로 처리되면 호출자는 원래의 401을 받게 된다
+    await expect(axiosInstance.get('/home/header')).rejects.toMatchObject({ status: 500 });
+
+    expect(getAccessToken()).toBe('old-token');
+  });
+
   it('토큰이 없는 게스트의 401은 건드리지 않는다', async () => {
     adapterReturning(401);
 

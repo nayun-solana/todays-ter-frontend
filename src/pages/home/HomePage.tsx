@@ -15,34 +15,26 @@ import RecommendedPlaceCard from './components/RecommendedPlaceCard';
 import RoutineChips from './components/RoutineChips';
 import { OHAENG_HOME } from './ohaeng';
 
-// BE 미배포라 오늘의 기운은 MSW mock(GET /home/today-energy). 로드 전 fallback = water.
+// 홈 데이터는 서버에서 온다. 실패했을 때 하드코딩된 값으로 화면을 채우면
+// 데이터가 안 왔다는 사실이 감춰지므로(배포본에서 실제로 그랬다), 로딩·에러를 각 영역에서 드러낸다.
+// 오행 테마(배경 그라데이션)만 로드 전 water로 두는데, 이건 데이터가 아니라 색상 뼈대다.
 
-const RECOMMENDED_DESC =
-  '왕궁의 터는 수백 년 동안 토기를 축적해왔습니다.\n안정과 중심을 잡아주는 기운이 강해\n재물과 사업에 큰 도움이 됩니다.';
-
-/** 추천 터 목록 (현재 시안 샘플). TODO: 서버 추천 데이터 연동. */
-const RECOMMENDED_PLACES = [
-  {
-    id: '1',
-    image: placeSample,
-    badge: '최고 궁합',
-    name: '경복궁',
-    subtitle: '안정과 번영의 기운, 토기 충전',
-    description: RECOMMENDED_DESC,
-    distance: '3.5km',
-    rating: 4.7,
-  },
-  {
-    id: '2',
-    image: placeSample,
-    badge: '최고 궁합',
-    name: '경복궁',
-    subtitle: '안정과 번영의 기운, 토기 충전',
-    description: RECOMMENDED_DESC,
-    distance: '3.5km',
-    rating: 4.7,
-  },
-];
+/**
+ * 화면에 보여줄 상태 판정. 데이터가 실제로 손에 있는지를 기준으로 한다.
+ *
+ * `isError`만 보면 안 된다 — react-query는 브라우저가 오프라인이라고 판단하면 재시도를 멈추고
+ * `fetchStatus: 'paused'` + `status: 'pending'`으로 붙잡아 둔다. 그러면 에러 UI가 영영 안 뜨고
+ * 스켈레톤만 남는다(실측으로 확인). 멈춘 것도 실패로 보여줘야 사용자가 다시 시도할 수 있다.
+ */
+function viewStateOf(query: {
+  data: unknown;
+  isError: boolean;
+  fetchStatus: 'fetching' | 'paused' | 'idle';
+}): 'loading' | 'failed' | 'ready' {
+  if (query.data !== undefined) return 'ready';
+  if (query.isError || query.fetchStatus === 'paused') return 'failed';
+  return 'loading';
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -50,18 +42,25 @@ export default function HomePage() {
   // TODO: BE 배포 후 /home/recommended-place의 userType·isLimited·visibleCount·loginPrompt로 교체.
   const { isMember } = useAuthStatus();
 
-  // 홈 데이터 — 서버(mock). 로드 전엔 각 항목 fallback.
-  const { data: energy } = useTodayEnergy();
-  const { data: header } = useHomeHeader();
-  const { data: routines } = useEnergyRoutines();
-  const { data: recommended } = useRecommendedPlaces();
+  const energyQuery = useTodayEnergy();
+  const headerQuery = useHomeHeader();
+  const routinesQuery = useEnergyRoutines();
+  const recommendedQuery = useRecommendedPlaces();
 
+  const header = headerQuery.data;
+  const routines = routinesQuery.data;
+  const headerState = viewStateOf(headerQuery);
+  const energyState = viewStateOf(energyQuery);
+  const routinesState = viewStateOf(routinesQuery);
+  const recommendedState = viewStateOf(recommendedQuery);
+
+  const energy = energyQuery.data;
   const ohaengKey = energy ? toOhaengKey(energy.element) : 'water';
   const theme = OHAENG_HOME[ohaengKey];
 
-  // 서버 추천 목록 → 카드 props (이미지는 실 URL 확정 전이라 샘플 사용). 로드 전엔 하드코딩 fallback.
+  // 서버 추천 목록 → 카드 props (이미지 실 URL은 BE 확정 전이라 샘플 사용)
   const cards =
-    recommended?.places.map((p) => ({
+    recommendedQuery.data?.places.map((p) => ({
       id: p.recommendationId,
       image: placeSample,
       badge: p.badge,
@@ -70,7 +69,7 @@ export default function HomePage() {
       description: p.description,
       distance: p.distanceLabel,
       rating: p.rating,
-    })) ?? RECOMMENDED_PLACES;
+    })) ?? [];
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
   const renderCard = ({ id, ...card }: (typeof cards)[number]) => (
@@ -78,7 +77,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="relative min-h-screen bg-gray-1">
+    <div className="relative min-h-dvh bg-gray-1">
       {/* 오행별 배경 그라데이션 */}
       <div
         aria-hidden
@@ -89,32 +88,75 @@ export default function HomePage() {
       <div className="relative flex flex-col gap-8 px-5 pb-8 pt-[70px]">
         {/* 인사말 */}
         <header className="flex flex-col gap-5 text-white">
-          <p className="text-base font-bold">{header?.dateLabel ?? '2026년 6월 11일 목요일'}</p>
-          <div className="flex flex-col gap-2">
-            <p className="text-2xl font-extrabold">안녕하세요 {header?.userName ?? '윤진'}님 !</p>
-            <p className="text-[17px] font-bold">{header?.message ?? '오늘도 좋은 기운 충전해요'}</p>
-          </div>
+          {headerState === 'loading' ? (
+            <HeaderSkeleton />
+          ) : headerState === 'failed' ? (
+            <SectionError
+              tone="light"
+              message="인사말을 불러오지 못했어요."
+              onRetry={() => void headerQuery.refetch()}
+            />
+          ) : (
+            <>
+              <p className="text-base font-bold">{header?.dateLabel}</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-2xl font-extrabold">안녕하세요 {header?.userName}님 !</p>
+                <p className="text-[17px] font-bold">{header?.message}</p>
+              </div>
+            </>
+          )}
         </header>
 
-        <EnergyCard
-          element={theme.key}
-          label={energy?.label ?? theme.label}
-          desc={energy?.description ?? theme.energyDesc}
-        />
-        <RoutineChips
-          title={routines?.title ?? theme.routineTitle}
-          routines={routines?.routines ?? theme.routines}
-        />
+        {energyState === 'loading' ? (
+          <BlockSkeleton className="h-[280px] rounded-[20px]" label="오늘의 기운 불러오는 중" />
+        ) : energyState === 'failed' ? (
+          <SectionError
+            message="오늘의 기운을 불러오지 못했어요."
+            onRetry={() => void energyQuery.refetch()}
+          />
+        ) : (
+          <EnergyCard
+            element={theme.key}
+            label={energy?.label ?? ''}
+            desc={energy?.description ?? ''}
+          />
+        )}
+
+        {routinesState === 'loading' ? (
+          <BlockSkeleton className="h-[76px] rounded-[20px]" label="에너지 루틴 불러오는 중" />
+        ) : routinesState === 'failed' ? (
+          <SectionError
+            message="에너지 루틴을 불러오지 못했어요."
+            onRetry={() => void routinesQuery.refetch()}
+          />
+        ) : (
+          <RoutineChips title={routines?.title ?? ''} routines={routines?.routines ?? []} />
+        )}
 
         {/* 오늘 가장 잘 맞는 터 */}
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
           <div className="flex flex-col gap-3">
+            {recommendedState === 'loading' && (
+              <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+            )}
+            {recommendedState === 'failed' && (
+              <SectionError
+                message="추천 터를 불러오지 못했어요."
+                onRetry={() => void recommendedQuery.refetch()}
+              />
+            )}
+            {recommendedState === 'ready' && cards.length === 0 && (
+              <p className="rounded-[20px] bg-white px-5 py-8 text-center text-sm text-gray-4">
+                오늘 추천할 터를 찾지 못했어요.
+              </p>
+            )}
             {cards[0] && renderCard(cards[0])}
-            {!isMember ? (
+            {/* 잠금 게이트는 가릴 카드가 실제로 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
+            {cards[1] && !isMember ? (
               // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
               <div className="relative">
-                {cards[1] && renderCard(cards[1])}
+                {renderCard(cards[1])}
                 <div
                   aria-hidden
                   className="absolute inset-0 rounded-[20px]"
@@ -140,11 +182,70 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-              cards[1] && renderCard(cards[1])
+              isMember && cards[1] && renderCard(cards[1])
             )}
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+/** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
+function BlockSkeleton({ className, label }: { className: string; label: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      className={`w-full animate-pulse bg-white/60 ${className}`}
+    />
+  );
+}
+
+function HeaderSkeleton() {
+  return (
+    <div role="status" aria-label="인사말 불러오는 중" className="flex animate-pulse flex-col gap-5">
+      <div className="h-[22px] w-40 rounded bg-white/50" />
+      <div className="flex flex-col gap-2">
+        <div className="h-8 w-56 rounded bg-white/50" />
+        <div className="h-[19px] w-44 rounded bg-white/50" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 영역 단위 실패 안내. 홈은 4개 API가 독립적이라 한 곳이 실패해도 나머지는 보여준다.
+ * tone='light'는 배경 그라데이션 위(인사말 영역)에서 쓰는 흰 글씨 버전.
+ */
+function SectionError({
+  message,
+  onRetry,
+  tone = 'dark',
+}: {
+  message: string;
+  onRetry: () => void;
+  tone?: 'dark' | 'light';
+}) {
+  const isLight = tone === 'light';
+
+  return (
+    <div
+      role="alert"
+      className={`flex items-center justify-between gap-3 rounded-[20px] px-5 py-4 ${
+        isLight ? 'bg-white/20 text-white' : 'bg-white text-gray-5'
+      }`}
+    >
+      <p className="text-sm font-bold">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
+          isLight ? 'bg-white/30 text-white' : 'bg-gray-1 text-primary'
+        }`}
+      >
+        다시 시도
+      </button>
     </div>
   );
 }

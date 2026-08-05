@@ -31,6 +31,7 @@ export default function ReportPage() {
 
   //   return <div>리포트를 불러오지 못했습니다.</div>;
   // }
+
   // status bar 색상 변경 (iOS Safari, Android Chrome)
   useEffect(() => {
     const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -134,21 +135,16 @@ export default function ReportPage() {
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
       <div className="relative z-10 flex flex-col gap-5 px-5 pt-5.5 pb-10">
         <div className="flex flex-col gap-3">
-          {/* 부가설명폰트 */}
-          <p className="text-[10px]font-bold text-primary-light ">기본 리포트</p>
+          <p className="typo-caption text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
-            {/* Body 2 */}
-            <p className="text-base font-bold text-white">{sajuReportData!.headline}</p>
-            {/* Head 1 */}
-            <p className="text-2xl font-extrabold text-white">{sajuReportData!.sajuTypeName}</p>
+            <p className="typo-body-2 text-white">{sajuReportData!.headline}</p>
+
+            <p className="typo-head-1 text-white">{sajuReportData!.sajuTypeName}</p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
-          <ContentBox>
-            {/* 부가설명폰트 */}
-            <p className="text-[10px] font-bold text-gray-5">
-              {sajuReportData!.elementAnalysis.summary}
-            </p>
+          <ContentBox type="TOP">
+            <p className="typo-caption text-gray-5">{sajuReportData!.elementAnalysis.summary}</p>
             <div className="flex flex-wrap gap-1.5">
               {sajuReportData!.elementAnalysis.primaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="primary" />
@@ -160,7 +156,7 @@ export default function ReportPage() {
               />
             </div>
           </ContentBox>
-          <ContentBox title="오행 분포">
+          <ContentBox type="TEXT" title="오행 분포">
             <div className="flex items-center gap-4">
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
@@ -207,14 +203,12 @@ export default function ReportPage() {
               </div>
             </div>
           </ContentBox>
-          <ContentBox title="전반적인 성향">
+          <ContentBox type="TEXT" title="전반적인 성향">
             <div className="flex flex-col gap-3">
               {sajuReportData!.overallTendency.items.map((item) => (
                 <div key={item.code} className="flex flex-col gap-1">
-                  {/* 부가설명폰트 */}
-                  <p className="text-[10px] font-bold text-primary">{item.title}</p>
-                  {/* Sub 3 */}
-                  <p className="text-[10px] font-normal text-gray-5">{item.description}</p>
+                  <p className="typo-caption text-primary">{item.title}</p>
+                  <p className="typo-sub-3 text-gray-5">{item.description}</p>
                 </div>
               ))}
             </div>

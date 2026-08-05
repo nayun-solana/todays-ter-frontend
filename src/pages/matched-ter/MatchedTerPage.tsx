@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router';
 
-import { ohaengByKey, ohaengByLabel } from '../../lib/ohaeng';
+import { ohaengByKey } from '../../lib/ohaeng';
+import { viewStateOf } from '../../lib/queryState';
 import Button from '../../components/Button';
 import {
   useRecommendationDetail,
@@ -8,6 +9,7 @@ import {
   useSharedRecommendation,
 } from '../../hooks/recommendation/useRecommendation';
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
+import { toOhaengKey } from '../../types/home/homeEnergy';
 import type { RecommendationDetail } from '../../types/recommendation/recommendationDetail';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
 import ImageCarousel from './components/ImageCarousel';
@@ -37,7 +39,8 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
   const detailQuery = useRecommendationDetail(isShared ? undefined : id);
   const sharedQuery = useSharedRecommendation(isShared ? token : undefined);
-  const { data, isError } = isShared ? sharedQuery : detailQuery;
+  const query = isShared ? sharedQuery : detailQuery;
+  const data = query.data;
 
   // 공유 링크는 버튼에 포인터·포커스가 닿을 때 미리 받아둔다 — 클릭 시점에 await가 끼면
   // navigator.share가 사용자 제스처를 잃어 iOS에서 막힌다.
@@ -50,9 +53,26 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
   } = useShareLink(id, { enabled: !isShared });
   const { share, result: shareResult } = useShareAction();
 
-  if (isShared && isError) return <SharedNotFound onHome={() => navigate('/home')} />;
+  // 데이터가 없으면 화면을 그리지 않는다. 예전에는 실패해도 `data?.x ?? ''` 폴백으로
+  // 빈 껍데기(장소명 없음·매칭 0%·해시태그 '#')가 그대로 그려져서, 사용자는 무슨 일이
+  // 일어났는지 알 수도 다시 시도할 수도 없었다. 실제로 BE가 primaryElement를 객체로
+  // 바꿨을 때 이 경로로 배포본이 빈 화면이 됐다(#98).
+  const state = viewStateOf(query);
+  if (state === 'loading') return <MatchedTerSkeleton isShared={isShared} />;
+  if (state === 'failed') {
+    // 공유 링크는 만료·오타가 흔하고 재시도가 의미 없다 — 홈으로 보낸다.
+    return isShared ? (
+      <SharedNotFound onHome={() => navigate('/home')} />
+    ) : (
+      <DetailLoadFailed onRetry={() => void query.refetch()} onBack={() => navigate(-1)} />
+    );
+  }
 
-  const meta = ohaengByLabel(data?.primaryElement ?? '') ?? ohaengByKey('water')!;
+  // viewStateOf가 'ready'면 data는 반드시 있다. 타입만 좁혀준다.
+  if (!data) return null;
+
+  // 오행은 code로 매핑한다 — 표시명("토")은 BE가 문구를 다듬으면 같이 깨진다.
+  const meta = ohaengByKey(data.primaryElement ? toOhaengKey(data.primaryElement.code) : 'water')!;
   const canShare = !isShared && !shareUnavailable;
 
   const handleShare = async () => {
@@ -61,7 +81,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
     await share({
       url,
-      title: `${data?.placeName ?? '오늘의 터'} — 나와 어울리는 터`,
+      title: `${data.placeName} — 나와 어울리는 터`,
       text: '오늘의 터에서 받은 추천이에요.',
     });
   };
@@ -85,23 +105,23 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
         )}
 
         <ImageCarousel />
-        <h2 className="text-xl font-extrabold text-gray-6">{data?.placeName ?? ''}</h2>
+        <h2 className="text-xl font-extrabold text-gray-6">{data.placeName}</h2>
 
         {/* 매칭칩·왜맞나요·행동제안은 12px 간격 (Figma) */}
         <div className="flex flex-col gap-3">
           <MatchChips
             meta={meta}
-            matchRate={data?.matchingScore ?? 0}
-            hashtag={data?.topCategories?.[0] ?? ''}
+            matchRate={data.matchingScore ?? 0}
+            hashtag={data.topCategories[0] ?? ''}
           />
           <WhyMatchCard
             meta={meta}
-            reason={data?.whyItMatches ?? NO_MATCH_REASON}
-            points={data?.matchingPoints ?? []}
+            reason={data.whyItMatches ?? NO_MATCH_REASON}
+            points={data.matchingPoints}
           />
           <ActionSuggestionCard
             meta={meta}
-            suggestion={data?.actionSuggestion ?? NO_MATCH_SUGGESTION}
+            suggestion={data.actionSuggestion ?? NO_MATCH_SUGGESTION}
           />
         </div>
       </div>
@@ -157,22 +177,79 @@ function ShareToast({ result }: { result: keyof typeof SHARE_TOAST_TEXT }) {
   );
 }
 
-/** 만료·오타 등으로 공유 토큰을 찾을 수 없을 때(PLACE404_2). */
-function SharedNotFound({ onHome }: { onHome: () => void }) {
+/** 본문 대신 안내를 채우는 껍데기. 앱바를 유지해 사용자가 갇히지 않게 한다. */
+function NoticeShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <MatchedTerAppBar title="나와 어울리는 터" showActions={false} />
       <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 text-center">
-        <div className="flex flex-col gap-2">
-          <p className="text-lg font-extrabold text-gray-6">링크를 찾을 수 없어요</p>
-          <p className="text-sm text-gray-4">
-            공유 링크가 잘못되었거나
-            <br />더 이상 유효하지 않아요.
-          </p>
-        </div>
-        <Button variant="primary" onClick={onHome}>
-          홈으로 가기
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** 만료·오타 등으로 공유 토큰을 찾을 수 없을 때(PLACE404_2). */
+function SharedNotFound({ onHome }: { onHome: () => void }) {
+  return (
+    <NoticeShell>
+      <div className="flex flex-col gap-2">
+        <p className="text-lg font-extrabold text-gray-6">링크를 찾을 수 없어요</p>
+        <p className="text-sm text-gray-4">
+          공유 링크가 잘못되었거나
+          <br />더 이상 유효하지 않아요.
+        </p>
+      </div>
+      <Button variant="primary" onClick={onHome}>
+        홈으로 가기
+      </Button>
+    </NoticeShell>
+  );
+}
+
+/**
+ * 추천 상세를 못 불러왔을 때. 네트워크 실패·서버 오류·응답 계약 불일치가 모두 여기로 온다.
+ * 원인이 무엇이든 사용자가 할 수 있는 건 재시도와 되돌아가기뿐이라 둘 다 준다.
+ */
+function DetailLoadFailed({ onRetry, onBack }: { onRetry: () => void; onBack: () => void }) {
+  return (
+    <NoticeShell>
+      <div className="flex flex-col gap-2">
+        <p className="text-lg font-extrabold text-gray-6">터 정보를 불러오지 못했어요</p>
+        <p className="text-sm text-gray-4">
+          잠시 후 다시 시도해주세요.
+          <br />
+          문제가 계속되면 잠시 뒤에 들어와 주세요.
+        </p>
+      </div>
+      <div className="flex w-full gap-[7px]">
+        <Button variant="primary" onClick={onRetry}>
+          다시 시도
         </Button>
+        <Button variant="secondary" onClick={onBack}>
+          돌아가기
+        </Button>
+      </div>
+    </NoticeShell>
+  );
+}
+
+/** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
+function MatchedTerSkeleton({ isShared }: { isShared: boolean }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-white pb-28" aria-busy="true">
+      <MatchedTerAppBar title="나와 어울리는 터" showActions={!isShared} />
+      <div className="flex flex-col gap-5 px-5 pt-4">
+        <span className="sr-only" role="status">
+          터 정보를 불러오는 중
+        </span>
+        <div className="h-[232px] animate-pulse rounded-[20px] bg-gray-2" />
+        <div className="h-7 w-40 animate-pulse rounded-lg bg-gray-2" />
+        <div className="flex flex-col gap-3">
+          <div className="h-9 animate-pulse rounded-full bg-gray-2" />
+          <div className="h-[180px] animate-pulse rounded-[20px] bg-gray-2" />
+          <div className="h-[104px] animate-pulse rounded-[20px] bg-gray-2" />
+        </div>
       </div>
     </div>
   );

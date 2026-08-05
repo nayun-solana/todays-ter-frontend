@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+
+import { restoreSession } from './api/session';
 import AppRoutes from './app/AppRoutes';
 import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 
@@ -13,6 +16,12 @@ import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 export const APP_SHELL_WIDTH = 375;
 
 function App() {
+  // 부팅 시 세션 복원 1회(localStorage 토큰이 없어도 refresh 쿠키로 회원인지 확인한다).
+  // 화면은 기다리지 않고 바로 그린다 — 판정을 기다리는 건 회원 전용 라우트 가드뿐이다.
+  useEffect(() => {
+    void restoreSession();
+  }, []);
+
   return (
     <div className="min-h-dvh bg-gray-100">
       <div className="relative mx-auto min-h-dvh w-full max-w-[375px] bg-white shadow-xl">

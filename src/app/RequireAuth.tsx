@@ -17,8 +17,14 @@ function GuardFallback() {
  * 세션 만료(인터셉터가 토큰을 비움) 시에도 이 가드가 리다이렉트를 맡는다.
  */
 export function RequireMember() {
-  const { isMember } = useAuthStatus();
+  const { isMember, isPending } = useAuthStatus();
   const location = useLocation();
+
+  // 부팅 복원이 끝나기 전엔 토큰이 없어도 게스트로 단정하면 안 된다
+  // (localStorage가 지워진 회원을 /login으로 튕겨버린다).
+  if (isPending) {
+    return <GuardFallback />;
+  }
 
   if (!isMember) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
@@ -34,10 +40,14 @@ export function RequireMember() {
  * 추천 목록을 못 불러와 판정이 불가능하면 홈으로 되돌린다.
  */
 export function RequireRecommendationAccess() {
-  const { isMember } = useAuthStatus();
+  const { isMember, isPending: isAuthPending } = useAuthStatus();
   const { id } = useParams();
-  const { data, isPending, isError } = useRecommendedPlaces({ enabled: !isMember });
+  // 회원 판정 전에 목록을 부르면 게스트로 나가서 잠긴 카드를 잘못 판정한다.
+  const { data, isPending, isError } = useRecommendedPlaces({
+    enabled: !isAuthPending && !isMember,
+  });
 
+  if (isAuthPending) return <GuardFallback />;
   if (isMember) return <Outlet />;
 
   if (isPending) return <GuardFallback />;

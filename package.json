@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "notion:sync-ticket": "tsx scripts/sync-notion-ticket.ts",
     "preview": "vite preview",
+    "test": "vitest run",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -49,7 +50,8 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.62.0",
     "vite": "^8.1.0",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.10"
   },
   "msw": {
     "workerDirectory": [

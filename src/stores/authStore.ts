@@ -2,18 +2,25 @@ import { create } from 'zustand';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 
+/**
+ * localStorage가 없는 환경(테스트 러너 등)을 위한 가드.
+ * `typeof localStorage?.getItem`으로는 막을 수 없다 — 옵셔널 체이닝은 `localStorage`를 먼저
+ * 평가하므로 식별자 자체가 선언돼 있지 않으면 ReferenceError가 난다. `typeof`를 식별자에 직접 써야 한다.
+ */
+function getStorage(): Storage | null {
+  return typeof localStorage !== 'undefined' ? localStorage : null;
+}
+
 function getStoredAccessToken() {
-  return typeof localStorage?.getItem === 'function'
-    ? localStorage.getItem(ACCESS_TOKEN_KEY)
-    : null;
+  return getStorage()?.getItem(ACCESS_TOKEN_KEY) ?? null;
 }
 
 function persistAccessToken(token: string) {
-  if (typeof localStorage?.setItem === 'function') localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  getStorage()?.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 function removeStoredAccessToken() {
-  if (typeof localStorage?.removeItem === 'function') localStorage.removeItem(ACCESS_TOKEN_KEY);
+  getStorage()?.removeItem(ACCESS_TOKEN_KEY);
 }
 
 type AuthState = {

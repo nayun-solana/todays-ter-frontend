@@ -40,7 +40,9 @@ export default function HomePage() {
   const navigate = useNavigate();
   // 게스트는 첫 카드만 보이고 나머지는 블러 + 로그인 게이트로 가린다.
   // TODO: BE 배포 후 /home/recommended-place의 userType·isLimited·visibleCount·loginPrompt로 교체.
-  const { isMember } = useAuthStatus();
+  // isAuthPending = 부팅 세션 복원 중. 이때 게스트로 단정해 게이트를 띄우면,
+  // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
+  const { isMember, isPending: isAuthPending } = useAuthStatus();
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
@@ -153,7 +155,10 @@ export default function HomePage() {
             )}
             {cards[0] && renderCard(cards[0])}
             {/* 잠금 게이트는 가릴 카드가 실제로 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
-            {cards[1] && !isMember ? (
+            {cards[1] && isAuthPending ? (
+              // 회원 판정 전 — 게이트도 카드도 아직 확정할 수 없다. 자리만 잡아 화면이 튀지 않게 한다.
+              <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+            ) : cards[1] && !isMember ? (
               // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
               <div className="relative">
                 {renderCard(cards[1])}

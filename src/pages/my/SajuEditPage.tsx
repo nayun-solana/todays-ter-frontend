@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
-import { ChevronDownIcon, CloseIcon } from '../../components/icons';
+import { ChevronDownIcon } from '../../components/icons';
 
 type DateField = 'year' | 'month' | 'day';
 
@@ -381,16 +381,8 @@ export function SajuReportCompletePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-dvh w-full bg-white">
-      <button
-        type="button"
-        onClick={() => navigate('/my')}
-        aria-label="닫기"
-        className="absolute top-[60px] right-5 flex size-6 items-center justify-center text-gray-5"
-      >
-        <CloseIcon />
-      </button>
-      <main className="flex min-h-dvh -translate-y-[46px] flex-col items-center justify-center gap-8 text-center text-gray-6">
+    <div className="flex min-h-dvh w-full flex-col bg-white">
+      <main className="flex flex-1 -translate-y-6 flex-col items-center justify-center gap-8 text-center text-gray-6">
         <CheckIcon />
         <div>
           <h1 className="typo-head-2">리포트 재생성 완료</h1>
@@ -401,6 +393,11 @@ export function SajuReportCompletePage() {
           </p>
         </div>
       </main>
+      <div className="px-5 pb-8">
+        <Button onClick={() => navigate('/report/1?from=my', { replace: true })}>
+          생성된 리포트 보러가기
+        </Button>
+      </div>
     </div>
   );
 }

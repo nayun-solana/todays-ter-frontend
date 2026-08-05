@@ -27,6 +27,20 @@ const queryClient = new QueryClient({
   },
 });
 
+async function unregisterLegacyMockServiceWorker() {
+  if (import.meta.env.DEV || !('serviceWorker' in navigator)) return false;
+
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  const legacyRegistrations = registrations.filter((registration) =>
+    [registration.active, registration.waiting, registration.installing].some((worker) =>
+      worker?.scriptURL.includes('mockServiceWorker'),
+    ),
+  );
+
+  const results = await Promise.all(legacyRegistrations.map((registration) => registration.unregister()));
+  return results.some(Boolean);
+}
+
 /** dev 전용 MSW 목 시작 (BE 미배포 엔드포인트 선개발). prod 빌드엔 포함 안 됨. */
 async function enableMocking() {
   if (!import.meta.env.DEV) return;
@@ -35,33 +49,14 @@ async function enableMocking() {
   await worker.start({ onUnhandledRequest: 'bypass' });
 }
 
-/**
- * 예전 배포본이 설치한 MSW 서비스워커를 해제한다.
- *
- * 2차 과제 제출 때 배포본이 목으로 구동돼서, 그때 방문한 사용자 브라우저에는
- * mockServiceWorker.js가 등록된 채로 남아 있다. 위 DEV 가드는 "앞으로 등록하지 않는다"일 뿐이라
- * 이미 설치된 워커는 계속 살아서 실 API 요청을 가로챌 수 있다(가짜 데이터가 진짜처럼 보인다).
- *
- * scriptURL로 걸러내는 게 핵심 — 조건 없이 unregister하면 PWA의 sw.js까지 날아간다.
- */
-async function removeLegacyMockWorker() {
-  if (import.meta.env.DEV || !('serviceWorker' in navigator)) return;
-
-  try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(
-      registrations
-        .filter((registration) => registration.active?.scriptURL.includes('mockServiceWorker'))
-        .map((registration) => registration.unregister()),
-    );
-  } catch {
-    // 해제 실패가 앱 부팅을 막을 이유는 없다
+async function bootstrap() {
+  if (await unregisterLegacyMockServiceWorker()) {
+    window.location.reload();
+    return;
   }
-}
 
-void removeLegacyMockWorker();
+  await enableMocking();
 
-enableMocking().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -71,4 +66,6 @@ enableMocking().then(() => {
       </QueryClientProvider>
     </StrictMode>,
   );
-});
+}
+
+void bootstrap();

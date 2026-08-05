@@ -59,7 +59,7 @@ export default defineConfig({
         short_name: '오늘의 터',
         description: '오행을 바탕으로 나에게 맞는 터를 찾아보세요.',
         lang: 'ko',
-        theme_color: '#863BFF',
+        theme_color: '#5a81fa',
         background_color: '#FFFFFF',
         display: 'standalone',
         start_url: '/',
@@ -70,6 +70,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: 'index.html',
+        globIgnores: ['**/mockServiceWorker.js'],
       },
     }),
   ],

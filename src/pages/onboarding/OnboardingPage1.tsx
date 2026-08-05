@@ -177,7 +177,7 @@ export default function OnboardingPage1() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full flex-col px-5 pb-8 pt-4">
+    <div className="flex min-h-dvh w-full flex-col px-5 pb-8 pt-4">
       {/* 상단 진행바 — 3분할 세그먼트, 1/3 (Figma Component 5/베리언트4) */}
       <div className="flex gap-1">
         <span className="h-1 flex-1 rounded-full bg-primary" />

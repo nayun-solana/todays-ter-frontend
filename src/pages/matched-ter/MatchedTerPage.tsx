@@ -67,7 +67,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-28">
+    <div className="flex min-h-dvh flex-col bg-white pb-28">
       <MatchedTerAppBar
         title="나와 어울리는 터"
         onShare={canShare ? handleShare : undefined}
@@ -109,7 +109,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       {shareResult && <ShareToast result={shareResult} />}
 
       {/* 하단 고정 액션바. 공유 화면에서는 후기 작성이 남의 추천에 붙으므로 감춘다. */}
-      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] bg-white px-5 py-4">
+      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] bg-white px-5 py-4">
         {isShared ? (
           <Button variant="primary" onClick={() => navigate('/home')}>
             나도 추천 받기
@@ -160,7 +160,7 @@ function ShareToast({ result }: { result: keyof typeof SHARE_TOAST_TEXT }) {
 /** 만료·오타 등으로 공유 토큰을 찾을 수 없을 때(PLACE404_2). */
 function SharedNotFound({ onHome }: { onHome: () => void }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       <MatchedTerAppBar title="나와 어울리는 터" showActions={false} />
       <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 text-center">
         <div className="flex flex-col gap-2">

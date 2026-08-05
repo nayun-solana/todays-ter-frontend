@@ -42,7 +42,7 @@ export default function OnboardingPage3() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col px-5 pb-8 pt-4">
+    <div className="flex min-h-dvh w-full flex-col px-5 pb-8 pt-4">
       {/* 상단 진행바 — 시안은 3분할 세그먼트(2/3 채움)이나 크로스팟 ProgressBar(연속형)로 근사 */}
       <ProgressBar step={2} total={3} />
 

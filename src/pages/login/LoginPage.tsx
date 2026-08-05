@@ -34,7 +34,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative mx-auto h-screen w-full max-w-[375px] overflow-hidden bg-primary">
+    <div className="relative mx-auto h-dvh w-full overflow-hidden bg-primary">
       {phase === 'intro' && <BallIntro onDone={() => setPhase('login')} />}
       {phase === 'login' && <LoginContent onGuest={handleGuest} />}
     </div>

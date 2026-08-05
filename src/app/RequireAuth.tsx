@@ -8,7 +8,7 @@ const GUEST_VISIBLE_RECOMMENDATIONS = 1;
 
 /** 가드가 판정을 못 내린 동안 보여줄 자리(라우트 청크 로딩과 같은 톤). */
 function GuardFallback() {
-  return <div className="min-h-screen bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
+  return <div className="min-h-dvh bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
 }
 
 /**

@@ -28,7 +28,7 @@ export type ElementDistribution = z.infer<typeof ElementDistribution>;
 export const ElementAnalysis = z.object({
   summary: z.string(),
   primaryElements: z.array(ElementCode),
-  complementaryElements: z.array(ElementCode),
+  complementaryElement: ElementCode,
   distribution: z.array(ElementDistribution),
 });
 export type ElementAnalysis = z.infer<typeof ElementAnalysis>;

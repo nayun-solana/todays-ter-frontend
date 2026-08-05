@@ -37,7 +37,7 @@ export default function ReportPage() {
     elementAnalysis: {
       summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
       primaryElements: ['WATER', 'WOOD'],
-      complementaryElements: ['FIRE'],
+      complementaryElement: 'FIRE',
       distribution: [
         { code: 'WOOD', percentage: 28 },
         { code: 'FIRE', percentage: 12 },
@@ -115,9 +115,11 @@ export default function ReportPage() {
               {sajuReportData!.elementAnalysis.primaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="primary" />
               ))}
-              {sajuReportData!.elementAnalysis.complementaryElements.map((element: ElementCode) => (
-                <OhaengIcon key={element} element={element} type="complementary" />
-              ))}
+              <OhaengIcon
+                key={sajuReportData!.elementAnalysis.complementaryElement}
+                element={sajuReportData!.elementAnalysis.complementaryElement}
+                type="complementary"
+              />
             </div>
           </ContentBox>
           <ContentBox title="오행 분포">

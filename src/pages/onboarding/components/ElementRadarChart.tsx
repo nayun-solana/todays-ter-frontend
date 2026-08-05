@@ -6,20 +6,7 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from 'recharts';
-
-type ElementCode = 'WOOD' | 'FIRE' | 'EARTH' | 'METAL' | 'WATER';
-
-type DistributionItem = {
-  code: ElementCode;
-  percentage: number;
-};
-
-type ElementAnalysis = {
-  summary: string;
-  primaryElements: ElementCode[];
-  complementaryElements: ElementCode[];
-  distribution: DistributionItem[];
-};
+import type { ElementAnalysis, ElementCode } from '../../../types/onboarding/report';
 
 type Props = {
   elementAnalysis: ElementAnalysis;

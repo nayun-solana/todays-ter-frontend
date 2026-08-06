@@ -53,9 +53,9 @@ export function RequireRecommendationAccess() {
   if (isPending) return <GuardFallback />;
   if (isError) return <Navigate to="/home" replace />;
 
-  const allowedIds = data.places
+  const allowedIds = data.recommendations
     .slice(0, GUEST_VISIBLE_RECOMMENDATIONS)
-    .map((place) => place.recommendationId);
+    .map((place) => String(place.placeId));
 
   if (!id || !allowedIds.includes(id)) {
     return <Navigate to="/login" replace />;

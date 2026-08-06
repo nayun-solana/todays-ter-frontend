@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import placeSample from '../../assets/home/place-sample.jpg';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import { formatKoreanDate } from '../../lib/date';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -57,20 +58,27 @@ export default function HomePage() {
   const recommendedState = viewStateOf(recommendedQuery);
 
   const energy = energyQuery.data;
-  const ohaengKey = energy ? toOhaengKey(energy.element) : 'water';
+  const ohaengKey = energy ? toOhaengKey(energy.element.code) : 'water';
   const theme = OHAENG_HOME[ohaengKey];
 
-  // 서버 추천 목록 → 카드 props (이미지 실 URL은 BE 확정 전이라 샘플 사용)
+  // 루틴 섹션 제목은 BE가 안 준다 — 오행 표시명으로 만든다("토" → "토기 에너지 루틴", 시안 기준).
+  const routineTitle = routines ? `${routines.element.name}기 에너지 루틴` : '';
+  // order는 서버가 매기는 노출 순서다. 배열 순서에 기대지 않고 명시적으로 정렬한다.
+  const routineTexts = [...(routines?.routines ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((r) => r.text);
+
+  // 서버 추천 목록 → 카드 props.
+  // badge·subtitle에 대응하는 BE 필드가 없다 — 시안 싱크에서 문구를 확정할 것.
   const cards =
-    recommendedQuery.data?.places.map((p) => ({
-      id: p.recommendationId,
-      image: placeSample,
-      badge: p.badge,
-      name: p.name,
-      subtitle: p.subtitle,
-      description: p.description,
-      distance: p.distanceLabel,
-      rating: p.rating,
+    recommendedQuery.data?.recommendations.map((p) => ({
+      id: String(p.placeId),
+      image: p.thumbnailUrl ?? placeSample,
+      badge: p.rankOrder === 1 ? '최고 궁합' : '추천 터',
+      name: p.placeName,
+      description: p.recommendationReason ?? '',
+      distance: p.distanceKm != null ? `${p.distanceKm}km` : '',
+      rating: p.averageRating ?? 0,
     })) ?? [];
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
@@ -100,10 +108,13 @@ export default function HomePage() {
             />
           ) : (
             <>
-              <p className="text-base font-bold">{header?.dateLabel}</p>
+              <p className="text-base font-bold">
+                {header ? formatKoreanDate(header.date, header.dayOfWeek) : ''}
+              </p>
               <div className="flex flex-col gap-2">
-                <p className="text-2xl font-extrabold">안녕하세요 {header?.userName}님 !</p>
-                <p className="text-[17px] font-bold">{header?.message}</p>
+                {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
+                <p className="text-2xl font-extrabold">{header?.greeting}</p>
+                <p className="text-[17px] font-bold">{header?.subGreeting}</p>
               </div>
             </>
           )}
@@ -119,7 +130,7 @@ export default function HomePage() {
         ) : (
           <EnergyCard
             element={theme.key}
-            label={energy?.label ?? ''}
+            label={energy?.element.name ?? ''}
             desc={energy?.description ?? ''}
           />
         )}
@@ -132,7 +143,7 @@ export default function HomePage() {
             onRetry={() => void routinesQuery.refetch()}
           />
         ) : (
-          <RoutineChips title={routines?.title ?? ''} routines={routines?.routines ?? []} />
+          <RoutineChips title={routineTitle} routines={routineTexts} />
         )}
 
         {/* 오늘 가장 잘 맞는 터 */}
@@ -209,7 +220,11 @@ function BlockSkeleton({ className, label }: { className: string; label: string 
 
 function HeaderSkeleton() {
   return (
-    <div role="status" aria-label="인사말 불러오는 중" className="flex animate-pulse flex-col gap-5">
+    <div
+      role="status"
+      aria-label="인사말 불러오는 중"
+      className="flex animate-pulse flex-col gap-5"
+    >
       <div className="h-[22px] w-40 rounded bg-white/50" />
       <div className="flex flex-col gap-2">
         <div className="h-8 w-56 rounded bg-white/50" />

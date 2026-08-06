@@ -5,7 +5,7 @@ import { Check } from 'lucide-react';
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
 import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
-import type { GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
+import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
 import WheelSelect, { type WheelColumnSpec } from './components/WheelSelect';
 
@@ -29,6 +29,15 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 const DEFAULT_DATE: DateValue = { year: 2000, month: 1, day: 1 };
 const DEFAULT_TIME: TimeValue = { hour: 0, minute: 0 };
 
+const CALENDAR_OPTIONS = [
+  { value: 'solar', label: '양력' },
+  { value: 'lunar', label: '음력' },
+] as const;
+const GENDER_OPTIONS = [
+  { value: 'MALE', label: '남자' },
+  { value: 'FEMALE', label: '여자' },
+] as const;
+
 const pad = (n: number) => String(n).padStart(2, '0');
 
 function daysInMonth(year: number, month: number) {
@@ -47,11 +56,51 @@ function formatHour(hour: number) {
   return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
 }
 
-/** 온보딩1 — 내 사주 입력 (달력 종류 → 생년월일 → 태어난 시간). 날짜/시간은 휠 드롭다운. */
+/** 달력 종류·성별처럼 2지선다를 pill로 고르는 그룹. (Figma 3099:1684) */
+function PillGroup<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly { value: T; label: string }[];
+  value: T | null;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="text-sm font-bold text-gray-6">{label}</p>
+      <div className="flex gap-2.5">
+        {options.map((option) => {
+          const active = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={cn(
+                'flex h-13 flex-1 items-center justify-center rounded-full text-sm transition-colors',
+                active
+                  ? 'bg-primary font-bold text-white'
+                  : 'bg-gray-2 font-normal text-gray-disabled',
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** 온보딩1 — 내 사주 입력 (달력 종류 → 성별 → 생년월일 → 태어난 시간). 날짜/시간은 휠 드롭다운. */
 export default function OnboardingPage1() {
   const navigate = useNavigate();
 
   const [calendarType, setCalendarType] = useState<CalendarType | null>(null);
+  const [gender, setGender] = useState<Gender | null>(null);
   // date/time은 휠 구동용으로 항상 값을 갖되, 사용자가 실제로 고른 뒤에만 '입력됨'(touched)으로 취급한다.
   const [date, setDate] = useState<DateValue>(DEFAULT_DATE);
   const [dateTouched, setDateTouched] = useState(false);
@@ -75,10 +124,12 @@ export default function OnboardingPage1() {
 
   const dateError = dateTouched && isFutureDate(date);
   const timeFilled = timeTouched || unknownTime;
-  const canSubmit = calendarType !== null && dateTouched && !dateError && timeFilled;
+  const canSubmit =
+    calendarType !== null && gender !== null && dateTouched && !dateError && timeFilled;
 
   /** 폼 상태 → 사주 저장 요청. (calendarType 대문자, 날짜/시간 문자열, 시간모름 시 null) */
-  const buildSajuRequest = (): GuestSajuRequest => ({
+  const buildSajuRequest = (selectedGender: Gender): GuestSajuRequest => ({
+    gender: selectedGender,
     calendarType: calendarType === 'lunar' ? 'LUNAR' : 'SOLAR',
     birthDate: `${date.year}-${pad(date.month)}-${pad(date.day)}`,
     birthTime: unknownTime ? null : `${pad(time.hour)}:${pad(time.minute)}`,
@@ -88,11 +139,13 @@ export default function OnboardingPage1() {
   /** 사주 저장 후 다음 온보딩(고민 선택)으로 이동. */
   const submitSaju = () => {
     if (saveSaju.isPending) return; // 중복 제출 방지
+    // 성별은 생년월일보다 앞 단계라 여기 도달 시 항상 선택돼 있다. 타입 좁히기용 가드.
+    if (gender === null) return;
     // 데모: 프로덕션은 cross-site라 게스트 쿠키(SameSite=Lax)가 안 실려 저장이 실패할 수 있음.
     // 흐름이 멈추지 않도록 성공/실패 무관 진행(onSettled). 로그인 '비회원 시작' 버튼과 동일 패턴.
     // 실서비스(BE SameSite=None;Secure/CORS 또는 동일도메인 배포) 시 onSuccess로 복원.
     // 리포트(/report/:id)는 reportId를 저장 응답에서 받아야 하고 BE 미배포(401)라 여기서 직접 보내지 않는다.
-    saveSaju.mutate(buildSajuRequest(), {
+    saveSaju.mutate(buildSajuRequest(gender), {
       onSettled: () => navigate('/onboarding/step-2'),
     });
   };
@@ -195,38 +248,18 @@ export default function OnboardingPage1() {
       </header>
 
       <div className="mt-8 flex flex-col gap-9">
-        {/* 달력 종류 */}
-        <section className="flex flex-col gap-3">
-          <p className="text-sm font-bold text-gray-6">달력 종류</p>
-          <div className="flex gap-2.5">
-            {(
-              [
-                { value: 'solar', label: '양력' },
-                { value: 'lunar', label: '음력' },
-              ] as const
-            ).map(({ value, label }) => {
-              const active = calendarType === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setCalendarType(value)}
-                  className={cn(
-                    'flex h-13 flex-1 items-center justify-center rounded-full text-sm transition-colors',
-                    active
-                      ? 'bg-primary font-bold text-white'
-                      : 'bg-gray-2 font-normal text-gray-disabled',
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <PillGroup
+          label="달력 종류"
+          options={CALENDAR_OPTIONS}
+          value={calendarType}
+          onChange={setCalendarType}
+        />
 
-        {/* 생년월일 — 달력 종류 선택 후 노출 */}
-        {calendarType !== null && (
+        {/* 성별 — BE 사주 계산에 필수(빠지면 저장 400) */}
+        <PillGroup label="성별" options={GENDER_OPTIONS} value={gender} onChange={setGender} />
+
+        {/* 생년월일 — 달력 종류·성별 선택 후 노출 */}
+        {calendarType !== null && gender !== null && (
           <WheelSelect
             label="생년월일"
             display={

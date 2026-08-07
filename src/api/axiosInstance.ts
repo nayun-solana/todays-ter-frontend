@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 
-import { reissueToken } from './reissue';
-import { clearAccessToken, getAccessToken, setAccessToken } from './token';
+import { reissueOnce } from './reissue';
+import { clearAccessToken, getAccessToken } from './token';
 import { ErrorCode, type ApiError, type ApiResponse } from './types';
 
 /** 재발급을 시도하면 안 되는 경로 — 재발급 자체이거나, 토큰을 처음 받는 요청. */
@@ -47,30 +47,10 @@ function toApiError(error: AxiosError<ApiResponse<unknown>>): ApiError {
 }
 
 /**
- * 진행 중인 재발급 요청.
- * BE의 refresh 토큰은 회전식이라 동시에 두 번 재발급하면 뒤엣것이 무효 토큰으로 깨진다.
- * 401이 여러 개 겹쳐도 재발급은 딱 한 번만 나가도록 프라미스를 공유한다(single-flight).
- */
-let reissuePromise: Promise<string> | null = null;
-
-function reissueOnce(): Promise<string> {
-  reissuePromise ??= reissueToken()
-    .then(({ accessToken }) => {
-      setAccessToken(accessToken);
-      return accessToken;
-    })
-    .finally(() => {
-      reissuePromise = null;
-    });
-
-  return reissuePromise;
-}
-
-/**
  * 응답 인터셉터
  * - 성공: AxiosResponse 그대로 반환 (본문은 ApiResponse<T>)
  * - 실패: ExceptionAdvice가 내려준 ApiResponse를 ApiError로 정규화
- * - 401: 회원이면 토큰 재발급 후 원 요청을 1회 재시도. 재발급도 실패하면 토큰을 비운다
+ * - 401: 회원이면 토큰 재발급 후 원 요청을 1회 재시도. 재발급이 401/403이면 토큰을 비운다
  *   (라우트 가드가 토큰 소실을 보고 /login으로 보낸다 — 인터셉터가 직접 이동시키지 않는다).
  *   토큰이 없는 게스트의 401은 손대지 않고 그대로 흘려보낸다.
  */
@@ -99,18 +79,27 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(apiError);
     }
 
+    // try는 재발급만 감싼다. 재시도까지 넣으면 재시도의 실패(예: 500)가 "재발급 실패"로 처리돼
+    // 호출자에게 원래의 401이 대신 전달된다.
     try {
-      const accessToken = await reissueOnce();
+      await reissueOnce();
+    } catch (reissueError) {
+      // 세션이 실제로 끝난 것은 재발급이 401/403일 때뿐이다.
+      // 타임아웃·오프라인·5xx까지 로그아웃으로 처리하면 신호가 잠깐 끊긴 것만으로 세션이 날아간다.
+      // (reissueClient는 인터셉터가 없어 AxiosError 원형이 그대로 온다.)
+      const reissueStatus = (reissueError as AxiosError | undefined)?.response?.status;
 
-      config._retry = true;
-      config.headers.Authorization = `Bearer ${accessToken}`;
+      if (reissueStatus === 401 || reissueStatus === 403) {
+        clearAccessToken();
+      }
 
-      return await axiosInstance.request(config);
-    } catch {
-      // refresh 만료·회전 불일치 등 — 세션 종료
-      clearAccessToken();
       return Promise.reject(apiError);
     }
+
+    // 헤더는 요청 인터셉터가 새 토큰으로 다시 넣는다(여기서 손대지 않는다).
+    config._retry = true;
+
+    return axiosInstance.request(config);
   },
 );
 

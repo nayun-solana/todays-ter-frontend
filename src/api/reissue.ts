@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { TokenResponse } from '../types/auth/auth';
+import { setAccessToken } from './token';
 import type { ApiResponse } from './types';
 
 /**
@@ -23,4 +24,25 @@ const reissueClient = axios.create({
 export async function reissueToken(): Promise<TokenResponse> {
   const res = await reissueClient.post<ApiResponse<unknown>>('/auth/reissue');
   return TokenResponse.parse(res.data.result);
+}
+
+/**
+ * 진행 중인 재발급 요청.
+ * BE의 refresh 토큰은 회전식이라 동시에 두 번 재발급하면 뒤엣것이 무효 토큰으로 깨진다.
+ * 401이 여러 개 겹쳐도, 부팅 복원과 401 재발급이 겹쳐도 실제 요청은 한 번만 나가도록
+ * 프라미스를 공유한다(single-flight).
+ */
+let reissuePromise: Promise<string> | null = null;
+
+export function reissueOnce(): Promise<string> {
+  reissuePromise ??= reissueToken()
+    .then(({ accessToken }) => {
+      setAccessToken(accessToken);
+      return accessToken;
+    })
+    .finally(() => {
+      reissuePromise = null;
+    });
+
+  return reissuePromise;
 }

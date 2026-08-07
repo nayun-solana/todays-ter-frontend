@@ -8,6 +8,9 @@ import { z } from 'zod';
 export const CalendarType = z.enum(['SOLAR', 'LUNAR']);
 export type CalendarType = z.infer<typeof CalendarType>;
 
+export const Gender = z.enum(['MALE', 'FEMALE']);
+export type Gender = z.infer<typeof Gender>;
+
 export const ConcernType = z.enum(['LOVE', 'CAREER', 'WEALTH', 'RELATIONSHIP', 'HEALTH', 'OTHER']);
 export type ConcernType = z.infer<typeof ConcernType>;
 
@@ -22,6 +25,8 @@ export type OnboardingStep = z.infer<typeof OnboardingStep>;
 // ── 요청 ──
 
 export const GuestSajuRequest = z.object({
+  /** BE required — 빠지면 400 COMMON400_1 "성별은 필수입니다."(실측 2026-08-06). */
+  gender: Gender,
   calendarType: CalendarType,
   birthDate: z.string(), // yyyy-MM-dd
   birthTime: z.string().nullable(), // HH:mm. birthTimeUnknown=true면 null
@@ -49,6 +54,8 @@ export const GuestConcernResponse = z.object({
 export type GuestConcernResponse = z.infer<typeof GuestConcernResponse>;
 
 export const GuestOnboardingResponse = z.object({
+  // 저장 전 조회면 아직 값이 없다.
+  gender: Gender.nullish(),
   calendarType: CalendarType,
   birthDate: z.string(),
   birthTime: z.string().nullable(),

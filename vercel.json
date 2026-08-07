@@ -1,8 +1,23 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
+    { "source": "/recommendations/places/shared/:token", "destination": "/index.html" },
+
+    { "source": "/api/:path(.+)", "destination": "https://today-ter.kr/api/:path" },
+    { "source": "/auth/:path(.+)", "destination": "https://today-ter.kr/auth/:path" },
+    { "source": "/home/:path(.+)", "destination": "https://today-ter.kr/home/:path" },
+    { "source": "/places/:path(.+)", "destination": "https://today-ter.kr/places/:path" },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+      "source": "/recommendations/:path(.+)",
+      "destination": "https://today-ter.kr/recommendations/:path"
+    },
+    { "source": "/records/:path(.+)", "destination": "https://today-ter.kr/records/:path" },
+    { "source": "/members/:path(.+)", "destination": "https://today-ter.kr/members/:path" },
+    {
+      "source": "/fortune-reports/:path(.+)",
+      "destination": "https://today-ter.kr/fortune-reports/:path"
+    },
+
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -10,7 +10,7 @@ import type { ApiResponse } from './types';
  * 인터셉터가 없는 별도 인스턴스를 쓴다. Authorization 헤더도 붙이지 않는다(쿠키만 사용).
  */
 const reissueClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  // baseURL 없음 = 상대경로. axiosInstance와 같은 이유(same-origin 경유) — 그쪽 주석 참고.
   timeout: 10_000,
   // refresh 토큰 쿠키(HttpOnly) 전송용
   withCredentials: true,

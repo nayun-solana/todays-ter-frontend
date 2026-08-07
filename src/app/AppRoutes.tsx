@@ -79,12 +79,13 @@ export default function AppRoutes() {
             실서비스 배포 시 인증(토큰/게스트 세션) 유무에 따라 /home 또는 /login으로 분기 예정. */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* 하단바 있는 메인 탭. 홈만 게스트 공개, 나머지 탭은 회원 전용.
-            ⚠️ /search는 성원 담당 화면 — 게스트 탐색 허용 여부 팀 확인 필요. */}
+        {/* 하단바 있는 메인 탭. 홈·탐색은 게스트 공개, 기록·마이는 회원 전용.
+            탐색이 쓰는 /places·/places/editor-picks·/places/explore-filters는 익명 호출도 200이라
+            게스트 세션 없이도 그대로 뜬다(실측 2026-08-07). */}
         <Route element={<MainTabsLayout />}>
           <Route path="/home" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route element={<RequireMember />}>
-            <Route path="/search" element={<SearchPage />} />
             <Route path="/record" element={<RecordPage />} />
             <Route path="/my" element={<MyPage />} />
           </Route>
@@ -118,9 +119,12 @@ export default function AppRoutes() {
           <Route path="/report/:id" element={<ReportPage />} />
           <Route path="/report/:id/detail" element={<ReportDetailPage />} />
 
-          {/* 회원 전용 */}
+          {/* 장소 상세는 게스트 공개(탐색에서 이어지는 화면).
+              `GET /places/{placeId}`도 익명 200이라 그대로 뜬다(실측 2026-08-07). */}
+          <Route path="/place/:id" element={<PlaceDetailPage />} />
+
+          {/* 회원 전용 — 기록·리뷰 작성·저장·마이 */}
           <Route element={<RequireMember />}>
-            <Route path="/place/:id" element={<PlaceDetailPage />} />
             <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
             <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
             <Route path="/place/:id/review" element={<PlaceReviewPage />} />

@@ -54,7 +54,7 @@ function MainTabsLayout() {
   const activeTab = pathToTab(pathname);
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-dvh pb-24">
       <Outlet />
       <BottomNavBar active={activeTab} onChange={(tab) => navigate(TAB_PATHS[tab])} />
     </div>
@@ -68,7 +68,7 @@ function NoFooterLayout() {
 
 /** lazy 라우트 청크 로딩 중 표시 (레이아웃 흔들림 최소화) */
 function RouteFallback() {
-  return <div className="min-h-screen bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
+  return <div className="min-h-dvh bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
 }
 
 export default function AppRoutes() {

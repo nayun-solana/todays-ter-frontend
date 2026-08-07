@@ -32,6 +32,16 @@ const proxy = Object.fromEntries(
       changeOrigin: true,
       secure: true,
       cookieDomainRewrite: { '*': '' }, // Set-Cookie 도메인 제거 → localhost host-only 쿠키로 저장
+      /**
+       * 화면 이동(문서 요청)은 프록시를 태우지 않고 Vite가 SPA로 처리하게 한다.
+       * `/home`·`/recommendations/...`처럼 **앱 라우트와 API 접두어가 겹치는 경로**가 있어서,
+       * 이 분기가 없으면 주소창으로 /home을 열었을 때 화면 대신 API JSON이 뜬다.
+       * XHR/fetch는 Accept에 text/html이 없으므로 그대로 프록시를 탄다.
+       */
+      bypass(req: { headers: Record<string, string | string[] | undefined>; url?: string }) {
+        const accept = req.headers.accept;
+        if (typeof accept === 'string' && accept.includes('text/html')) return req.url;
+      },
     },
   ]),
 );

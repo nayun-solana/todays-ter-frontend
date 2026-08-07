@@ -8,6 +8,9 @@ import { z } from 'zod';
 export const CalendarType = z.enum(['SOLAR', 'LUNAR']);
 export type CalendarType = z.infer<typeof CalendarType>;
 
+export const Gender = z.enum(['MALE', 'FEMALE']);
+export type Gender = z.infer<typeof Gender>;
+
 export const ConcernType = z.enum(['LOVE', 'CAREER', 'WEALTH', 'RELATIONSHIP', 'HEALTH', 'OTHER']);
 export type ConcernType = z.infer<typeof ConcernType>;
 
@@ -22,6 +25,11 @@ export type OnboardingStep = z.infer<typeof OnboardingStep>;
 // ── 요청 ──
 
 export const GuestSajuRequest = z.object({
+  /**
+   * ⚠️ BE required. 안 보내면 400 COMMON400_1 "성별은 필수입니다."(실측 2026-08-06).
+   * 화면에 성별 입력이 아직 없어 optional로 둔다 — 입력 UI가 붙는 즉시 required로 바꿀 것.
+   */
+  gender: Gender.optional(),
   calendarType: CalendarType,
   birthDate: z.string(), // yyyy-MM-dd
   birthTime: z.string().nullable(), // HH:mm. birthTimeUnknown=true면 null
@@ -49,6 +57,7 @@ export const GuestConcernResponse = z.object({
 export type GuestConcernResponse = z.infer<typeof GuestConcernResponse>;
 
 export const GuestOnboardingResponse = z.object({
+  gender: Gender.nullish(),
   calendarType: CalendarType,
   birthDate: z.string(),
   birthTime: z.string().nullable(),

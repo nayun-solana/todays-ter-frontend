@@ -1,8 +1,10 @@
 import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
+import { isOnboardingRequired } from '../../api/onboardingRequired';
 import placeSample from '../../assets/home/place-sample.jpg';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import { formatKoreanDate } from '../../lib/date';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -56,21 +58,35 @@ export default function HomePage() {
   const routinesState = viewStateOf(routinesQuery);
   const recommendedState = viewStateOf(recommendedQuery);
 
+  // 온보딩(사주 리포트) 미완료. 헤더를 뺀 3개가 전부 이걸 전제로 하므로,
+  // 하나라도 이 신호를 주면 세 섹션을 각각 실패로 보여주는 대신 유도 카드 하나로 대체한다.
+  // 이 상태에서 "다시 시도"를 띄우면 영영 404라 사용자가 빠져나갈 길이 없다.
+  const needsOnboarding = [energyQuery, routinesQuery, recommendedQuery].some((q) =>
+    isOnboardingRequired(q.error),
+  );
+
   const energy = energyQuery.data;
-  const ohaengKey = energy ? toOhaengKey(energy.element) : 'water';
+  const ohaengKey = energy ? toOhaengKey(energy.element.code) : 'water';
   const theme = OHAENG_HOME[ohaengKey];
 
-  // 서버 추천 목록 → 카드 props (이미지 실 URL은 BE 확정 전이라 샘플 사용)
+  // 루틴 섹션 제목은 BE가 안 준다 — 오행 표시명으로 만든다("토" → "토기 에너지 루틴", 시안 기준).
+  const routineTitle = routines ? `${routines.element.name}기 에너지 루틴` : '';
+  // order는 서버가 매기는 노출 순서다. 배열 순서에 기대지 않고 명시적으로 정렬한다.
+  const routineTexts = [...(routines?.routines ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((r) => r.text);
+
+  // 서버 추천 목록 → 카드 props.
+  // badge·subtitle에 대응하는 BE 필드가 없다 — 시안 싱크에서 문구를 확정할 것.
   const cards =
-    recommendedQuery.data?.places.map((p) => ({
-      id: p.recommendationId,
-      image: placeSample,
-      badge: p.badge,
-      name: p.name,
-      subtitle: p.subtitle,
-      description: p.description,
-      distance: p.distanceLabel,
-      rating: p.rating,
+    recommendedQuery.data?.recommendations.map((p) => ({
+      id: String(p.placeId),
+      image: p.thumbnailUrl ?? placeSample,
+      badge: p.rankOrder === 1 ? '최고 궁합' : '추천 터',
+      name: p.placeName,
+      description: p.recommendationReason ?? '',
+      distance: p.distanceKm != null ? `${p.distanceKm}km` : '',
+      rating: p.averageRating ?? 0,
     })) ?? [];
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
@@ -100,99 +116,136 @@ export default function HomePage() {
             />
           ) : (
             <>
-              <p className="text-base font-bold">{header?.dateLabel}</p>
+              <p className="text-base font-bold">
+                {header ? formatKoreanDate(header.date, header.dayOfWeek) : ''}
+              </p>
               <div className="flex flex-col gap-2">
-                <p className="text-2xl font-extrabold">안녕하세요 {header?.userName}님 !</p>
-                <p className="text-[17px] font-bold">{header?.message}</p>
+                {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
+                <p className="text-2xl font-extrabold">{header?.greeting}</p>
+                <p className="text-[17px] font-bold">{header?.subGreeting}</p>
               </div>
             </>
           )}
         </header>
 
-        {energyState === 'loading' ? (
-          <BlockSkeleton className="h-[280px] rounded-[20px]" label="오늘의 기운 불러오는 중" />
-        ) : energyState === 'failed' ? (
-          <SectionError
-            message="오늘의 기운을 불러오지 못했어요."
-            onRetry={() => void energyQuery.refetch()}
-          />
+        {needsOnboarding ? (
+          <OnboardingPrompt onStart={() => navigate('/onboarding/step-1')} />
         ) : (
-          <EnergyCard
-            element={theme.key}
-            label={energy?.label ?? ''}
-            desc={energy?.description ?? ''}
-          />
-        )}
-
-        {routinesState === 'loading' ? (
-          <BlockSkeleton className="h-[76px] rounded-[20px]" label="에너지 루틴 불러오는 중" />
-        ) : routinesState === 'failed' ? (
-          <SectionError
-            message="에너지 루틴을 불러오지 못했어요."
-            onRetry={() => void routinesQuery.refetch()}
-          />
-        ) : (
-          <RoutineChips title={routines?.title ?? ''} routines={routines?.routines ?? []} />
-        )}
-
-        {/* 오늘 가장 잘 맞는 터 */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
-          <div className="flex flex-col gap-3">
-            {recommendedState === 'loading' && (
-              <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
-            )}
-            {recommendedState === 'failed' && (
+          <>
+            {energyState === 'loading' ? (
+              <BlockSkeleton className="h-[280px] rounded-[20px]" label="오늘의 기운 불러오는 중" />
+            ) : energyState === 'failed' ? (
               <SectionError
-                message="추천 터를 불러오지 못했어요."
-                onRetry={() => void recommendedQuery.refetch()}
+                message="오늘의 기운을 불러오지 못했어요."
+                onRetry={() => void energyQuery.refetch()}
+              />
+            ) : (
+              <EnergyCard
+                element={theme.key}
+                label={energy?.element.name ?? ''}
+                desc={energy?.description ?? ''}
               />
             )}
-            {recommendedState === 'ready' && cards.length === 0 && (
-              <p className="rounded-[20px] bg-white px-5 py-8 text-center text-sm text-gray-4">
-                오늘 추천할 터를 찾지 못했어요.
-              </p>
-            )}
-            {cards[0] && renderCard(cards[0])}
-            {/* 잠금 게이트는 가릴 카드가 실제로 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
-            {cards[1] && isAuthPending ? (
-              // 회원 판정 전 — 게이트도 카드도 아직 확정할 수 없다. 자리만 잡아 화면이 튀지 않게 한다.
-              <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
-            ) : cards[1] && !isMember ? (
-              // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
-              <div className="relative">
-                {renderCard(cards[1])}
-                <div
-                  aria-hidden
-                  className="absolute inset-0 rounded-[20px]"
-                  style={{
-                    background:
-                      'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.75) 10%, #ffffff 53%)',
-                  }}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-[22px]">
-                  <div className="flex flex-col items-center gap-3">
-                    <Lock className="size-6 text-primary" strokeWidth={2.2} />
-                    <p className="text-base font-bold text-gray-6">
-                      로그인 후 더 많은 터를 탐색해보세요
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/login')}
-                    className="h-12 w-full rounded-[20px] bg-primary text-sm font-bold text-white"
-                  >
-                    로그인/회원가입 하러가기
-                  </button>
-                </div>
-              </div>
+
+            {routinesState === 'loading' ? (
+              <BlockSkeleton className="h-[76px] rounded-[20px]" label="에너지 루틴 불러오는 중" />
+            ) : routinesState === 'failed' ? (
+              <SectionError
+                message="에너지 루틴을 불러오지 못했어요."
+                onRetry={() => void routinesQuery.refetch()}
+              />
             ) : (
-              isMember && cards[1] && renderCard(cards[1])
+              <RoutineChips title={routineTitle} routines={routineTexts} />
             )}
-          </div>
-        </section>
+
+            {/* 오늘 가장 잘 맞는 터 */}
+            <section className="flex flex-col gap-4">
+              <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
+              <div className="flex flex-col gap-3">
+                {recommendedState === 'loading' && (
+                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+                )}
+                {recommendedState === 'failed' && (
+                  <SectionError
+                    message="추천 터를 불러오지 못했어요."
+                    onRetry={() => void recommendedQuery.refetch()}
+                  />
+                )}
+                {recommendedState === 'ready' && cards.length === 0 && (
+                  <p className="rounded-[20px] bg-white px-5 py-8 text-center text-sm text-gray-4">
+                    오늘 추천할 터를 찾지 못했어요.
+                  </p>
+                )}
+                {cards[0] && renderCard(cards[0])}
+                {/* 잠금 게이트는 가릴 카드가 실제로 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
+                {cards[1] && isAuthPending ? (
+                  // 회원 판정 전 — 게이트도 카드도 아직 확정할 수 없다. 자리만 잡아 화면이 튀지 않게 한다.
+                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+                ) : cards[1] && !isMember ? (
+                  // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
+                  <div className="relative">
+                    {renderCard(cards[1])}
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 rounded-[20px]"
+                      style={{
+                        background:
+                          'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.75) 10%, #ffffff 53%)',
+                      }}
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-[22px]">
+                      <div className="flex flex-col items-center gap-3">
+                        <Lock className="size-6 text-primary" strokeWidth={2.2} />
+                        <p className="text-base font-bold text-gray-6">
+                          로그인 후 더 많은 터를 탐색해보세요
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/login')}
+                        className="h-12 w-full rounded-[20px] bg-primary text-sm font-bold text-white"
+                      >
+                        로그인/회원가입 하러가기
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  isMember && cards[1] && renderCard(cards[1])
+                )}
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 온보딩 미완료 안내.
+ *
+ * 기운·루틴·추천은 전부 사주 리포트를 전제로 한다. 리포트가 없으면 서버가 404를 주는데
+ * 이건 장애가 아니라 "아직 안 만들었다"는 뜻이므로, 실패 UI가 아니라 다음 할 일을 보여준다.
+ * 세 섹션을 통째로 대체한다 — 같은 안내를 세 번 반복하지 않기 위해서다.
+ */
+function OnboardingPrompt({ onStart }: { onStart: () => void }) {
+  return (
+    <section className="flex flex-col items-center gap-5 rounded-[20px] bg-white px-5 py-8 text-center">
+      <div className="flex flex-col gap-2">
+        <p className="text-lg font-extrabold text-gray-6">아직 나의 기운을 몰라요</p>
+        <p className="text-sm font-normal leading-5 text-gray-4">
+          생년월일만 알려주면 오늘의 기운과
+          <br />잘 맞는 터를 찾아드릴게요.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onStart}
+        className="h-12 w-full rounded-[20px] bg-primary text-sm font-bold text-white"
+      >
+        1분 만에 내 기운 확인하기
+      </button>
+    </section>
   );
 }
 
@@ -209,7 +262,11 @@ function BlockSkeleton({ className, label }: { className: string; label: string 
 
 function HeaderSkeleton() {
   return (
-    <div role="status" aria-label="인사말 불러오는 중" className="flex animate-pulse flex-col gap-5">
+    <div
+      role="status"
+      aria-label="인사말 불러오는 중"
+      className="flex animate-pulse flex-col gap-5"
+    >
       <div className="h-[22px] w-40 rounded bg-white/50" />
       <div className="flex flex-col gap-2">
         <div className="h-8 w-56 rounded bg-white/50" />

@@ -1,10 +1,19 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import Button from '../../components/Button';
 import StatusView from '../../components/StatusView';
 import { useKakaoLogin } from '../../hooks/auth/useAuth';
 import { nextPathForOnboardingStep } from '../../lib/onboardingRoute';
+
+/**
+ * 이미 교환을 시도한 인가코드.
+ *
+ * 인가코드는 1회용이라 두 번 보내면 두 번째가 반드시 실패한다. StrictMode는 이펙트를
+ * mount → cleanup → mount로 두 번 돌리므로 가드가 필요한데, `useRef`는 컴포넌트가
+ * 다시 마운트되면 초기화되므로 모듈 스코프에 둔다.
+ */
+const attemptedCodes = new Set<string>();
 
 /**
  * 카카오 인가 콜백(`/oauth/kakao/callback`).
@@ -14,30 +23,33 @@ export default function KakaoCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const kakaoLogin = useKakaoLogin();
-
-  // 인가코드는 1회용이다. StrictMode의 이중 실행으로 두 번 보내면 두 번째가 반드시 실패한다.
-  const requestedRef = useRef(false);
+  const [requestFailed, setRequestFailed] = useState(false);
 
   const code = searchParams.get('code');
   // 사용자가 동의를 취소하면 code 대신 error가 온다(예: access_denied).
   const denied = searchParams.get('error') !== null;
+  // 코드 없이 들어온 경우는 상태가 아니라 URL로 이미 정해져 있으므로 파생시킨다.
+  const failed = denied || !code || requestFailed;
 
   useEffect(() => {
-    if (requestedRef.current) return;
-    requestedRef.current = true;
-
     if (denied || !code) return;
+    if (attemptedCodes.has(code)) return;
+    attemptedCodes.add(code);
 
-    kakaoLogin.mutate(code, {
-      onSuccess: ({ onboardingStep }) => {
+    // `mutate`가 아니라 `mutateAsync`를 쓴다.
+    // mutate에 넘긴 콜백은 **옵저버가 살아 있을 때만** 불린다. StrictMode의 이펙트 정리로
+    // 구독이 한 번 끊기면 onSuccess/onError가 영영 안 불려, 요청이 끝났는데도 화면이
+    // 로딩에 갇힌다(실측: 뮤테이션 캐시는 error인데 컴포넌트는 계속 pending).
+    // mutateAsync가 돌려주는 프라미스는 구독과 무관하게 항상 끝난다.
+    kakaoLogin
+      .mutateAsync(code)
+      .then(({ onboardingStep }) => {
         navigate(nextPathForOnboardingStep(onboardingStep), { replace: true });
-      },
-    });
+      })
+      .catch(() => setRequestFailed(true));
     // 마운트 시 1회. code/denied는 URL에서 오므로 이 화면이 사는 동안 바뀌지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const failed = denied || !code || kakaoLogin.isError;
 
   if (!failed) {
     return (

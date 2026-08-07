@@ -120,8 +120,7 @@ export default function AppRoutes() {
           <Route path="/report/:id/detail" element={<ReportDetailPage />} />
 
           {/* 장소 상세는 게스트 공개(탐색에서 이어지는 화면).
-              ⚠️ BE `GET /places/{placeId}`가 게스트 쿠키로도 401이라 지금은 에러 화면이 뜬다.
-              permitAll 대상인지 BE에 확인 중 — 서버가 열리면 그대로 동작한다. */}
+              `GET /places/{placeId}`도 익명 200이라 그대로 뜬다(실측 2026-08-07). */}
           <Route path="/place/:id" element={<PlaceDetailPage />} />
 
           {/* 회원 전용 — 기록·리뷰 작성·저장·마이 */}

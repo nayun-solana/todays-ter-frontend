@@ -31,6 +31,7 @@ const ReviewDetailPage = lazy(() => import('../pages/review/ReviewDetailPage'));
 const ReviewPage = lazy(() => import('../pages/review/ReviewPage'));
 const MatchedTerPage = lazy(() => import('../pages/matched-ter/MatchedTerPage'));
 const LoginPage = lazy(() => import('../pages/login/LoginPage'));
+const KakaoCallbackPage = lazy(() => import('../pages/auth/KakaoCallbackPage'));
 const PlaceReviewCompletePage = lazy(() => import('../pages/review/PlaceReviewCompletePage'));
 
 const TAB_PATHS: Record<NavTabKey, string> = {
@@ -93,6 +94,8 @@ export default function AppRoutes() {
         {/* 하단바 없는 화면 */}
         <Route element={<NoFooterLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          {/* 카카오 인가 콜백. 경로는 카카오 콘솔 등록값과 일치해야 한다(src/lib/kakao.ts). */}
+          <Route path="/oauth/kakao/callback" element={<KakaoCallbackPage />} />
           <Route path="/onboarding">
             <Route index element={<Navigate to="/onboarding/step-1" replace />} />
             <Route path="step-1" element={<OnboardingPage1 />} />

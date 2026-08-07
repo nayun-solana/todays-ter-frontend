@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router';
 
 import { useDevLogin } from '../../hooks/auth/useAuth';
 import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
+import { buildKakaoAuthorizeUrl } from '../../lib/kakao';
 import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
@@ -254,15 +255,17 @@ function LoginContent({ onGuest }: { onGuest: () => void }) {
 
         <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />
 
-        {/* 소셜 로그인: BE 미구현 → 데모에서 비활성화(회색). 연동 시 disabled 제거 */}
+        {/* 카카오는 연동 완료. Apple·구글은 BE 미구현 → 비활성화(회색) 유지 */}
         <button
           type="button"
-          disabled
-          aria-disabled
-          className="mt-2.5 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
+          onClick={() => {
+            // 카카오 인가 화면으로 이동(외부 리다이렉트라 router가 아니라 location).
+            window.location.href = buildKakaoAuthorizeUrl();
+          }}
+          className="mt-2.5 flex h-12 items-center justify-center gap-2.5 rounded-full bg-[#fee500]"
         >
-          <KakaoIcon className="size-5 grayscale" />
-          <span className="text-sm font-bold text-white">카카오로 로그인</span>
+          <KakaoIcon className="size-5" />
+          <span className="text-sm font-bold text-[#191600]">카카오로 로그인</span>
         </button>
         <button
           type="button"

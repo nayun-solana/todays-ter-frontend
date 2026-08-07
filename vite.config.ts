@@ -5,7 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // 게스트 온보딩은 HTTP 쿠키(guest_id, SameSite=Lax) 기반이라 cross-site면 XHR로 쿠키가 안 실린다.
 // dev에서 /api·/auth를 운영 서버로 프록시해 브라우저 관점 same-origin으로 만들어 쿠키를 흐르게 한다.
-// (axios baseURL을 비워 상대경로로 두면 이 프록시를 탄다. 운영 빌드는 VITE_API_BASE_URL로 직접 호출.)
+// axios는 baseURL 없이 상대경로로 부르므로 이 프록시를 탄다. 운영 빌드는 vercel.json의 rewrites가 같은 역할을 한다
+// (경로 목록을 바꿀 땐 아래 API_PATHS와 vercel.json을 함께 수정할 것).
 const API_TARGET = 'https://today-ter.kr';
 
 /**

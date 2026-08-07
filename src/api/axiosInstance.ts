@@ -11,9 +11,10 @@ const NO_REISSUE_PATHS = ['/auth/reissue', '/auth/kakao/login', '/auth/dev/token
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  // baseURL 없음 = 항상 상대경로. dev는 Vite 프록시(vite.config.ts), prod는 Vercel rewrite(vercel.json)가
+  // 같은 오리진에서 BE로 넘긴다. 게스트 쿠키가 SameSite=Lax라 cross-site로 직접 부르면 쿠키가 안 실린다.
   timeout: 10_000,
-  // 게스트 세션 쿠키(guest_id) 전송용. dev는 Vite 프록시로 same-origin 처리(vite.config.ts).
+  // 게스트 세션 쿠키(guest_id) 전송용.
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

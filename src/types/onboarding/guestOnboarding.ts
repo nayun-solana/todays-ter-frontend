@@ -25,11 +25,8 @@ export type OnboardingStep = z.infer<typeof OnboardingStep>;
 // ── 요청 ──
 
 export const GuestSajuRequest = z.object({
-  /**
-   * ⚠️ BE required. 안 보내면 400 COMMON400_1 "성별은 필수입니다."(실측 2026-08-06).
-   * 화면에 성별 입력이 아직 없어 optional로 둔다 — 입력 UI가 붙는 즉시 required로 바꿀 것.
-   */
-  gender: Gender.optional(),
+  /** BE required — 빠지면 400 COMMON400_1 "성별은 필수입니다."(실측 2026-08-06). */
+  gender: Gender,
   calendarType: CalendarType,
   birthDate: z.string(), // yyyy-MM-dd
   birthTime: z.string().nullable(), // HH:mm. birthTimeUnknown=true면 null
@@ -57,6 +54,7 @@ export const GuestConcernResponse = z.object({
 export type GuestConcernResponse = z.infer<typeof GuestConcernResponse>;
 
 export const GuestOnboardingResponse = z.object({
+  // 저장 전 조회면 아직 값이 없다.
   gender: Gender.nullish(),
   calendarType: CalendarType,
   birthDate: z.string(),

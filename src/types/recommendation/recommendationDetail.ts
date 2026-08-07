@@ -1,19 +1,31 @@
 import { z } from 'zod';
 
+import { ElementCode } from '../home/homeEnergy';
+
 /**
  * 추천 장소 상세(나와 어울리는 터) API 계약.
- * BE 실응답으로 검증함(2026-08-04, GET /recommendations/places/1).
+ * BE 실응답으로 검증함(2026-08-06, GET /recommendations/places/1).
  *
  * ⚠️ 사주 리포트가 없는 사용자는 200이지만 맞춤 필드가 전부 비어서 온다
  *    (matchingScore·whyItMatches·actionSuggestion = null, matchingPoints = []).
  *    화면에서 값 없음을 반드시 처리할 것.
  */
+
+/**
+ * 오행. 08-04에는 한글 표시명("토") 문자열이었는데 그 사이 객체로 바뀌었다.
+ * 표시명이 아니라 `code`로 매핑할 것 — 한글은 BE가 문구를 다듬으면 같이 깨진다.
+ */
+export const PrimaryElement = z.object({
+  code: ElementCode,
+  name: z.string(),
+});
+export type PrimaryElement = z.infer<typeof PrimaryElement>;
+
 export const RecommendationDetail = z.object({
   placeId: z.number().int(),
   placeName: z.string(),
   imageUrl: z.string().nullish(),
-  /** ⚠️ 코드가 아니라 한글 표시명("토"). lib/ohaeng의 ohaengByLabel로 매핑한다. */
-  primaryElement: z.string().nullish(),
+  primaryElement: PrimaryElement.nullish(),
   topCategories: z.array(z.string()).default([]),
   matchingScore: z.number().nullish(),
   matchingPoints: z.array(z.string()).default([]),

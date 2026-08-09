@@ -44,7 +44,9 @@ export default function NotificationPage() {
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
-      <PageHeader title="알림" leading="close" backTo="/my" />
+      {/* 진입 경로는 홈 우상단 알림 벨 하나뿐이다(마이페이지엔 알림 링크가 없다).
+          `/my`로 고정돼 있어서 닫으면 들어온 적도 없는 마이페이지로 갔다. */}
+      <PageHeader title="알림" leading="close" backTo="/home" />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8">
         {NOTIFICATION_GROUPS.map((group) => (

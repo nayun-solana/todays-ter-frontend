@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { Bell, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { isOnboardingRequired } from '../../api/onboardingRequired';
@@ -92,8 +92,18 @@ export default function HomePage() {
 
   // 추천 카드 클릭 → 나와 어울리는 터(장소 상세)로 이동.
   const renderCard = ({ id, ...card }: (typeof cards)[number]) => (
-    <RecommendedPlaceCard {...card} onClick={() => navigate(`/matched-ter/${id}`)} />
+    <RecommendedPlaceCard key={id} {...card} onClick={() => navigate(`/matched-ter/${id}`)} />
   );
+
+  // 게스트에게 몇 장을 열어줄지는 서버가 정한다(`visibleCount`). 회원은 전부 본다.
+  // 서버가 값을 안 주는 동안에도 화면이 무너지지 않게 1장으로 폴백한다.
+  // ⚠️ 이 수와 라우트 가드(RequireAuth)의 허용 범위는 같은 값이어야 한다 —
+  //    어긋나면 홈에 보이는 카드를 눌렀는데 로그인으로 튕긴다.
+  const visibleCount = isMember ? cards.length : (recommendedQuery.data?.visibleCount ?? 1);
+  const visibleCards = cards.slice(0, visibleCount);
+  // 가릴 카드가 실제로 있을 때만 게이트를 얹는다.
+  const gatedCard = cards[visibleCount];
+  const loginPrompt = recommendedQuery.data?.loginPrompt;
 
   return (
     <div className="relative min-h-dvh bg-gray-1">
@@ -105,27 +115,45 @@ export default function HomePage() {
       />
 
       <div className="relative flex flex-col gap-8 px-5 pb-8 pt-[70px]">
-        {/* 인사말 */}
-        <header className="flex flex-col gap-5 text-white">
-          {headerState === 'loading' ? (
-            <HeaderSkeleton />
-          ) : headerState === 'failed' ? (
-            <SectionError
-              tone="light"
-              message="인사말을 불러오지 못했어요."
-              onRetry={() => void headerQuery.refetch()}
-            />
-          ) : (
-            <>
-              <p className="text-base font-bold">
-                {header ? formatKoreanDate(header.date, header.dayOfWeek) : ''}
-              </p>
-              <div className="flex flex-col gap-2">
-                {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
-                <p className="text-2xl font-extrabold">{header?.greeting}</p>
-                <p className="text-[17px] font-bold">{header?.subGreeting}</p>
-              </div>
-            </>
+        {/* 인사말 + 알림 벨 */}
+        <header className="flex items-start justify-between gap-3 text-white">
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            {headerState === 'loading' ? (
+              <HeaderSkeleton />
+            ) : headerState === 'failed' ? (
+              <SectionError
+                tone="light"
+                message="인사말을 불러오지 못했어요."
+                onRetry={() => void headerQuery.refetch()}
+              />
+            ) : (
+              <>
+                <p className="text-base font-bold">
+                  {header ? formatKoreanDate(header.date, header.dayOfWeek) : ''}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
+                  <p className="text-2xl font-extrabold">{header?.greeting}</p>
+                  <p className="text-[17px] font-bold">{header?.subGreeting}</p>
+                </div>
+              </>
+            )}
+          </div>
+          {/* 알림 진입점. 지금까지 알림 화면으로 갈 경로가 아예 없었다.
+              알림은 회원 전용이라 게스트에겐 아예 노출하지 않는다 — 눌러봐야 로그인으로
+              튕길 버튼을 보여줄 이유가 없다(에디터 오행 픽과 같은 기준).
+              인사말 API와 무관한 고정 요소라 로딩·실패 상태에서도 그대로 둔다.
+              ⚠️ 시안에는 안 읽은 알림 빨간 점이 있지만 미확인 개수를 주는 API가 없다 —
+                 NotificationPage 데이터도 아직 하드코딩 목이라 벨 배지는 후속으로 남긴다. */}
+          {isMember && (
+            <button
+              type="button"
+              aria-label="알림"
+              onClick={() => navigate('/my/notifications')}
+              className="shrink-0 pt-0.5"
+            >
+              <Bell className="size-6" strokeWidth={2} />
+            </button>
           )}
         </header>
 
@@ -177,15 +205,17 @@ export default function HomePage() {
                     오늘 추천할 터를 찾지 못했어요.
                   </p>
                 )}
-                {cards[0] && renderCard(cards[0])}
+                {visibleCards.map(renderCard)}
                 {/* 잠금 게이트는 가릴 카드가 실제로 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
-                {cards[1] && isAuthPending ? (
+                {gatedCard && isAuthPending && (
                   // 회원 판정 전 — 게이트도 카드도 아직 확정할 수 없다. 자리만 잡아 화면이 튀지 않게 한다.
                   <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
-                ) : cards[1] && !isMember ? (
-                  // 로그인 전: 둘째 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
+                )}
+                {gatedCard && !isAuthPending && (
+                  // 로그인 전: 다음 카드를 흰색 그라데이션으로 가리고 로그인 게이트를 얹는다.
+                  // 문구는 서버가 내려주는 loginPrompt를 쓴다 — 없으면 기존 문구로 폴백.
                   <div className="relative">
-                    {renderCard(cards[1])}
+                    {renderCard(gatedCard)}
                     <div
                       aria-hidden
                       className="absolute inset-0 rounded-[20px]"
@@ -198,7 +228,7 @@ export default function HomePage() {
                       <div className="flex flex-col items-center gap-3">
                         <Lock className="size-6 text-primary" strokeWidth={2.2} />
                         <p className="text-base font-bold text-gray-6">
-                          로그인 후 더 많은 터를 탐색해보세요
+                          {loginPrompt?.title ?? '로그인 후 더 많은 터를 탐색해보세요'}
                         </p>
                       </div>
                       <button
@@ -206,12 +236,10 @@ export default function HomePage() {
                         onClick={() => navigate('/login')}
                         className="h-12 w-full rounded-[20px] bg-primary text-sm font-bold text-white"
                       >
-                        로그인/회원가입 하러가기
+                        {loginPrompt?.buttonText ?? '로그인/회원가입 하러가기'}
                       </button>
                     </div>
                   </div>
-                ) : (
-                  isMember && cards[1] && renderCard(cards[1])
                 )}
               </div>
             </section>

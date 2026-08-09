@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
-import placeSampleImage from '../../assets/home/place-sample.jpg';
 import placeImage from '../../assets/place-cheonggyecheon.png';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { usePlaceDetail } from '../../hooks/place/usePlace';
+import { usePlaceDetail, usePlaceReviews, placeKeys } from '../../hooks/place/usePlace';
+import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
 import { ohaengByLabel } from '../../lib/ohaeng';
 import DeleteReviewModal from '../review/components/DeleteReviewModal';
@@ -24,43 +25,9 @@ type Review = {
   date: string;
   rating: number;
   content: string;
-  photoCount: number;
+  imageUrls: string[];
   isMine?: boolean;
 };
-
-// TODO: API 연동 시 교체. isMine 후기는 목록 상단에 고정된다.
-const REVIEWS: Review[] = [
-  {
-    id: 'mine',
-    writer: '계수',
-    date: '2026.07.24',
-    rating: 5,
-    content:
-      '퇴근 후 물길을 따라 천천히 걸었어요. 복잡했던 생각이 정리되고 마음도 한결 편안해졌습니다.',
-    photoCount: 2,
-    isMine: true,
-  },
-  {
-    id: 'r1',
-    writer: '산책하는물고기',
-    date: '2026.07.21',
-    rating: 5,
-    content:
-      '비 온 다음 날 방문했는데 물소리가 시원하고 산책로도 깨끗했어요. 혼자 조용히 걷기 좋았습니다.',
-    photoCount: 2,
-  },
-  {
-    id: 'r2',
-    writer: '서울뚜벅이',
-    date: '2026.07.18',
-    rating: 4,
-    content:
-      '광화문 근처에서 잠깐 쉬고 싶을 때 들르기 좋아요. 저녁에는 조명이 켜져 분위기가 더 좋았습니다.',
-    photoCount: 1,
-  },
-];
-
-const REVIEW_IMAGES = [placeImage, placeSampleImage];
 
 /** Figma: 별 18×17, 활성 #ffd310 / 비활성 gray-3 */
 function StarRow({ rating }: { rating: number }) {
@@ -78,19 +45,41 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-function ReviewPhotos({ count }: { count: number }) {
+function ReviewPhotos({ imageUrls }: { imageUrls: string[] }) {
   return (
     <div className="flex gap-1 overflow-x-auto">
-      {Array.from({ length: count }, (_, index) => (
+      {imageUrls.map((imageUrl, index) => (
         <img
-          key={index}
-          src={REVIEW_IMAGES[index % REVIEW_IMAGES.length]}
+          key={imageUrl}
+          src={imageUrl}
           alt={`후기 사진 ${index + 1}`}
           className="size-[120px] shrink-0 rounded-btn object-cover"
         />
       ))}
     </div>
   );
+}
+
+function toReview(
+  review: {
+    reviewId: number;
+    writerNickname: string;
+    rating: number;
+    content: string;
+    images: { imageUrl: string }[];
+    createdAt: string;
+  },
+  isMine = false,
+): Review {
+  return {
+    id: String(review.reviewId),
+    writer: review.writerNickname,
+    date: review.createdAt.slice(0, 10).replaceAll('-', '.'),
+    rating: review.rating,
+    content: review.content,
+    imageUrls: review.images.map((image) => image.imageUrl),
+    isMine,
+  };
 }
 
 /** 내 후기 — 목록 상단 고정. 우측 ⋮ 로 수정/삭제 */
@@ -128,8 +117,7 @@ function MyReviewCard({
       <div className="flex flex-col gap-2">
         <div ref={wrapperRef} className="relative flex h-5 items-center justify-between">
           <p className="typo-body-3 flex items-center gap-1 text-gray-6">
-            <PinIcon className="text-primary-light" />
-            내 리뷰
+            <PinIcon className="text-primary-light" />내 리뷰
           </p>
           <button
             type="button"
@@ -178,7 +166,7 @@ function MyReviewCard({
         <StarRow rating={review.rating} />
       </div>
 
-      <ReviewPhotos count={review.photoCount} />
+      {review.imageUrls.length > 0 ? <ReviewPhotos imageUrls={review.imageUrls} /> : null}
       {review.content ? (
         <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
       ) : null}
@@ -198,7 +186,7 @@ function ReviewItem({ review }: { review: Review }) {
           {review.date}
         </p>
       </div>
-      <ReviewPhotos count={review.photoCount} />
+      {review.imageUrls.length > 0 ? <ReviewPhotos imageUrls={review.imageUrls} /> : null}
       <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
     </article>
   );
@@ -206,6 +194,7 @@ function ReviewItem({ review }: { review: Review }) {
 
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams();
   // 장소 상세는 게스트에게 열려 있지만(#109) 후기 작성은 회원 전용이다.
   const { isMember } = useAuthStatus();
@@ -213,9 +202,10 @@ export default function PlaceDetailPage() {
   const [tab, setTab] = useState<Tab>(() =>
     searchParams.get('tab') === 'reviews' ? '후기' : '지도',
   );
-  const [reviews, setReviews] = useState(REVIEWS);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const placeQuery = usePlaceDetail(id);
+  const reviewsQuery = usePlaceReviews(id);
+  const deleteReviewMutation = useDeleteRecord();
   const place = placeQuery.data;
 
   if (placeQuery.isPending) {
@@ -248,8 +238,10 @@ export default function PlaceDetailPage() {
   const feature = place.description.answer;
   const address = place.address;
 
-  const myReview = reviews.find((review) => review.isMine);
-  const otherReviews = reviews.filter((review) => !review.isMine);
+  const myReview = reviewsQuery.data?.myReview
+    ? toReview(reviewsQuery.data.myReview, true)
+    : undefined;
+  const otherReviews = reviewsQuery.data?.reviews.map((review) => toReview(review)) ?? [];
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white pb-[106px]">
@@ -307,7 +299,7 @@ export default function PlaceDetailPage() {
               {t === '후기' && (
                 <span className={tab === t ? 'text-primary' : 'text-gray-4'}>
                   {' '}
-                  {reviews.length}
+                  {reviewsQuery.data?.totalCount ?? place.reviewCount}
                 </span>
               )}
             </span>
@@ -333,7 +325,13 @@ export default function PlaceDetailPage() {
 
         {tab === '후기' && (
           <div className="pt-4">
-            {myReview ? (
+            {reviewsQuery.isPending ? (
+              <p className="px-5 py-4 text-sm text-gray-4">후기를 불러오는 중입니다.</p>
+            ) : reviewsQuery.isError ? (
+              <p className="px-5 py-4 text-sm text-gray-4">
+                후기를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+              </p>
+            ) : myReview ? (
               <>
                 <div className="px-5">
                   <MyReviewCard
@@ -372,9 +370,12 @@ export default function PlaceDetailPage() {
         <DeleteReviewModal
           onCancel={() => setDeleteTarget(null)}
           onConfirm={() => {
-            // TODO: 후기 삭제 API 연동
-            setReviews((current) => current.filter((review) => review.id !== deleteTarget));
-            setDeleteTarget(null);
+            deleteReviewMutation.mutate(deleteTarget, {
+              onSuccess: () => {
+                void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
+                setDeleteTarget(null);
+              },
+            });
           }}
         />
       ) : null}

@@ -12,6 +12,7 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { usePlaceDetail, usePlaceReviews, placeKeys } from '../../hooks/place/usePlace';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
+import { loadNaverMaps } from '../../lib/naverMaps';
 import { ohaengByLabel } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 import DeleteReviewModal from '../review/components/DeleteReviewModal';
@@ -58,6 +59,45 @@ function ReviewPhotos({ imageUrls }: { imageUrls: string[] }) {
       ))}
     </div>
   );
+}
+
+function PlaceMap({ latitude, longitude }: { latitude: number; longitude: number }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [isMapUnavailable, setIsMapUnavailable] = useState(false);
+
+  useEffect(() => {
+    const mapElement = mapRef.current;
+    const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
+    if (!mapElement || !clientId) {
+      setIsMapUnavailable(true);
+      return;
+    }
+
+    let isUnmounted = false;
+    loadNaverMaps(clientId)
+      .then((naver) => {
+        if (isUnmounted) return;
+
+        const position = new naver.maps.LatLng(latitude, longitude);
+        const map = new naver.maps.Map(mapElement, {
+          center: position,
+          zoom: 15,
+          zoomControl: false,
+        });
+        new naver.maps.Marker({ map, position });
+      })
+      .catch(() => {
+        if (!isUnmounted) setIsMapUnavailable(true);
+      });
+
+    return () => {
+      isUnmounted = true;
+    };
+  }, [latitude, longitude]);
+
+  if (isMapUnavailable) return <div className="h-40 rounded-btn bg-placeholder" />;
+
+  return <div ref={mapRef} className="h-40 rounded-btn" />;
 }
 
 function toReview(
@@ -317,8 +357,7 @@ export default function PlaceDetailPage() {
       <div className="flex-1">
         {tab === '지도' && (
           <div className="px-5 pt-4">
-            {/* ponytail: 지도 SDK는 새 dependency라 금지, SDK 결정 후 교체 */}
-            <div className="h-40 rounded-btn bg-placeholder" />
+            <PlaceMap latitude={place.latitude} longitude={place.longitude} />
             <p className="typo-body-3 mt-2.5 pl-2.5 text-gray-6">{address}</p>
           </div>
         )}

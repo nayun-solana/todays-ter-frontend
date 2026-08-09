@@ -19,6 +19,7 @@ const SajuEditPage = lazy(() => import('../pages/my/SajuEditPage'));
 const SajuReportCompletePage = lazy(() =>
   import('../pages/my/SajuEditPage').then((m) => ({ default: m.SajuReportCompletePage })),
 );
+const ConcernEditCompletePage = lazy(() => import('../pages/my/ConcernEditCompletePage'));
 const OnboardingPage1 = lazy(() => import('../pages/onboarding/OnboardingPage1'));
 const OnboardingPage2 = lazy(() => import('../pages/onboarding/OnboardingPage2'));
 const OnboardingPage3 = lazy(() => import('../pages/onboarding/OnboardingPage3'));
@@ -54,8 +55,11 @@ function MainTabsLayout() {
   const { pathname } = useLocation();
   const activeTab = pathToTab(pathname);
 
+  // 배경·최소 높이·하단바 여백은 여기서만 잡는다. 페이지가 각자 min-h-dvh를 또 주면
+  // 레이아웃 패딩만큼 높이가 넘쳐 늘 빈 스크롤이 생기고, 패딩 영역은 배경이 없어
+  // 하단바 주변이 별도 상자처럼 보였다. 페이지는 flex-1로 남는 높이를 채운다.
   return (
-    <div className="min-h-dvh pb-24">
+    <div className="flex min-h-dvh flex-col bg-gray-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <Outlet />
       <BottomNavBar active={activeTab} onChange={(tab) => navigate(TAB_PATHS[tab])} />
     </div>
@@ -80,9 +84,10 @@ export default function AppRoutes() {
             실서비스 배포 시 인증(토큰/게스트 세션) 유무에 따라 /home 또는 /login으로 분기 예정. */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* 하단바 있는 메인 탭. 홈·탐색은 게스트 공개, 기록·마이는 회원 전용.
+        {/* 하단바 있는 메인 탭. 홈·탐색은 게스트 공개, 기록은 회원 전용.
             탐색이 쓰는 /places·/places/editor-picks·/places/explore-filters는 익명 호출도 200이라
-            게스트 세션 없이도 그대로 뜬다(실측 2026-08-07). */}
+            게스트 세션 없이도 그대로 뜬다(실측 2026-08-07).
+            마이는 게스트도 열되(로그인 유도 화면), 하위 설정 화면은 계속 회원 전용이다. */}
         <Route element={<MainTabsLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
@@ -141,6 +146,9 @@ export default function AppRoutes() {
 
             <Route path="/my/saju" element={<SajuEditPage />} />
             <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
+            {/* 고민유형 재선택 — 온보딩3 화면을 그대로 쓰고 CTA·이동만 다르다 */}
+            <Route path="/my/concerns" element={<OnboardingPage3 mode="edit" />} />
+            <Route path="/my/concerns/complete" element={<ConcernEditCompletePage />} />
             <Route path="/my/notifications" element={<NotificationPage />} />
             <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
             <Route path="/my/account-links" element={<AccountLinkPage />} />

@@ -33,7 +33,7 @@ export default function RecordPage() {
   const places = placesQuery.data ?? [];
 
   return (
-    <div className="flex min-h-[calc(100dvh-6rem)] flex-col bg-gray-1">
+    <div className="flex flex-1 flex-col bg-gray-1">
       <header className="bg-white px-5 pb-4 pt-5">
         <h1 className="text-2xl font-extrabold text-primary">내 터</h1>
       </header>

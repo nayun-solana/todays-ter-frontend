@@ -112,7 +112,7 @@ export default function HomePage() {
   const hasLockedMore = !isMember && lockedCount > 0;
 
   return (
-    <div className="relative min-h-dvh bg-gray-1">
+    <div className="relative flex-1 bg-gray-1">
       {/* 오행별 배경 그라데이션 */}
       <div
         aria-hidden

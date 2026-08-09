@@ -53,53 +53,45 @@ export function CloseIcon({ className }: IconProps) {
   );
 }
 
+/** 후기 수정 — Figma 2380:1754 vector 그대로 (20×20, stroke 1.2, Gray5) */
 export function PencilIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 13 13" className={cn('size-[13px]', className)}>
-      <path
-        d="M9 1L12 4L4 12H1V9L9 1Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function TrashIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 12 14" className={cn('h-3.5 w-3', className)}>
-      <path
-        d="M1 3.5H11M4.5 1H7.5M2.5 3.5L3 13H9L9.5 3.5M5 6V10.5M7 6V10.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** 내 후기 상단 고정 표시 */
-export function PinIcon({ className }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" className={cn('size-5', className)}>
       <path
-        d="M11.5 2.5L17.5 8.5L14.5 9.5L11 13L7 9L10.5 5.5L11.5 2.5Z"
-        fill="currentColor"
-        opacity="0.35"
-      />
-      <path
-        d="M11.5 2.5L17.5 8.5L14.5 9.5L11 13L7 9L10.5 5.5L11.5 2.5ZM7 13L2.5 17.5"
+        d="M12.3535 6.14692L14.3535 8.14692M3.35352 16.6469L4.17705 13.3528L13.6767 3.85316C14.3429 3.18697 15.423 3.18697 16.0892 3.85316L16.1473 3.91126C16.8135 4.57745 16.8135 5.65756 16.1473 6.32375L6.64763 15.8234L3.35352 16.6469Z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/** 후기 삭제 — Figma 2380:1790 vector 그대로 (20×20, stroke 1.2, Gray5) */
+export function TrashIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" className={cn('size-5', className)}>
+      <path
+        d="M11.5556 9.22222V13.8889M8.4445 9.22222V13.8889M5.33339 6.11111V15.4444C5.33339 16.3036 6.02983 17 6.88894 17H13.1112C13.9703 17 14.6667 16.3036 14.6667 15.4444V6.11111M5.33339 6.11111H3.77783M5.33339 6.11111H6.11117M14.6667 6.11111H13.8889M14.6667 6.11111H16.2223M6.11117 6.11111H13.8889M6.11117 6.11111L7.66672 3H12.3334L13.8889 6.11111"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** 내 후기 상단 고정 표시 — Figma 2380:1640 vector 그대로 (20×20, 채움, Primary3) */
+export function PinIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className={cn('size-5', className)}>
+      <path d="M16.3205 8.71579C16.931 8.41055 17.0631 7.5969 16.5804 7.11426L12.8857 3.41952C12.4031 2.93688 11.5894 3.06892 11.2842 3.67942L9.39855 7.45065C9.20605 7.83564 9.28151 8.30061 9.58587 8.60497L11.395 10.4141C11.6993 10.7185 12.1643 10.7939 12.5493 10.6014L16.3205 8.71579Z" />
+      <path d="M12.7105 15.0166C12.6727 15.8859 11.6196 16.2955 11.0043 15.6803L4.31967 8.99563C3.70441 8.38037 4.11406 7.32726 4.98334 7.28947L10.4045 7.05377C10.6845 7.04159 10.9568 7.14751 11.155 7.34572L12.6542 8.84492C12.8524 9.04313 12.9584 9.31542 12.9462 9.59547L12.7105 15.0166Z" />
+      <path d="M9.78332 11.6309C10.1738 11.2403 10.1738 10.6072 9.78332 10.2166C9.39279 9.82611 8.75963 9.82611 8.36911 10.2166L3.41936 15.1664C3.02883 15.5569 3.02883 16.1901 3.41936 16.5806C3.80988 16.9711 4.44305 16.9711 4.83357 16.5806L9.78332 11.6309Z" />
     </svg>
   );
 }

@@ -8,6 +8,7 @@ import type { SajuReportResponse } from '../../types/onboarding/report';
 import RightIcon from '../../assets/onboarding/right.svg';
 // components
 import Button from '../../components/Button';
+import { CloseIcon } from '../../components/icons';
 import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
 import ElementRadarChart from './components/ElementRadarChart';
@@ -95,9 +96,20 @@ export default function ReportPage() {
   };
 
   return (
-    <div className="bg-primary-bg mx-auto relative">
+    <div className="relative mx-auto min-h-dvh bg-primary-bg">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
       <div className="relative z-10 flex flex-col gap-5 px-5 pt-5.5 pb-10">
+        {/* Figma 3514:5416 — 마이에서 다시 볼 때만 우상단 X로 마이페이지에 복귀한다 */}
+        {isMyReport ? (
+          <button
+            type="button"
+            aria-label="마이페이지로 닫기"
+            onClick={() => navigate('/my')}
+            className="absolute top-4 right-5 flex size-6 items-center justify-center text-white"
+          >
+            <CloseIcon />
+          </button>
+        ) : null}
         <div className="flex flex-col gap-3">
           {/* 부가설명폰트 */}
           <p className="text-[10px]font-bold text-primary-light ">기본 리포트</p>
@@ -193,13 +205,15 @@ export default function ReportPage() {
 
             <img src={RightIcon} alt="right" className="" />
           </Button>
+          {/* Figma 3514:5416 — outline CTA는 primary-bg 채움 + primary-light 테두리 */}
           <Button
             variant="secondary"
+            className="border-primary-light bg-primary-bg"
             onClick={() => {
-              navigate(isMyReport ? '/my' : '/onboarding/step-3');
+              navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
             }}
           >
-            {isMyReport ? '마이페이지로 돌아가기' : '상세 분석 없이 고민유형 선택하기'}
+            {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
           </Button>
         </div>
       </div>

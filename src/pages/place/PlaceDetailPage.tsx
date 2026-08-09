@@ -13,6 +13,7 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { usePlaceDetail } from '../../hooks/place/usePlace';
 import { cn } from '../../lib/cn';
 import { ohaengByLabel } from '../../lib/ohaeng';
+import DeleteReviewModal from '../review/components/DeleteReviewModal';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
@@ -127,7 +128,8 @@ function MyReviewCard({
       <div className="flex flex-col gap-2">
         <div ref={wrapperRef} className="relative flex h-5 items-center justify-between">
           <p className="typo-body-3 flex items-center gap-1 text-gray-6">
-            <PinIcon className="text-primary" />내 리뷰
+            <PinIcon className="text-primary-light" />
+            내 리뷰
           </p>
           <button
             type="button"
@@ -199,39 +201,6 @@ function ReviewItem({ review }: { review: Review }) {
       <ReviewPhotos count={review.photoCount} />
       <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
     </article>
-  );
-}
-
-function DeleteReviewDialog({
-  onClose,
-  onConfirm,
-}: {
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[25px]">
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="delete-review-title"
-        className="w-full max-w-[324px] rounded-btn bg-white px-5 pt-[30px] pb-5 shadow-dialog"
-      >
-        <div className="text-center">
-          <h2 id="delete-review-title" className="typo-head-2 text-gray-6">
-            후기를 삭제하시겠어요?
-          </h2>
-          <p className="typo-sub-2 mt-3 text-gray-6">삭제된 후기는 복구할 수 없습니다.</p>
-        </div>
-        {/* Figma: 버튼 가로 2분할 138×48 gap8 */}
-        <div className="mt-10 flex gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            취소
-          </Button>
-          <Button onClick={onConfirm}>삭제</Button>
-        </div>
-      </section>
-    </div>
   );
 }
 
@@ -400,8 +369,8 @@ export default function PlaceDetailPage() {
       </div>
 
       {deleteTarget ? (
-        <DeleteReviewDialog
-          onClose={() => setDeleteTarget(null)}
+        <DeleteReviewModal
+          onCancel={() => setDeleteTarget(null)}
           onConfirm={() => {
             // TODO: 후기 삭제 API 연동
             setReviews((current) => current.filter((review) => review.id !== deleteTarget));

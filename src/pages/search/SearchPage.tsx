@@ -29,13 +29,14 @@ const REGIONS = [
   { code: 'CAPITAL_AREA', name: '수도권' },
 ];
 
+// Figma 칩에는 장소 수 문구가 없어 표시하지 않는다(응답의 placeCount는 그대로 둔다).
 const THEMES = [
-  { code: 'LOVE', name: '연애 터', placeCount: 3 },
-  { code: 'CAREER', name: '커리어 터', placeCount: 3 },
-  { code: 'WEALTH', name: '재물 터', placeCount: 3 },
-  { code: 'RELATIONSHIP', name: '인간관계 터', placeCount: 3 },
-  { code: 'HEALTH', name: '건강 터', placeCount: 3 },
-  { code: 'ETC', name: '기타', placeCount: 3 },
+  { code: 'LOVE', name: '연애 터' },
+  { code: 'CAREER', name: '커리어 터' },
+  { code: 'WEALTH', name: '재물 터' },
+  { code: 'RELATIONSHIP', name: '인간관계 터' },
+  { code: 'HEALTH', name: '건강 터' },
+  { code: 'ETC', name: '기타' },
 ];
 
 const THEME_ICONS: Record<string, string> = {
@@ -115,7 +116,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-dvh w-full bg-gray-1">
+    <div className="w-full flex-1 bg-gray-1">
       <header
         className={cn(
           'sticky top-0 z-40 flex h-[111px] items-end bg-white px-5 pb-3 transition-shadow',
@@ -132,57 +133,45 @@ export default function SearchPage() {
           className="mx-5 mt-3 h-11 shadow-card"
         />
 
-        <div className="no-scrollbar flex gap-1 overflow-x-auto px-5 pt-4 pb-1">
-          {regions.map((item) => (
-            <Chip
-              key={item.code}
-              selected={item.code === 'ALL' ? region === null : region === item.code}
-              onClick={() => setRegion(item.code === 'ALL' ? null : (item.code as RegionCode))}
-              className="h-8 px-4 text-xs"
-            >
-              {item.name}
-            </Chip>
-          ))}
-        </div>
+        {/* Figma 3570:6881 — 세 필터 섹션이 같은 제목 typography(Body2)와 간격(제목 12px, 섹션 20px)을 쓴다 */}
+        <section className="mt-5 pl-5">
+          <h2 className="typo-body-2 text-gray-6">장소별 터 필터</h2>
+          <div className="no-scrollbar mt-3 flex gap-1 overflow-x-auto py-0.5 pr-5">
+            {regions.map((item) => (
+              <Chip
+                key={item.code}
+                selected={item.code === 'ALL' ? region === null : region === item.code}
+                onClick={() => setRegion(item.code === 'ALL' ? null : (item.code as RegionCode))}
+                className="h-8 px-4 text-xs"
+              >
+                {item.name}
+              </Chip>
+            ))}
+          </div>
+        </section>
 
         <section className="mt-5 pl-5">
-          <h2 className="typo-body-2 text-gray-6">테마별 터 컬렉션</h2>
-          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto py-1.5 pr-5">
+          <h2 className="typo-body-2 text-gray-6">테마별 터 필터</h2>
+          <div className="no-scrollbar mt-3 flex gap-1 overflow-x-auto py-0.5 pr-5">
             {themes.map((theme) => {
               const isSelected = selectedTheme === theme.code;
 
               return (
-                <button
+                <Chip
                   key={theme.code}
-                  type="button"
+                  selected={isSelected}
                   aria-pressed={isSelected}
                   onClick={() => setSelectedTheme(isSelected ? null : (theme.code as ThemeType))}
-                  className={cn(
-                    'flex h-25 w-[110px] shrink-0 flex-col gap-3.5 rounded-btn border py-3 pr-10 pl-4 text-left transition active:scale-[0.98]',
-                    isSelected
-                      ? 'border-primary bg-primary-bg shadow-none'
-                      : 'border-gray-2 bg-white shadow-card',
-                  )}
+                  /* Figma: 미선택 테마 칩은 흰색이 아니라 gray-2 채움 */
+                  className={cn('h-[34px] px-4 text-xs', !isSelected && 'bg-gray-2')}
                 >
                   <img
                     src={THEME_ICONS[theme.code] ?? themeOther}
                     alt=""
-                    className="size-[30px] shrink-0"
+                    className="size-[18px] shrink-0"
                   />
-                  <div className="flex flex-col gap-1.5 whitespace-nowrap">
-                    <p
-                      className={cn(
-                        'text-sm leading-none font-bold',
-                        isSelected ? 'text-primary' : 'text-gray-5',
-                      )}
-                    >
-                      {theme.name}
-                    </p>
-                    <p className="mt-1 text-[10px] leading-none text-gray-4">
-                      장소 {theme.placeCount}개
-                    </p>
-                  </div>
-                </button>
+                  {theme.name.replace(/ 터$/, '')}
+                </Chip>
               );
             })}
           </div>

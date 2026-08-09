@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 import BottomNavBar, { type NavTabKey } from '../components/BottomNavBar';
-import { RequireMember, RequireRecommendationAccess } from './RequireAuth';
+import { RequireMember, RequireMemberTab, RequireRecommendationAccess } from './RequireAuth';
 
 // 라우트별 코드 스플리팅: 방문하는 화면 청크만 로드된다.
 const HomePage = lazy(() => import('../pages/home/HomePage'));
@@ -86,8 +86,12 @@ export default function AppRoutes() {
         <Route element={<MainTabsLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route element={<RequireMember />}>
+          {/* 탭은 게스트가 직접 누르는 곳이라 로그인으로 튕기지 않고 잠금 화면을 보여준다.
+              하위 화면(리뷰 작성·마이 설정 등)은 아래 RequireMember 그대로 /login으로 보낸다. */}
+          <Route element={<RequireMemberTab title="내 터" variant="record" />}>
             <Route path="/record" element={<RecordPage />} />
+          </Route>
+          <Route element={<RequireMemberTab title="마이페이지" variant="my" />}>
             <Route path="/my" element={<MyPage />} />
           </Route>
         </Route>

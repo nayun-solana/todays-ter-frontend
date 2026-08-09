@@ -9,6 +9,7 @@ import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { usePlaceDetail } from '../../hooks/place/usePlace';
 import { cn } from '../../lib/cn';
 import { ohaengByLabel } from '../../lib/ohaeng';
@@ -126,8 +127,7 @@ function MyReviewCard({
       <div className="flex flex-col gap-2">
         <div ref={wrapperRef} className="relative flex h-5 items-center justify-between">
           <p className="typo-body-3 flex items-center gap-1 text-gray-6">
-            <PinIcon className="text-primary" />
-            내 리뷰
+            <PinIcon className="text-primary" />내 리뷰
           </p>
           <button
             type="button"
@@ -238,6 +238,8 @@ function DeleteReviewDialog({
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  // 장소 상세는 게스트에게 열려 있지만(#109) 후기 작성은 회원 전용이다.
+  const { isMember } = useAuthStatus();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>(() =>
     searchParams.get('tab') === 'reviews' ? '후기' : '지도',
@@ -334,11 +336,17 @@ export default function PlaceDetailPage() {
             <span>
               {t}
               {t === '후기' && (
-                <span className={tab === t ? 'text-primary' : 'text-gray-4'}> {reviews.length}</span>
+                <span className={tab === t ? 'text-primary' : 'text-gray-4'}>
+                  {' '}
+                  {reviews.length}
+                </span>
               )}
             </span>
             <span
-              className={cn('h-0.5 w-full rounded-[2px]', tab === t ? 'bg-primary' : 'bg-transparent')}
+              className={cn(
+                'h-0.5 w-full rounded-[2px]',
+                tab === t ? 'bg-primary' : 'bg-transparent',
+              )}
             />
           </button>
         ))}
@@ -383,7 +391,11 @@ export default function PlaceDetailPage() {
       </div>
 
       <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
-        <Button onClick={() => navigate(`/place/${id}/review`)}>다녀왔어요</Button>
+        {/* 후기 작성은 회원 전용이다. 게스트가 누르면 /login으로 튕겼는데,
+            눌리는 버튼이 튕기는 것보다 처음부터 잠겨 있는 편이 낫다. */}
+        <Button disabled={!isMember} onClick={() => navigate(`/place/${id}/review`)}>
+          다녀왔어요
+        </Button>
         <Button variant="secondary">길찾기</Button>
       </div>
 

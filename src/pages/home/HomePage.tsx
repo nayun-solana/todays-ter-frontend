@@ -1,8 +1,9 @@
-import { Bell, Lock } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { isOnboardingRequired } from '../../api/onboardingRequired';
 import placeSample from '../../assets/home/place-sample.jpg';
+import GuestLoginPrompt from '../../components/GuestLoginPrompt';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { formatKoreanDate } from '../../lib/date';
 import {
@@ -220,20 +221,12 @@ export default function HomePage() {
                   // 서버가 잠긴 카드는 아예 내려주지 않으므로 가릴 대상이 없다 —
                   // 카드 자리를 그대로 차지하는 게이트 카드 하나로 대신한다.
                   // 문구는 서버 loginPrompt를 쓰고, 없으면 기존 문구로 폴백한다.
-                  <div className="flex h-[224px] flex-col items-center justify-center gap-4 rounded-[20px] bg-white px-[22px] shadow-card">
-                    <div className="flex flex-col items-center gap-3">
-                      <Lock className="size-6 text-primary" strokeWidth={2.2} />
-                      <p className="text-center text-base font-bold text-gray-6">
-                        {loginPrompt?.title ?? '로그인 후 더 많은 터를 탐색해보세요'}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/login')}
-                      className="h-12 w-full rounded-[20px] bg-primary text-sm font-bold text-white"
-                    >
-                      {loginPrompt?.buttonText ?? '로그인/회원가입 하러가기'}
-                    </button>
+                  <div className="flex h-[224px] items-center justify-center rounded-[20px] bg-white shadow-card">
+                    {/* 기록·마이 잠금 화면과 같은 블록을 쓴다. 문구만 홈 기본값으로 덮는다. */}
+                    <GuestLoginPrompt
+                      title={loginPrompt?.title ?? '로그인 후 더 많은 터를 탐색해보세요'}
+                      buttonText={loginPrompt?.buttonText}
+                    />
                   </div>
                 )}
               </div>

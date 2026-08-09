@@ -56,9 +56,15 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
    * (주석: "저장 API가 아직 없어 UI만 완료 처리한다"). `PUT /api/guest-onboarding/concerns`는
    * 이미 배포돼 있다(실호출 200 확인).
    *
-   * ⚠️ 수정 모드(`/my/concerns`)는 회원 전용 라우트인데 이 API는 게스트 세션에 쓴다.
-   *    회원 계정에는 안 붙으므로 저장을 시도하지 않는다 — BE에 회원용 고민 저장
-   *    엔드포인트가 없다(`/members`에는 `me/saju`뿐). 그때까지는 기존처럼 UI만 완료 처리한다.
+   * ⚠️ 수정 모드(`/my/concerns`)에서는 저장을 시도하지 않는다. 이유가 둘이다(이슈 #133).
+   *
+   *    1. **이 API를 부를 수 없다.** 로그인 시 게스트 온보딩이 회원으로 이관되면서
+   *       `Onboarding.guestSession = null` · `GuestSession.status = CONVERTED`가 된다.
+   *       `getValidGuestSession`이 ACTIVE가 아닌 세션을 거부해 `GUEST401_2`로 실패한다(실측).
+   *       회원용 고민 저장 엔드포인트는 BE에 아직 없다(`/members`에는 `me/saju`뿐).
+   *    2. **저장돼도 화면이 안 바뀐다.** 고민은 리포트 생성 프롬프트에만 쓰인다
+   *       (`FortuneReportPromptProvider`). 이미 만들어진 리포트는 그대로라
+   *       재생성과 한 세트로 설계해야 한다 — 그래서 저장만 붙이는 건 오히려 혼란스럽다.
    */
   const submit = async () => {
     if (saveConcerns.isPending) return;

@@ -1,4 +1,4 @@
-type Type = 'TOP' | 'COLOR' | 'TEXT' | 'GENETAL' | 'CATEGORY';
+type Type = 'TOP' | 'COLOR' | 'TEXT' | 'GENERAL' | 'CATEGORY';
 
 type Props = {
   title?: string;
@@ -11,7 +11,7 @@ type Props = {
 export default function ContentBox({ title, children, type, ohangColor, categoryColor }: Props) {
   return (
     <div
-      className={`rounded-btn shadow-[0_2px_4px_0_rgba(0,0,0,0.10)] flex flex-col ${type === 'COLOR' ? 'bg-primary gap-3 p-5' : 'bg-white gap-4'} ${type == 'TOP' ? 'p-5' : 'p-4.5'} ${type === 'GENETAL' ? `border border-${ohangColor}` : ''} ${type === 'CATEGORY' ? `border border-${categoryColor}` : ''}`}
+      className={`rounded-btn shadow-[0_2px_4px_0_rgba(0,0,0,0.10)] flex flex-col ${type === 'COLOR' ? 'bg-primary gap-3 p-5' : 'bg-white gap-4'} ${type == 'TOP' ? 'p-5' : 'p-4.5'} ${type === 'GENERAL' ? `border border-${ohangColor}` : ''} ${type === 'CATEGORY' ? `border border-${categoryColor}` : ''}`}
     >
       {type === 'TEXT' && (
         <>
@@ -25,7 +25,7 @@ export default function ContentBox({ title, children, type, ohangColor, category
           {children}
         </>
       )}
-      {type === 'GENETAL' && <>{children}</>}
+      {type === 'GENERAL' && <div className="flex flex-col gap-2.5">{children}</div>}
       {type === 'CATEGORY' && <>{children}</>}
       {type === 'TOP' && <>{children}</>}
     </div>

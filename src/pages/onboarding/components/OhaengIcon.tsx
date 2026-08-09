@@ -8,9 +8,10 @@ import metalIcon from '../../../assets/orb-metal.png';
 type Props = {
   element: string;
   type: 'primary' | 'complementary' | 'secondary';
+  color?: string;
 };
 
-export default function Orb({ element, type }: Props) {
+export default function Orb({ element, type, color }: Props) {
   const getIcon = () => {
     switch (element) {
       case 'WATER':
@@ -31,7 +32,7 @@ export default function Orb({ element, type }: Props) {
       case 'primary':
         return 'bg-primary border border-primary';
       case 'complementary':
-        return 'bg-white border border-primary';
+        return `bg-white border ${color ? `border-${color}` : 'border-primary'}`;
       case 'secondary':
         return 'bg-primary border border-white ';
     }
@@ -51,13 +52,14 @@ export default function Orb({ element, type }: Props) {
         return '금';
     }
   };
-  const textColor = type === 'complementary' ? 'text-primary' : 'text-white ';
+  const textColor =
+    type === 'complementary' ? `${color ? `text-${color}` : 'text-primary'}` : 'text-white ';
 
   const title = type === 'complementary' ? '보완 할 오행' : '주 오행';
 
   return (
     <div
-      className={`flex px-3 py-2 gap-1 rounded-btn ${backgroundColor()} ${textColor} text-xs font-bold'`}
+      className={`flex px-3 py-2 gap-1 rounded-btn w-fit items-center justify-center typo-body-4 ${backgroundColor()} ${textColor} '`}
     >
       <p>{title}</p>
       <p>:</p>

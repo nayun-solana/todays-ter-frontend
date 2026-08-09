@@ -217,7 +217,9 @@ export default function ReportPage() {
         <div className="flex flex-col gap-2">
           <Button
             variant="primary"
-            onClick={() => {}}
+            onClick={() => {
+              navigate(`/report/${sajuReportData!.reportId}/detail`);
+            }}
             className="flex items-center justify-center gap-3"
           >
             <p>상세 분석 보기</p>

@@ -1,4 +1,8 @@
-import { RecommendationDetail, ShareLink } from '../types/recommendation/recommendationDetail';
+import {
+  PlaceBookmark,
+  RecommendationDetail,
+  ShareLink,
+} from '../types/recommendation/recommendationDetail';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
@@ -19,6 +23,21 @@ export async function getRecommendationDetail(placeId: string): Promise<Recommen
 export async function createRecommendationShare(placeId: string): Promise<ShareLink> {
   const res = await axiosInstance.post<ApiResponse>(`/recommendations/places/${placeId}/share`);
   return ShareLink.parse(getResult(res));
+}
+
+/**
+ * PATCH /recommendations/places/{placeId}/bookmark — 저장/해제.
+ * 회원 전용이다(게스트는 COMMON401) — 호출부에서 게스트를 걸러 로그인으로 유도할 것.
+ */
+export async function updateRecommendationBookmark(
+  placeId: string,
+  isSaved: boolean,
+): Promise<PlaceBookmark> {
+  const res = await axiosInstance.patch<ApiResponse>(
+    `/recommendations/places/${placeId}/bookmark`,
+    { isSaved },
+  );
+  return PlaceBookmark.parse(getResult(res));
 }
 
 /** GET /recommendations/places/shared/{shareToken} — 공유된 추천 조회(인증 불필요) */

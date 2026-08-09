@@ -37,6 +37,17 @@ export const RecommendationDetail = z.object({
 export type RecommendationDetail = z.infer<typeof RecommendationDetail>;
 
 /**
+ * PATCH /recommendations/places/{placeId}/bookmark 응답.
+ * 서버가 확정한 상태를 그대로 돌려준다 — 낙관적 갱신을 이 값으로 되맞춘다.
+ * 실호출 검증(2026-08-09): 회원 200, 게스트는 COMMON401.
+ */
+export const PlaceBookmark = z.object({
+  placeId: z.number().int(),
+  isSaved: z.boolean(),
+});
+export type PlaceBookmark = z.infer<typeof PlaceBookmark>;
+
+/**
  * POST /recommendations/places/{placeId}/share 응답.
  * shareUrl은 BE 환경변수로 조립되는데 지금은 API 경로가 그대로 들어가 있어
  * FE에 존재하지 않는 주소(`/recommendations/places/shared/{token}`)가 내려온다.

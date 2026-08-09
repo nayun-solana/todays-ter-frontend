@@ -74,8 +74,7 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
         justify-center
         bg-black/60
         px-4
-        pt-[env(safe-area-inset-top)]
-        pb-[env(safe-area-inset-bottom)]
+        py-safe
       "
     >
       <div className="flex w-83.75 flex-col items-center justify-center gap-5 rounded-btn bg-white px-5 pt-7.5 pb-5 shadow-[0_1px_10px_0_rgba(0,0,0,0.10)]">

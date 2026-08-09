@@ -15,6 +15,7 @@ import PlaceListItem from '../../components/PlaceListItem';
 import { useExploreFilters, useInfinitePlaces } from '../../hooks/search/useSearch';
 import { cn } from '../../lib/cn';
 import { ohaengByKey, type OhaengKey } from '../../lib/ohaeng';
+import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 import { toOhaengKey, type ElementCode } from '../../types/home/homeEnergy';
 import { type RegionCode, type ThemeType } from '../../types/search/search';
 
@@ -110,7 +111,7 @@ export default function SearchPage() {
       page.content.map((place) => ({
         id: String(place.placeId),
         name: place.placeName,
-        thumbnailUrl: place.thumbnailUrl,
+        thumbnailUrl: getPlaceThumbnailUrl(place.placeId),
         description: place.summary,
         tags: [place.theme.name.replace(/ 터$/, '')],
         rating: place.averageRating,

@@ -4,7 +4,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
-import placeImage from '../../assets/place-cheonggyecheon.png';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
@@ -14,6 +13,7 @@ import { usePlaceDetail, usePlaceReviews, placeKeys } from '../../hooks/place/us
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
 import { ohaengByLabel } from '../../lib/ohaeng';
+import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 import DeleteReviewModal from '../review/components/DeleteReviewModal';
 
 const TABS = ['지도', '후기'] as const;
@@ -260,7 +260,7 @@ export default function PlaceDetailPage() {
       />
 
       <img
-        src={place.imageUrl ?? placeImage}
+        src={getPlaceThumbnailUrl(place.placeId)}
         alt={placeName}
         className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
       />

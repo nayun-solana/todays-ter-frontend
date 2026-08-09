@@ -100,6 +100,23 @@ function PlaceMap({ latitude, longitude }: { latitude: number; longitude: number
   return <div ref={mapRef} className="h-40 rounded-btn" />;
 }
 
+function PlaceThumbnail({ placeId, placeName }: { placeId: number; placeName: string }) {
+  const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false);
+
+  if (isThumbnailUnavailable) {
+    return <div className="mx-5 mt-[5px] h-[210px] rounded-btn bg-placeholder" />;
+  }
+
+  return (
+    <img
+      src={getPlaceThumbnailUrl(placeId)}
+      alt={placeName}
+      className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
+      onError={() => setIsThumbnailUnavailable(true)}
+    />
+  );
+}
+
 function toReview(
   review: {
     reviewId: number;
@@ -299,11 +316,7 @@ export default function PlaceDetailPage() {
         }
       />
 
-      <img
-        src={getPlaceThumbnailUrl(place.placeId)}
-        alt={placeName}
-        className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
-      />
+      <PlaceThumbnail key={place.placeId} placeId={place.placeId} placeName={placeName} />
 
       <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{placeName}</h2>
 

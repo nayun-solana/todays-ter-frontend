@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import iconStar from '../assets/icon-star.svg';
 import OhaengOrb from './OhaengOrb';
 import { cn } from '../lib/cn';
@@ -25,17 +27,20 @@ export default function PlaceListItem({
   element,
   onClick,
 }: PlaceListItemProps) {
+  const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false);
+
   return (
     <button
       type="button"
       onClick={onClick}
       className="flex w-full overflow-hidden rounded-xl bg-white text-left shadow-card"
     >
-      {thumbnailUrl ? (
+      {thumbnailUrl && !isThumbnailUnavailable ? (
         <img
           src={thumbnailUrl}
           alt={`${name} 사진`}
           className="h-21 w-21 shrink-0 object-cover"
+          onError={() => setIsThumbnailUnavailable(true)}
         />
       ) : (
         <div className="h-21 w-21 shrink-0 bg-placeholder" />

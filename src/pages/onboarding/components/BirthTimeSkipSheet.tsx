@@ -32,20 +32,21 @@ export default function BirthTimeSkipSheet({ open, onClose, onConfirm }: BirthTi
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full rounded-btn border border-primary-light bg-primary-bg px-5 py-4 text-sm font-bold text-primary"
-          >
-            출생시간 입력하기
-          </button>
+        {/* 시안(3354:3524)은 '간이 리포트 생성하기'가 위(primary), '돌아가서…'가 아래다. */}
+        <div className="mt-6 flex flex-col gap-2">
           <button
             type="button"
             onClick={onConfirm}
-            className="w-full rounded-btn bg-primary px-5 py-4 text-sm font-bold text-white shadow-btn"
+            className="h-12 w-full rounded-btn bg-primary text-sm font-bold text-white"
           >
             간이 리포트 생성하기
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-12 w-full rounded-btn bg-primary-bg text-sm font-bold text-primary"
+          >
+            돌아가서 출생시간 입력하기
           </button>
         </div>
       </div>

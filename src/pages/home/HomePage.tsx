@@ -12,6 +12,7 @@ import {
   useTodayEnergy,
 } from '../../hooks/home/useHome';
 import { toOhaengKey } from '../../types/home/homeEnergy';
+import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
 import RoutineChips from './components/RoutineChips';
@@ -216,6 +217,11 @@ export default function HomePage() {
             </section>
           </>
         )}
+
+        {/* 에디터 오행 픽 — 시안(2349:2783)에서 홈 맨 아래. 회원에게만 보인다.
+            사주·리포트와 무관한 에디터 큐레이션이라(`/places/editor-picks`는 익명도 200)
+            온보딩 유도 화면일 때도 그대로 보여준다. */}
+        {isMember && <EditorPicks />}
       </div>
     </div>
   );

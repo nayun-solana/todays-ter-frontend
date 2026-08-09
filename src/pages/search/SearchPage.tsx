@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import themeCareer from '../../assets/search/theme-career.svg';
 import themeHealth from '../../assets/search/theme-health.svg';
 import themeLove from '../../assets/search/theme-love.svg';
@@ -12,7 +11,7 @@ import Chip from '../../components/Chip';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
 import SearchBar from '../../components/SearchBar';
-import { useEditorPicks, useExploreFilters, usePlaces } from '../../hooks/search/useSearch';
+import { useExploreFilters, usePlaces } from '../../hooks/search/useSearch';
 import { cn } from '../../lib/cn';
 import { ohaengByKey, type OhaengKey } from '../../lib/ohaeng';
 import {
@@ -84,7 +83,6 @@ export default function SearchPage() {
     page: 0,
     size: 20,
   });
-  const editorPicksQuery = useEditorPicks();
   const regions = filtersQuery.data?.regions ?? REGIONS;
   const themes = filtersQuery.data?.themes ?? THEMES;
   const elementChips =
@@ -102,14 +100,6 @@ export default function SearchPage() {
       rating: place.averageRating,
       distance: place.distanceKm === null ? undefined : `${place.distanceKm}km`,
       element: toOhaengKey(place.element.code),
-    })) ?? [];
-  const editorPicks =
-    editorPicksQuery.data?.content.map((pick) => ({
-      id: String(pick.placeId),
-      name: pick.placeName,
-      course: pick.summary,
-      description: pick.description,
-      element: toOhaengKey(pick.element.code),
     })) ?? [];
 
   useEffect(() => {
@@ -238,51 +228,6 @@ export default function SearchPage() {
                 onClick={() => navigate(`/place/${place.id}`)}
               />
             ))}
-          </div>
-        </section>
-
-        <section className="mt-5 px-5">
-          <h2 className="typo-body-2 text-gray-6">에디터 오행 픽</h2>
-          <div className="mt-3 flex flex-col gap-2">
-            {editorPicksQuery.isPending ? (
-              <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오는 중입니다.</p>
-            ) : editorPicksQuery.isError ? (
-              <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오지 못했습니다.</p>
-            ) : editorPicks.length === 0 ? (
-              <p className="typo-sub-2 py-4 text-gray-4">등록된 에디터 픽이 없습니다.</p>
-            ) : editorPicks.map((pick) => {
-              const meta = ohaengByKey(pick.element)!;
-              return (
-                <button
-                  key={pick.id}
-                  type="button"
-                  onClick={() => navigate(`/place/${pick.id}`)}
-                  className={cn(
-                    'flex h-20 items-center justify-between rounded-btn px-4 text-left',
-                    meta.bg,
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <OhaengOrb element={meta.key} size={36} />
-                    <div className="flex flex-col gap-3">
-                      <p className="flex items-center gap-1.5 leading-none">
-                        <span className="text-base leading-none font-bold text-gray-6">
-                          {pick.name}
-                        </span>
-                        <span aria-hidden="true" className="size-[3px] rounded-full bg-white" />
-                        <span className="text-[10px] leading-none font-bold text-white">
-                          {pick.course}
-                        </span>
-                      </p>
-                      <p className="text-xs leading-none font-bold text-white">
-                        {pick.description}
-                      </p>
-                    </div>
-                  </div>
-                  <img src={iconChevronRight} alt="" className="h-4 w-[9px] -scale-x-100" />
-                </button>
-              );
-            })}
           </div>
         </section>
       </main>

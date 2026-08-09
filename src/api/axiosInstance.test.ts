@@ -140,4 +140,25 @@ describe('401 응답 처리', () => {
 
     expect(mockedReissueOnce).not.toHaveBeenCalled();
   });
+
+  // 로그인 실패는 "가지고 있던 세션이 끝났다"는 뜻이 아니다.
+  // 카카오 로그인을 디버깅하다 실패 한 번에 멀쩡하던 세션이 날아간 적이 있다.
+  it('카카오 로그인이 401이어도 기존 세션을 유지한다', async () => {
+    setAccessToken('valid-token');
+    adapterReturning(401);
+
+    await expect(axiosInstance.post('/auth/kakao/login')).rejects.toMatchObject({ status: 401 });
+
+    expect(mockedReissueOnce).not.toHaveBeenCalled();
+    expect(getAccessToken()).toBe('valid-token');
+  });
+
+  it('dev 토큰 발급이 401이어도 기존 세션을 유지한다', async () => {
+    setAccessToken('valid-token');
+    adapterReturning(401);
+
+    await expect(axiosInstance.post('/auth/dev/token')).rejects.toMatchObject({ status: 401 });
+
+    expect(getAccessToken()).toBe('valid-token');
+  });
 });

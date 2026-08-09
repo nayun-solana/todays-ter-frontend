@@ -7,6 +7,14 @@ import { ErrorCode, type ApiError, type ApiResponse } from './types';
 /** 재발급을 시도하면 안 되는 경로 — 재발급 자체이거나, 토큰을 처음 받는 요청. */
 const NO_REISSUE_PATHS = ['/auth/reissue', '/auth/kakao/login', '/auth/dev/token'];
 
+/**
+ * 토큰을 처음 받는(=로그인) 경로. 여기서 나는 401은 "로그인 시도가 실패했다"는 뜻이지
+ * "가지고 있던 세션이 만료됐다"는 뜻이 아니다 — 기존 토큰을 지우면 안 된다.
+ *
+ * 실제로 카카오 로그인을 디버깅하다 로그인 실패 한 번에 멀쩡하던 세션이 날아갔다.
+ */
+const LOGIN_PATHS = ['/auth/kakao/login', '/auth/dev/token'];
+
 /** 재시도 1회 제한 플래그를 실어 나르는 요청 설정. */
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -74,7 +82,10 @@ axiosInstance.interceptors.response.use(
 
     if (!canReissue) {
       // 재시도까지 했는데 또 401이면 세션이 끝난 것. 게스트(토큰 없음)는 그대로 둔다.
-      if (getAccessToken() !== null) {
+      // 단 로그인 요청의 401은 세션 만료가 아니라 로그인 실패다 — 기존 세션을 건드리지 않는다.
+      const isLoginAttempt = LOGIN_PATHS.some((path) => url.includes(path));
+
+      if (!isLoginAttempt && getAccessToken() !== null) {
         clearAccessToken();
       }
       return Promise.reject(apiError);

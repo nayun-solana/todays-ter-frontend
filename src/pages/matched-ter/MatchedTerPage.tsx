@@ -100,8 +100,9 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
         onShare={canShare ? handleShare : undefined}
         onSharePrefetch={canShare ? prefetchShareLink : undefined}
         isSaved={data.isSaved ?? false}
+        // 연타로 PATCH가 겹치지 않게 진행 중에는 잠근다.
         onToggleBookmark={
-          isShared
+          isShared || bookmark.isPending
             ? undefined
             : () =>
                 isMember

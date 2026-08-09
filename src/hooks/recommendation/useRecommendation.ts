@@ -65,6 +65,12 @@ export function useBookmarkToggle(placeId: string | undefined) {
       const current = queryClient.getQueryData<RecommendationDetail>(key);
       if (current) queryClient.setQueryData(key, { ...current, isSaved: result.isSaved });
     },
+    // 연타로 요청이 겹치면 나중 요청의 onMutate가 앞 요청의 낙관적 값을 "이전 값"으로
+    // 스냅샷한다 → 앞 요청이 실패하면 뒤 요청이 확정한 상태를 덮어써 서버와 어긋난다.
+    // 마지막 요청이 끝난 뒤 한 번 무효화해 서버 값으로 되맞춘다.
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: key });
+    },
   });
 }
 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
-import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
 
 type DateField = 'year' | 'month' | 'day';
 type DateValue = { year: number; month: number; day: number };
@@ -471,13 +471,6 @@ export default function SajuEditPage() {
 
 export function SajuReportCompletePage() {
   const navigate = useNavigate();
-  const myPageQuery = useMyPage();
-  const reportId = myPageQuery.data?.reportId;
-  // 리포트 id를 하드코딩(`/report/1`)하고 있었다. ReportPage가 목이던 시절엔 무해했지만
-  // 실 API를 붙인 뒤로는 남의 리포트를 열거나 "불러오지 못했어요"로 떨어진다.
-  // MyPage와 같은 출처(프로필의 reportId)를 쓴다.
-  const myPageQuery = useMyPage();
-  const reportId = myPageQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -493,12 +486,7 @@ export function SajuReportCompletePage() {
         </div>
       </main>
       <div className="px-5 pb-8">
-        <Button
-          disabled={!reportId}
-          onClick={() => reportId && navigate(`/report/${reportId}?from=my`, { replace: true })}
-        >
-          생성된 리포트 보러가기
-        </Button>
+        <Button onClick={() => navigate('/my', { replace: true })}>마이페이지로 돌아가기</Button>
       </div>
     </div>
   );

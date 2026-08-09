@@ -158,7 +158,8 @@ function TimeWheel({
   );
 }
 
-function CheckIcon() {
+/** 완료 화면 공통 체크 배지 (Figma 그라데이션 원 + 흰 체크). 고민유형 수정 완료 화면도 재사용한다. */
+export function CheckIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 40 40" fill="none" className="size-10">
       <defs>

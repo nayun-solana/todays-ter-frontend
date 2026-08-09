@@ -20,10 +20,12 @@ export const myKeys = {
   policies: () => [...myKeys.all, 'policies'] as const,
 };
 
-export function useMyPage() {
+/** 게스트도 /my에 들어오므로(로그인 유도 화면) 회원일 때만 호출한다. */
+export function useMyPage(enabled = true) {
   return useQuery({
     queryKey: myKeys.profile(),
     queryFn: getMyPage,
+    enabled,
   });
 }
 

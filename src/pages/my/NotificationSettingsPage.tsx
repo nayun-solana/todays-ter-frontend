@@ -19,8 +19,9 @@ function NotificationToggleCard({
   disabled: boolean;
 }) {
   return (
-    <div className="flex min-h-[56px] items-center justify-between rounded-btn bg-white px-5 py-4 shadow-card">
-      <div>
+    /* Figma 2615:1593 — 카드 p16/20, 제목 Body3, 설명 캡션(primary, 위 8px), 토글 우측 세로 중앙 */
+    <div className="flex min-h-[56px] items-center justify-between gap-4 rounded-btn bg-white px-5 py-4 shadow-card">
+      <div className="min-w-0">
         <p className="typo-body-3 text-gray-6">{title}</p>
         {description ? <p className="typo-caption mt-2 text-primary">{description}</p> : null}
       </div>
@@ -59,7 +60,7 @@ export default function NotificationSettingsPage() {
           <div className="mt-3 space-y-2">
             <NotificationToggleCard
               title="오늘의 터 리마인드"
-              description="오늘의 터 추천 알림을 받아볼 수 있어요."
+              description="설정한 간격과 시간에 맞춰 알려드려요."
               checked={notificationSettings?.isPushEnabled ?? false}
               onChange={() => updateSettings({ isPushEnabled: !notificationSettings?.isPushEnabled })}
               disabled={isDisabled}

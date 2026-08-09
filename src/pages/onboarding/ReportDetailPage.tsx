@@ -141,10 +141,10 @@ export default function ReportDetailPage() {
       <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-bg/90 px-5 pt-3 pb-3 backdrop-blur-sm">
         <div className="mx-auto max-w-[390px]">
           <Button
-            onClick={() => navigate(isMyReport ? '/my' : '/onboarding/step-3')}
+            onClick={() => navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3')}
             className="gap-2"
           >
-            {isMyReport ? '마이페이지로 돌아가기' : '고민 유형 선택하기'}
+            {isMyReport ? '고민유형 수정하기' : '고민 유형 선택하기'}
             <ChevronRight size={16} strokeWidth={2} aria-hidden />
           </Button>
         </div>

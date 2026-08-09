@@ -68,7 +68,6 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
         z-50
         flex
         w-full
-        max-w-[375px]
         -translate-x-1/2
         items-center
         justify-center

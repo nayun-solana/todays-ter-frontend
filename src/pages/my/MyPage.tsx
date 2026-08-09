@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router';
 
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
+import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
@@ -31,14 +33,73 @@ function DefaultAvatar() {
   );
 }
 
+/** Figma 3509:4591 잠금 아이콘 — 24×24 안에 16×20 자물쇠, primary */
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 text-primary">
+      <path
+        d="M8 10V7a4 4 0 0 1 8 0v3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <rect x="5" y="10" width="14" height="11" rx="2" fill="currentColor" />
+      <circle cx="12" cy="15.5" r="1.5" fill="white" />
+    </svg>
+  );
+}
+
+/** 비회원 마이페이지 — 프로필 카드를 흐리게 깔고 로그인 유도를 얹는다 (Figma 3509:4591). */
+function GuestMyPage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="relative w-full flex-1 bg-gray-1">
+      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+        <h1 className="typo-head-1 text-primary">마이페이지</h1>
+      </header>
+
+      <div aria-hidden="true" className="px-5 pt-3">
+        <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
+          <div className="flex flex-col items-center gap-2">
+            <DefaultAvatar />
+            <p className="typo-head-4 text-gray-5">닉네임</p>
+          </div>
+        </section>
+      </div>
+
+      {/* 헤더 아래 전체를 덮는 흐림 + 흰색 그라데이션 */}
+      {/* 그라데이션 끝은 Figma상 #FFF지만, 하단바 여백(레이아웃 pb)과 이어지도록 페이지 톤으로 맞춘다 */}
+      <div className="absolute inset-x-0 top-[111px] bottom-0 flex flex-col items-center justify-center bg-linear-to-b from-white/20 via-white/80 to-gray-1 px-10 pb-4 backdrop-blur-xs">
+        <LockIcon />
+        <p className="typo-body-2 mt-3 text-center whitespace-pre-line text-gray-6">
+          {'로그인하고 나에게 꼭 맞는\n‘오늘의 터’를 찾아보세요'}
+        </p>
+        <Button onClick={() => navigate('/login')} className="mt-5">
+          로그인/회원가입 하러가기
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function MyPage() {
   const navigate = useNavigate();
-  const myPageQuery = useMyPage();
+  const { isMember, isPending: isAuthPending } = useAuthStatus();
+  const myPageQuery = useMyPage(isMember);
   const logoutMutation = useLogout();
   const profile = myPageQuery.data;
 
+  // 부팅 복원 전의 isMember=false는 "게스트"가 아니라 "아직 모름"이다.
+  if (isAuthPending) {
+    return <div className="w-full flex-1 bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
+  }
+
+  if (!isMember) return <GuestMyPage />;
+
   return (
-    <div className="min-h-dvh w-full bg-gray-1">
+    <div className="w-full flex-1 bg-gray-1">
       <header className="flex h-[111px] items-end bg-white px-5 pb-3">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>

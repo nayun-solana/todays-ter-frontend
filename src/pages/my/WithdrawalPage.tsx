@@ -62,7 +62,8 @@ function ConfirmDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm:
           </p>
         </div>
         <div className="mt-10 space-y-2">
-          <Button variant="secondary" onClick={onClose}>
+          {/* Figma 2398:3610 — 돌아가기는 gray-3 채움 + 흰 글자(테두리 없음) */}
+          <Button variant="neutral" onClick={onClose}>
             아니요, 돌아갈게요
           </Button>
           <Button onClick={onConfirm}>네, 탈퇴할게요</Button>

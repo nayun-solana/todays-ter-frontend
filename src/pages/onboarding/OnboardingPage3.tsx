@@ -31,9 +31,14 @@ const CONCERNS: Concern[] = [
   { id: 'etc', title: '기타', description: '그 외 고민들' },
 ];
 
-/** 온보딩3 — 고민 유형 선택 (다중 선택). */
-export default function OnboardingPage3() {
+/**
+ * 온보딩3 — 고민 유형 선택 (다중 선택).
+ * `mode="edit"`는 마이페이지에서 다시 들어오는 고민유형 수정 화면(Figma 3514:5768).
+ * 화면 구성은 같고 CTA 문구·이동 경로만 다르다. 저장 API가 아직 없어 UI만 완료 처리한다.
+ */
+export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboarding' | 'edit' }) {
   const navigate = useNavigate();
+  const isEdit = mode === 'edit';
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -76,10 +81,14 @@ export default function OnboardingPage3() {
         disabled={selectedIds.length === 0}
         className="mt-auto"
         onClick={() => {
+          if (isEdit) {
+            navigate('/my/concerns/complete', { state: { selectedConcerns: selectedIds } });
+            return;
+          }
           navigate('/home', { state: { selectedConcerns: selectedIds } });
         }}
       >
-        오늘의 터 시작하기
+        {isEdit ? '고민유형 수정 완료' : '오늘의 터 시작하기'}
       </Button>
     </div>
   );

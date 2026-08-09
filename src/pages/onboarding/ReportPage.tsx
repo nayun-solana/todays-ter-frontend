@@ -44,7 +44,24 @@ export default function ReportPage() {
 
   // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
   const reportId = Number(id);
+  const isValidId = Number.isFinite(reportId) && reportId > 0;
   const { data: report, isPending, isError, refetch } = useGetSajuReport(reportId);
+
+  // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
+  // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
+  if (!isValidId) {
+    return (
+      <ReportNotice
+        title="리포트를 찾을 수 없어요"
+        description="주소가 잘못되었거나 만료된 링크예요."
+        action={
+          <Button variant="primary" onClick={() => navigate('/home')}>
+            홈으로 가기
+          </Button>
+        }
+      />
+    );
+  }
 
   if (isPending) {
     return <ReportNotice title="리포트를 불러오는 중이에요" />;

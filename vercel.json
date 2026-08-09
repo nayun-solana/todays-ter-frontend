@@ -18,6 +18,9 @@
       "destination": "https://today-ter.kr/fortune-reports/:path"
     },
 
+    { "source": "/fortune-reports", "destination": "https://today-ter.kr/fortune-reports" },
+    { "source": "/records", "destination": "https://today-ter.kr/records" },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

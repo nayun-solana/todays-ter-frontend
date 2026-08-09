@@ -98,7 +98,10 @@ export default function OnboardingStep2Page() {
     progressContent.length,
   );
 
-  const failed = createFailed || status === 'failed' || statusQuery.isError;
+  // 최종 실패로 볼 것은 **생성 요청 자체가 거절됐거나 서버가 failed라고 말한 경우**뿐이다.
+  // 상태 조회가 한 번 실패했다고 실패로 단정하면, 잘 만들어진 리포트를 두고 온보딩1로
+  // 돌려보내 사주를 다시 입력하게 만든다. 폴링은 계속 도니 다음 응답에서 회복된다.
+  const failed = createFailed || status === 'failed';
 
   // 완료·실패 어느 쪽이든 모달로 알린다. 예전에는 isSuccess가 true로 하드코딩돼 있어
   // 실패 분기가 렌더될 수 없었다.

@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation, useParams } from 'react-router';
 
 import { useAuthStatus } from '../hooks/auth/useAuthStatus';
 import { useRecommendedPlaces } from '../hooks/home/useHome';
+import GuestTabGate from './GuestTabGate';
 
 /** 가드가 판정을 못 내린 동안 보여줄 자리(라우트 청크 로딩과 같은 톤). */
 function GuardFallback() {
@@ -28,6 +29,28 @@ export function RequireMember() {
   }
 
   return <Outlet />;
+}
+
+/**
+ * 기록·마이 **탭** 전용 가드.
+ *
+ * 회원이면 그대로 통과하고, 게스트에게는 리다이렉트 대신 잠금 화면을 렌더한다
+ * (Figma 3509:4479 · 3509:4591). 탭은 사용자가 직접 누르는 곳이라 화면이 홱 바뀌면
+ * 왜 못 들어가는지 알 수 없다. 반면 리뷰 작성·마이 하위 페이지처럼 **이동 중에** 걸리는
+ * 화면은 기존 `RequireMember`(→ /login)를 그대로 쓴다.
+ *
+ * `RecordPage`·`MyPage`를 건드리지 않으려고 가드 층에서 화면을 갈아끼운다
+ * (각각 수현·성원 담당 파일이다).
+ */
+export function RequireMemberTab({ title, variant }: React.ComponentProps<typeof GuestTabGate>) {
+  const { isMember, isPending } = useAuthStatus();
+
+  // 복원 중에 게스트로 단정하면 회원에게 잠금 화면이 깜빡였다 사라진다.
+  if (isPending) {
+    return <GuardFallback />;
+  }
+
+  return isMember ? <Outlet /> : <GuestTabGate title={title} variant={variant} />;
 }
 
 /**

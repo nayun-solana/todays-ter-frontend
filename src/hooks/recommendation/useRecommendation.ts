@@ -107,12 +107,23 @@ export function useShareLink(placeId: string | undefined, options?: { enabled?: 
     prefetchShareLink: () => setIntent(true),
     /** 이미 받아둔 URL. 준비됐으면 클릭 핸들러가 await 없이 바로 공유할 수 있다. */
     shareUrl: query.data ? shareLinkFrom(query.data.shareToken) : null,
-    /** 아직 준비 전이면 여기서 받아온다(캐시에 있으면 즉시 반환). */
-    ensureShareUrl: async () => {
+    /**
+     * 아직 준비 전이면 여기서 받아온다(캐시에 있으면 즉시 반환).
+     *
+     * 실패는 throw하지 않고 null로 돌려준다. 예전에는 `fetchQuery`의 거절이 그대로 새어나가
+     * 클릭 핸들러가 rejected promise가 됐고(호출부가 await만 하고 catch하지 않는다),
+     * 사용자에게는 아무 일도 안 일어난 채 콘솔에만 unhandled rejection이 쌓였다.
+     * 리포트가 없는 회원은 여기로 반드시 들어온다(서버가 PLACE409_1로 거절).
+     */
+    ensureShareUrl: async (): Promise<string | null> => {
       if (!enabled) return null;
       setIntent(true);
-      const link = await queryClient.fetchQuery(queryOptions);
-      return shareLinkFrom(link.shareToken);
+      try {
+        const link = await queryClient.fetchQuery(queryOptions);
+        return shareLinkFrom(link.shareToken);
+      } catch {
+        return null;
+      }
     },
   };
 }

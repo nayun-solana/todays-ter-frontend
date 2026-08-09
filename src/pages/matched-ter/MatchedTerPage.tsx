@@ -53,7 +53,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
     ensureShareUrl,
     isError: shareUnavailable,
   } = useShareLink(id, { enabled: !isShared });
-  const { share, result: shareResult } = useShareAction();
+  const { share, result: shareResult, notify: notifyShare } = useShareAction();
 
   // 저장은 회원 전용(게스트는 서버가 401). 게스트에겐 버튼을 잠그는 대신 로그인으로 보낸다 —
   // 눌렀는데 아무 일도 안 일어나는 것보다 다음 행동이 분명하다.
@@ -84,7 +84,13 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
   const handleShare = async () => {
     const url = shareUrl ?? (await ensureShareUrl());
-    if (!url) return;
+    // 링크를 못 받는 가장 흔한 경우는 "사주 리포트가 없는 회원"이다(서버 PLACE409_1).
+    // 공유 링크에는 공유자의 맞춤 점수·추천 문구 스냅샷이 실리는데 그 원본이 없다.
+    // 조용히 return하면 눌러도 아무 일이 없어 사용자가 계속 다시 누른다 — 이유를 알려준다.
+    if (!url) {
+      notifyShare('unavailable');
+      return;
+    }
 
     await share({
       url,
@@ -188,6 +194,7 @@ const SHARE_TOAST_TEXT = {
   shared: '공유했어요',
   copied: '링크가 복사되었어요',
   failed: '링크 복사에 실패했어요',
+  unavailable: '사주 리포트를 만들면 공유할 수 있어요',
 } as const;
 
 function ShareToast({ result }: { result: keyof typeof SHARE_TOAST_TEXT }) {

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type ShareResult = 'shared' | 'copied' | 'failed';
+/**
+ * `unavailable`은 공유 링크 자체를 못 받은 경우다(리포트 없는 회원 → 서버 PLACE409_1).
+ * 공유 실행이 실패한 `failed`와 원인이 달라서 문구도 달라야 한다.
+ */
+export type ShareResult = 'shared' | 'copied' | 'failed' | 'unavailable';
 
 /**
  * 링크 공유 실행. Web Share가 되면 OS 공유 시트, 안 되면 클립보드 복사로 떨어진다.
@@ -51,5 +55,5 @@ export function useShareAction() {
     [notify],
   );
 
-  return { share, result };
+  return { share, result, notify };
 }

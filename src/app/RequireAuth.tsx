@@ -3,9 +3,6 @@ import { Navigate, Outlet, useLocation, useParams } from 'react-router';
 import { useAuthStatus } from '../hooks/auth/useAuthStatus';
 import { useRecommendedPlaces } from '../hooks/home/useHome';
 
-/** 게스트에게 열어주는 추천 카드 수. TODO: BE 배포 후 응답의 visibleCount로 교체. */
-const GUEST_VISIBLE_RECOMMENDATIONS = 1;
-
 /** 가드가 판정을 못 내린 동안 보여줄 자리(라우트 청크 로딩과 같은 톤). */
 function GuardFallback() {
   return <div className="min-h-dvh bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
@@ -53,8 +50,10 @@ export function RequireRecommendationAccess() {
   if (isPending) return <GuardFallback />;
   if (isError) return <Navigate to="/home" replace />;
 
+  // 몇 장을 열어줄지는 서버가 정한다(`visibleCount`). FE가 숫자를 갖고 있으면
+  // 서버가 정책을 바꿔도 가드만 옛 값으로 남아 홈에 보이는 카드가 열리지 않는다.
   const allowedIds = data.recommendations
-    .slice(0, GUEST_VISIBLE_RECOMMENDATIONS)
+    .slice(0, data.visibleCount)
     .map((place) => String(place.placeId));
 
   if (!id || !allowedIds.includes(id)) {

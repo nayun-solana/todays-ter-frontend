@@ -1,7 +1,7 @@
+import { Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import back from '../../../assets/matched-ter/back.svg';
-import bookmark from '../../../assets/matched-ter/bookmark.svg';
 import share from '../../../assets/matched-ter/share.svg';
 
 type MatchedTerAppBarProps = {
@@ -10,6 +10,10 @@ type MatchedTerAppBarProps = {
   onShare?: () => void;
   /** 공유 의사가 보일 때(포인터 접근·포커스) 링크를 미리 받아두기 위한 훅. */
   onSharePrefetch?: () => void;
+  /** 저장 여부. 아이콘 채움으로 표시한다. */
+  isSaved?: boolean;
+  /** 저장/해제 토글. 없으면 버튼을 비활성화한다. */
+  onToggleBookmark?: () => void;
   /** 공유받은 화면에서는 북마크·공유 액션을 감춘다. */
   showActions?: boolean;
 };
@@ -19,6 +23,8 @@ export default function MatchedTerAppBar({
   title,
   onShare,
   onSharePrefetch,
+  isSaved = false,
+  onToggleBookmark,
   showActions = true,
 }: MatchedTerAppBarProps) {
   const navigate = useNavigate();
@@ -32,8 +38,21 @@ export default function MatchedTerAppBar({
       <div className="flex gap-1.5">
         {showActions ? (
           <>
-            <button type="button" aria-label="북마크">
-              <img src={bookmark} alt="" className="size-6" />
+            {/* 채움 여부로 상태를 보여줘야 해서 lucide 아이콘을 쓴다 —
+                <img>로 불러온 svg는 CSS로 fill을 바꿀 수 없다. */}
+            <button
+              type="button"
+              aria-label={isSaved ? '저장 해제' : '저장'}
+              aria-pressed={isSaved}
+              onClick={onToggleBookmark}
+              disabled={!onToggleBookmark}
+              className="disabled:opacity-40"
+            >
+              <Bookmark
+                className={isSaved ? 'size-6 text-primary' : 'size-6 text-gray-4'}
+                fill={isSaved ? 'currentColor' : 'none'}
+                strokeWidth={2}
+              />
             </button>
             <button
               type="button"

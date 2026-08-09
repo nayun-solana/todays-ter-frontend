@@ -4,11 +4,13 @@ import { ohaengByKey } from '../../lib/ohaeng';
 import { viewStateOf } from '../../lib/queryState';
 import Button from '../../components/Button';
 import {
+  useBookmarkToggle,
   useRecommendationDetail,
   useShareLink,
   useSharedRecommendation,
 } from '../../hooks/recommendation/useRecommendation';
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { toOhaengKey } from '../../types/home/homeEnergy';
 import type { RecommendationDetail } from '../../types/recommendation/recommendationDetail';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
@@ -53,6 +55,11 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
   } = useShareLink(id, { enabled: !isShared });
   const { share, result: shareResult } = useShareAction();
 
+  // 저장은 회원 전용(게스트는 서버가 401). 게스트에겐 버튼을 잠그는 대신 로그인으로 보낸다 —
+  // 눌렀는데 아무 일도 안 일어나는 것보다 다음 행동이 분명하다.
+  const { isMember } = useAuthStatus();
+  const bookmark = useBookmarkToggle(id);
+
   // 데이터가 없으면 화면을 그리지 않는다. 예전에는 실패해도 `data?.x ?? ''` 폴백으로
   // 빈 껍데기(장소명 없음·매칭 0%·해시태그 '#')가 그대로 그려져서, 사용자는 무슨 일이
   // 일어났는지 알 수도 다시 시도할 수도 없었다. 실제로 BE가 primaryElement를 객체로
@@ -92,6 +99,15 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
         title="나와 어울리는 터"
         onShare={canShare ? handleShare : undefined}
         onSharePrefetch={canShare ? prefetchShareLink : undefined}
+        isSaved={data.isSaved ?? false}
+        onToggleBookmark={
+          isShared
+            ? undefined
+            : () =>
+                isMember
+                  ? bookmark.mutate(!(data.isSaved ?? false))
+                  : navigate('/login', { state: { from: `/matched-ter/${id}` } })
+        }
         showActions={!isShared}
       />
 

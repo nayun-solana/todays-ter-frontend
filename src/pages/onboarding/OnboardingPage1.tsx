@@ -121,6 +121,7 @@ export default function OnboardingPage1() {
   const [unknownTime, setUnknownTime] = useState(false);
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null);
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // 게스트 세션 보장(진입 경로 무관 안전망). 서버 idempotent — 쿠키 있으면 재사용.
   const initSession = useInitGuestSession();
@@ -136,10 +137,7 @@ export default function OnboardingPage1() {
     calendarType !== null && gender !== null && date !== null && (time !== null || unknownTime);
 
   /** 폼 상태 → 사주 저장 요청. (calendarType 대문자, 날짜/시간 문자열, 시간모름 시 null) */
-  const buildSajuRequest = (
-    selectedGender: Gender,
-    birthDate: DateValue,
-  ): GuestSajuRequest => ({
+  const buildSajuRequest = (selectedGender: Gender, birthDate: DateValue): GuestSajuRequest => ({
     gender: selectedGender,
     calendarType: calendarType === 'lunar' ? 'LUNAR' : 'SOLAR',
     birthDate: `${birthDate.year}-${pad(birthDate.month)}-${pad(birthDate.day)}`,
@@ -147,17 +145,33 @@ export default function OnboardingPage1() {
     birthTimeUnknown: unknownTime,
   });
 
-  /** 사주 저장 후 다음 온보딩(분석)으로 이동. */
-  const submitSaju = () => {
+  /**
+   * 사주 저장 후 다음 온보딩(분석)으로 이동.
+   *
+   * 예전에는 `onSettled`로 **저장 실패와 무관하게** 넘어갔다. 프로덕션이 cross-site라
+   * 게스트 쿠키(SameSite=Lax)가 안 실려 저장이 실패하던 시절의 데모용 우회였고,
+   * 주석에도 "실서비스 시 onSuccess로 복원"이라고 적혀 있었다. 그 문제는 #106(same-origin
+   * 프록시) + BE의 SameSite=None 전환으로 해결됐다.
+   *
+   * 그대로 두면 사주가 저장되지 않은 채 step-2로 넘어가 리포트 생성이 400으로 실패한다
+   * (예전에는 step-2가 성공을 흉내내서 드러나지 않았다).
+   *
+   * 마운트에서 세션을 만들고 있지만 그건 비동기라 빠르게 제출하면 쿠키 없이 저장이 나갈 수 있다.
+   * 서버가 idempotent하니 제출 시점에 한 번 더 보장하고 순서를 확정한다.
+   */
+  const submitSaju = async () => {
     if (saveSaju.isPending) return; // 중복 제출 방지
     // 성별·생년월일은 앞 단계라 여기 도달 시 항상 채워져 있다. 타입 좁히기용 가드.
     if (gender === null || date === null) return;
-    // 데모: 프로덕션은 cross-site라 게스트 쿠키(SameSite=Lax)가 안 실려 저장이 실패할 수 있음.
-    // 흐름이 멈추지 않도록 성공/실패 무관 진행(onSettled). 로그인 '비회원 시작' 버튼과 동일 패턴.
-    // 실서비스(BE SameSite=None;Secure/CORS 또는 동일도메인 배포) 시 onSuccess로 복원.
-    saveSaju.mutate(buildSajuRequest(gender, date), {
-      onSettled: () => navigate('/onboarding/step-2'),
-    });
+
+    setSubmitError(null);
+    try {
+      await initSession.mutateAsync();
+      await saveSaju.mutateAsync(buildSajuRequest(gender, date));
+      navigate('/onboarding/step-2');
+    } catch {
+      setSubmitError('사주 정보를 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    }
   };
 
   const openDateSheet = () => {
@@ -192,7 +206,7 @@ export default function OnboardingPage1() {
   const confirmSkip = () => {
     setSkipSheetOpen(false);
     // 시간 모름(unknownTime=true) 상태로 사주 저장 후 진행.
-    submitSaju();
+    void submitSaju();
   };
 
   const dateColumns: WheelColumnSpec[] = [
@@ -306,14 +320,20 @@ export default function OnboardingPage1() {
         )}
       </div>
 
-      <Button
-        variant="primary"
-        disabled={!canSubmit || saveSaju.isPending}
-        className="mt-auto"
-        onClick={submitSaju}
-      >
-        내 기운 확인하기
-      </Button>
+      <div className="mt-auto flex flex-col gap-2">
+        {submitError ? (
+          <p role="alert" className="text-center text-xs font-bold text-danger">
+            {submitError}
+          </p>
+        ) : null}
+        <Button
+          variant="primary"
+          disabled={!canSubmit || saveSaju.isPending || initSession.isPending}
+          onClick={() => void submitSaju()}
+        >
+          {saveSaju.isPending ? '저장 중…' : '내 기운 확인하기'}
+        </Button>
+      </div>
 
       <WheelPickerSheet
         open={openSheet === 'date'}

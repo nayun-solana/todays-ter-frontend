@@ -153,7 +153,12 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
           </Button>
         ) : (
           <>
-            <Button variant="primary" onClick={() => navigate(`/matched-ter/${id}/review`)}>
+            {/* 장소 상세와 같은 기준 — 후기 작성은 회원 전용이라 게스트에겐 잠근다. */}
+            <Button
+              variant="primary"
+              disabled={!isMember}
+              onClick={() => navigate(`/matched-ter/${id}/review`)}
+            >
               다녀왔어요
             </Button>
             <MapButton mapUrl={data?.mapUrl} />

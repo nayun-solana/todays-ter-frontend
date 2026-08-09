@@ -1,6 +1,8 @@
 // libraries
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+// hooks
+import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
 // components
 import AnalysisProgress from './components/CircularProgress';
 import StatusBox from './components/StatusBox';
@@ -12,8 +14,9 @@ const STATUS_BAR_COLOR = '#5a81fa';
 export default function OnboardingStep2Page() {
   const navigate = useNavigate();
   // state
-  const [progress, setProgress] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reportId, setReportId] = useState<number | null>(null);
+  const [isModalDismissed, setIsModalDismissed] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
 
   // progress 내용
   const progressContent = [
@@ -59,24 +62,48 @@ export default function OnboardingStep2Page() {
       document.body.style.backgroundColor = previousBodyBackground;
     };
   }, []);
-  // 임시 progress 증가용 effect (1초마다 1씩 증가)
+  /**
+   * 리포트 생성 시작 — 이 화면의 존재 이유다.
+   *
+   * 예전에는 API 호출이 하나도 없이 setTimeout으로 진행률만 흉내내고 `/report/1`(하드코딩)로
+   * 넘어갔다. 그래서 사주 리포트가 실제로는 만들어지지 않았고, 홈 3개 API가 계속
+   * 404 HOME404_2로 떨어져 추천이 비어 있었다.
+   *
+   * StrictMode는 이펙트를 두 번 돌린다 — 가드가 없으면 리포트가 두 개 생긴다.
+   * 이 컴포넌트는 완전히 언마운트됐다 다시 마운트되면 새로 만드는 게 맞으므로
+   * (모듈 스코프가 아니라) ref로 막는다.
+   */
+  const createReport = useCreateFortuneReport();
+  const hasRequested = useRef(false);
+
   useEffect(() => {
-    if (progress >= progressContent.length) return;
+    if (hasRequested.current) return;
+    hasRequested.current = true;
 
-    const timer = window.setTimeout(() => {
-      const nextProgress = Math.min(progress + 1, progressContent.length);
+    createReport
+      .mutateAsync()
+      .then((result) => setReportId(result.reportId))
+      .catch(() => setCreateFailed(true));
+    // 마운트 시 1회.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      setProgress(nextProgress);
+  // 생성이 끝날 때까지 상태를 폴링한다(완료·실패면 훅이 알아서 멈춘다).
+  const statusQuery = useReportStatus(reportId ?? undefined);
+  const status = statusQuery.data?.status;
 
-      if (nextProgress === progressContent.length) {
-        setIsModalOpen(true);
-      }
-    }, 1000);
+  // 서버 진행률(0~100)을 화면의 5단계로 환산한다.
+  const progress = Math.min(
+    Math.floor(((statusQuery.data?.progress ?? 0) / 100) * progressContent.length),
+    progressContent.length,
+  );
 
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [progress, progressContent.length]);
+  const failed = createFailed || status === 'failed' || statusQuery.isError;
+
+  // 완료·실패 어느 쪽이든 모달로 알린다. 예전에는 isSuccess가 true로 하드코딩돼 있어
+  // 실패 분기가 렌더될 수 없었다.
+  // 이펙트+setState가 아니라 파생값이다 — 상태에서 바로 계산되므로 굳이 동기화할 이유가 없다.
+  const isModalOpen = (status === 'completed' || failed) && !isModalDismissed;
 
   return (
     <main
@@ -112,10 +139,11 @@ export default function OnboardingStep2Page() {
         <Modal
           isOpen={isModalOpen}
           onClick={() => {
-            setIsModalOpen(false);
-            navigate('/report/1');
+            setIsModalDismissed(true);
+            // 실패면 사주를 다시 입력할 수 있게 온보딩1로 돌려보낸다.
+            navigate(failed ? '/onboarding/step-1' : `/report/${reportId}`);
           }}
-          isSuccess={true}
+          isSuccess={!failed}
         />
       )}
     </main>

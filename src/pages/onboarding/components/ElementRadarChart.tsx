@@ -10,19 +10,17 @@ import {
 type ElementCode = 'WOOD' | 'FIRE' | 'EARTH' | 'METAL' | 'WATER';
 
 type DistributionItem = {
-  code: ElementCode;
+  element: ElementCode;
+  /** BE가 주는 한글 라벨. 차트 축 라벨은 아래 ELEMENT_LABEL을 그대로 쓴다(순서 고정이 필요해서). */
+  label: string;
   percentage: number;
 };
 
-type ElementAnalysis = {
-  summary: string;
-  primaryElements: ElementCode[];
-  complementaryElements: ElementCode[];
-  distribution: DistributionItem[];
-};
-
 type Props = {
-  elementAnalysis: ElementAnalysis;
+  /** BE 기본 리포트의 `basic.elementDistribution`. */
+  distribution: DistributionItem[];
+  /** 강조할 주 오행. `basic.primaryElements`. */
+  primaryElements: ElementCode[];
 };
 
 type TickProps = {
@@ -94,11 +92,9 @@ function ElementTick({
   );
 }
 
-export default function ElementRadarChart({ elementAnalysis }: Props) {
-  const { distribution, primaryElements } = elementAnalysis;
-
+export default function ElementRadarChart({ distribution, primaryElements }: Props) {
   const chartData = ELEMENT_ORDER.map((code) => {
-    const matchedItem = distribution.find((item) => item.code === code);
+    const matchedItem = distribution.find((item) => item.element === code);
 
     return {
       code,

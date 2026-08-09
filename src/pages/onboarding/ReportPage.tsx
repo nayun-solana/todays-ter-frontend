@@ -1,9 +1,7 @@
 // libraries
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 // hooks
-// import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
-//type
-import type { SajuReportResponse } from '../../types/onboarding/report';
+import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
 // asstets
 import RightIcon from '../../assets/onboarding/right.svg';
 // components
@@ -14,68 +12,59 @@ import ElementRadarChart from './components/ElementRadarChart';
 //types
 import type { ElementCode } from '../../types/onboarding/report';
 
+/**
+ * 로딩·실패 자리. 예전에는 목 데이터라 이 상태 자체가 없었고, 실연동 후에는
+ * 값이 없을 때 빈 껍데기(제목 없음·0%)가 그려지는 걸 막아야 한다.
+ */
+function ReportNotice({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-primary-bg px-5 text-center">
+      <div className="flex flex-col gap-2">
+        <p className="text-lg font-extrabold text-gray-6">{title}</p>
+        {description ? <p className="text-sm text-gray-4">{description}</p> : null}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default function ReportPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const isMyReport = searchParams.get('from') === 'my';
 
-  // const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
+  // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
+  const reportId = Number(id);
+  const { data: report, isPending, isError, refetch } = useGetSajuReport(reportId);
 
-  // if (isPending) {
-  //   return <div>리포트를 불러오는 중입니다.</div>;
-  // }
+  if (isPending) {
+    return <ReportNotice title="리포트를 불러오는 중이에요" />;
+  }
 
-  // if (isError) {
-  //   console.error('사주 리포트 조회 실패:', error);
+  if (isError || !report) {
+    return (
+      <ReportNotice
+        title="리포트를 불러오지 못했어요"
+        description="잠시 후 다시 시도해주세요."
+        action={
+          <Button variant="primary" onClick={() => void refetch()}>
+            다시 시도
+          </Button>
+        }
+      />
+    );
+  }
 
-  //   return <div>리포트를 불러오지 못했습니다.</div>;
-  // }
-
-  const sajuReportData = {
-    reportId: 1,
-    reportType: 'BASIC',
-    headline: '깊게 느끼고 천천히 움직이는',
-    sajuTypeName: '수목형',
-    elementAnalysis: {
-      summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
-      primaryElements: ['WATER', 'WOOD'],
-      complementaryElements: ['FIRE'],
-      distribution: [
-        { code: 'WOOD', percentage: 28 },
-        { code: 'FIRE', percentage: 12 },
-        { code: 'EARTH', percentage: 18 },
-        { code: 'METAL', percentage: 17 },
-        { code: 'WATER', percentage: 25 },
-      ],
-    },
-    overallTendency: {
-      title: '전반적인 성향',
-      items: [
-        {
-          code: 'EMOTION_THOUGHT',
-          title: '감정과 생각의 흐름',
-          description:
-            '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
-          displayOrder: 1,
-        },
-        {
-          code: 'CHOICE_ACTION',
-          title: '선택과 행동 방식',
-          description:
-            '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
-          displayOrder: 2,
-        },
-        {
-          code: 'RECOVERY',
-          title: '회복 방식',
-          description:
-            '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
-          displayOrder: 3,
-        },
-      ],
-    },
-  } satisfies SajuReportResponse;
+  const basic = report.basic;
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {
@@ -103,43 +92,47 @@ export default function ReportPage() {
           <p className="text-[10px]font-bold text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
             {/* Body 2 */}
-            <p className="text-base font-bold text-white">{sajuReportData!.headline}</p>
+            <p className="text-base font-bold text-white">{basic.typeTitle}</p>
             {/* Head 1 */}
-            <p className="text-2xl font-extrabold text-white">{sajuReportData!.sajuTypeName}</p>
+            <p className="text-2xl font-extrabold text-white">{basic.typeName}</p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <ContentBox>
             {/* 부가설명폰트 */}
-            <p className="text-[10px] font-bold text-gray-5">
-              {sajuReportData!.elementAnalysis.summary}
-            </p>
+            <p className="text-[10px] font-bold text-gray-5">{basic.elementSummary}</p>
             <div className="flex flex-wrap gap-1.5">
-              {sajuReportData!.elementAnalysis.primaryElements.map((element: ElementCode) => (
+              {basic.primaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="primary" />
               ))}
-              {sajuReportData!.elementAnalysis.complementaryElements.map((element: ElementCode) => (
-                <OhaengIcon key={element} element={element} type="complementary" />
-              ))}
+              {/* 보완 오행은 BE가 하나만 준다(예전 스키마는 배열이었다). */}
+              {basic.complementElement ? (
+                <OhaengIcon element={basic.complementElement} type="complementary" />
+              ) : null}
             </div>
           </ContentBox>
           <ContentBox title="오행 분포">
             <div className="flex items-center gap-4">
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
-                <ElementRadarChart elementAnalysis={sajuReportData!.elementAnalysis} />
+                <ElementRadarChart
+                  distribution={basic.elementDistribution}
+                  primaryElements={basic.primaryElements}
+                />
               </div>
 
               {/* 오른쪽 오행 분포 */}
               <div className="flex w-[160px] shrink-0 flex-col gap-3">
-                {sajuReportData!.elementAnalysis.distribution.map((item) => {
-                  const { label, color } = parseElementCodeandColor(item.code);
+                {basic.elementDistribution.map((item) => {
+                  const { color } = parseElementCodeandColor(item.element);
+                  // 라벨은 BE가 준 값을 그대로 쓴다.
+                  const label = item.label;
 
                   const percentage = Math.min(Math.max(item.percentage, 0), 100);
 
                   return (
                     <div
-                      key={item.code}
+                      key={item.element}
                       className="grid w-full grid-cols-[16px_minmax(0,1fr)_36px] items-center gap-1.5"
                     >
                       {/* 오행 */}
@@ -172,12 +165,13 @@ export default function ReportPage() {
           </ContentBox>
           <ContentBox title="전반적인 성향">
             <div className="flex flex-col gap-3">
-              {sajuReportData!.overallTendency.items.map((item) => (
-                <div key={item.code} className="flex flex-col gap-1">
+              {/* BE에 정렬 키가 없다 — 배열 순서를 그대로 쓴다. */}
+              {basic.overallTendencies.map((item) => (
+                <div key={item.label} className="flex flex-col gap-1">
                   {/* 부가설명폰트 */}
-                  <p className="text-[10px] font-bold text-primary">{item.title}</p>
+                  <p className="text-[10px] font-bold text-primary">{item.label}</p>
                   {/* Sub 3 */}
-                  <p className="text-[10px] font-normal text-gray-5">{item.description}</p>
+                  <p className="text-[10px] font-normal text-gray-5">{item.text}</p>
                 </div>
               ))}
             </div>

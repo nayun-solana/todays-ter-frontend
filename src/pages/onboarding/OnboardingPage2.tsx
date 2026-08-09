@@ -150,8 +150,12 @@ export default function OnboardingStep2Page() {
               navigate(`/report/${reportId}`);
               return;
             }
-            // 게스트는 사주를 다시 입력하면 풀리지만, 회원은 온보딩1이 게스트 API로 저장해서
-            // 다시 해도 같은 실패가 반복된다(회원 사주 저장 경로가 아직 없다) → 홈으로 보낸다.
+            // 게스트는 사주를 다시 입력하면 풀린다.
+            // 회원은 다시 해도 같은 실패가 반복된다 — BE의 createForMember는 findByMemberId로만
+            // 온보딩을 찾는데(FortuneReportService), 온보딩1은 게스트 세션에 저장하기 때문이다.
+            // 회원 계정에 온보딩이 붙는 경로는 **로그인 시 이관**뿐이다
+            // (KakaoAuthService.login → GuestOnboardingTransferService). 즉 온보딩을 먼저
+            // 끝내고 로그인해야 하며, 로그인부터 한 회원은 온보딩1을 반복해도 소용없다 → 홈으로.
             navigate(isMember ? '/home' : '/onboarding/step-1');
           }}
           isSuccess={!failed}

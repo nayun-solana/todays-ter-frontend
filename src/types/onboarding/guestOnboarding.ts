@@ -64,3 +64,12 @@ export const GuestOnboardingResponse = z.object({
   onboardingStep: OnboardingStep,
 });
 export type GuestOnboardingResponse = z.infer<typeof GuestOnboardingResponse>;
+
+/**
+ * GET /api/guest-sessions/status 응답.
+ * 세션이 있는지만 알려준다 — 만들지 않는다(실측 2026-08-09: Set-Cookie 없음).
+ */
+export const GuestSessionStatus = z.object({
+  hasGuestId: z.boolean(),
+});
+export type GuestSessionStatus = z.infer<typeof GuestSessionStatus>;

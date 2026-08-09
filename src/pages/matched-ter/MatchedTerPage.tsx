@@ -114,10 +114,12 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
       <div className="flex flex-col gap-5 px-5 pt-4">
         {/* 공유받은 화면임을 알린다 — 매칭 점수·해석은 공유한 사람의 사주 기준이다.
-            TODO: 시안 확정 시 교체하고, BE가 공유자 닉네임을 내려주면 이름을 넣는다. */}
+            닉네임이 없는 공유자(게스트)도 있어 그때는 "공유한 분"으로 부른다. */}
         {isShared && (
           <p className="rounded-xl bg-gray-1 px-4 py-3 text-sm font-bold text-gray-5">
-            공유받은 추천이에요. 아래 궁합은 공유한 분의 사주를 기준으로 계산됐어요.
+            {data.sharerNickname
+              ? `${data.sharerNickname}님이 공유한 추천이에요. 아래 궁합은 ${data.sharerNickname}님의 사주를 기준으로 계산됐어요.`
+              : '공유받은 추천이에요. 아래 궁합은 공유한 분의 사주를 기준으로 계산됐어요.'}
           </p>
         )}
 

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router';
 import BottomNavBar, { type NavTabKey } from '../components/BottomNavBar';
 import { RequireMember, RequireMemberTab, RequireRecommendationAccess } from './RequireAuth';
+import SessionGate from './SessionGate';
 
 // 라우트별 코드 스플리팅: 방문하는 화면 청크만 로드된다.
 const HomePage = lazy(() => import('../pages/home/HomePage'));
@@ -80,82 +81,92 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        {/* 데모 진입점: 서비스 흐름(로그인→온보딩→홈)을 보여주기 위해 로그인으로 시작.
-            실서비스 배포 시 인증(토큰/게스트 세션) 유무에 따라 /home 또는 /login으로 분기 예정. */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* 세션(회원 토큰·게스트 쿠키) 없이 URL을 직접 쳐서 들어온 방문자를 로그인으로 보낸다.
+            로그인·카카오 콜백·공유 링크는 이 바깥에 둔다 — 아래 참고. */}
+        <Route element={<SessionGate />}>
+          {/* 루트는 홈으로. 세션이 없으면 위 SessionGate가 로그인으로 돌린다
+              (예전에는 `/login` 고정이라 세션이 있어도 로그인 화면부터 시작했다). */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
 
-        {/* 하단바 있는 메인 탭. 홈·탐색은 게스트 공개, 기록은 회원 전용.
+          {/* 하단바 있는 메인 탭. 홈·탐색은 게스트 공개, 기록은 회원 전용.
             탐색이 쓰는 /places·/places/editor-picks·/places/explore-filters는 익명 호출도 200이라
             게스트 세션 없이도 그대로 뜬다(실측 2026-08-07).
             마이는 게스트도 열되(로그인 유도 화면), 하위 설정 화면은 계속 회원 전용이다. */}
-        <Route element={<MainTabsLayout />}>
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          {/* 탭은 게스트가 직접 누르는 곳이라 로그인으로 튕기지 않고 잠금 화면을 보여준다.
+          <Route element={<MainTabsLayout />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            {/* 탭은 게스트가 직접 누르는 곳이라 로그인으로 튕기지 않고 잠금 화면을 보여준다.
               하위 화면(리뷰 작성·마이 설정 등)은 아래 RequireMember 그대로 /login으로 보낸다. */}
-          <Route element={<RequireMemberTab title="내 터" variant="record" />}>
-            <Route path="/record" element={<RecordPage />} />
+            <Route element={<RequireMemberTab title="내 터" variant="record" />}>
+              <Route path="/record" element={<RecordPage />} />
+            </Route>
+            <Route element={<RequireMemberTab title="마이페이지" variant="my" />}>
+              <Route path="/my" element={<MyPage />} />
+            </Route>
           </Route>
-          <Route element={<RequireMemberTab title="마이페이지" variant="my" />}>
-            <Route path="/my" element={<MyPage />} />
+
+          {/* 하단바 없는 화면 */}
+          <Route element={<NoFooterLayout />}>
+            <Route path="/onboarding">
+              <Route index element={<Navigate to="/onboarding/step-1" replace />} />
+              <Route path="step-1" element={<OnboardingPage1 />} />
+              <Route path="step-2" element={<OnboardingPage2 />} />
+              <Route path="step-3" element={<OnboardingPage3 />} />
+            </Route>
+            {/* 게스트 조건부: 홈에서 노출이 허용된 추천 카드로 들어온 경우에만 진입 가능 */}
+            <Route element={<RequireRecommendationAccess />}>
+              <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
+            </Route>
+
+            <Route path="/report/:id" element={<ReportPage />} />
+            <Route path="/report/:id/detail" element={<ReportDetailPage />} />
+
+            {/* 장소 상세는 게스트 공개(탐색에서 이어지는 화면).
+              `GET /places/{placeId}`도 익명 200이라 그대로 뜬다(실측 2026-08-07). */}
+            <Route path="/place/:id" element={<PlaceDetailPage />} />
+
+            {/* 회원 전용 — 기록·리뷰 작성·저장·마이 */}
+            <Route element={<RequireMember />}>
+              <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
+              <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
+              <Route path="/place/:id/review" element={<PlaceReviewPage />} />
+              <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
+              <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
+              <Route path="/review/:visitId" element={<ReviewDetailPage />} />
+
+              <Route path="/my/saju" element={<SajuEditPage />} />
+              <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
+              {/* 고민유형 재선택 — 온보딩3 화면을 그대로 쓰고 CTA·이동만 다르다 */}
+              <Route path="/my/concerns" element={<OnboardingPage3 mode="edit" />} />
+              <Route path="/my/concerns/complete" element={<ConcernEditCompletePage />} />
+              <Route path="/my/notifications" element={<NotificationPage />} />
+              <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
+              <Route path="/my/account-links" element={<AccountLinkPage />} />
+              <Route path="/my/permissions" element={<PermissionsPage />} />
+              <Route path="/my/policies" element={<PoliciesPage />} />
+              <Route path="/my/withdrawal" element={<WithdrawalPage />} />
+            </Route>
           </Route>
         </Route>
 
-        {/* 하단바 없는 화면 */}
+        {/* ── 여기부터는 SessionGate 바깥 ── */}
         <Route element={<NoFooterLayout />}>
+          {/* 세션을 만들러 오는 화면이라 게이트를 태우면 들어올 수가 없다. */}
           <Route path="/login" element={<LoginPage />} />
           {/* 카카오 인가 콜백. 경로는 카카오 콘솔 등록값과 일치해야 한다(src/lib/kakao.ts). */}
           <Route path="/oauth/kakao/callback" element={<KakaoCallbackPage />} />
-          <Route path="/onboarding">
-            <Route index element={<Navigate to="/onboarding/step-1" replace />} />
-            <Route path="step-1" element={<OnboardingPage1 />} />
-            <Route path="step-2" element={<OnboardingPage2 />} />
-            <Route path="step-3" element={<OnboardingPage3 />} />
-          </Route>
-          {/* 공유 링크 진입 — 인증·가드 없이 열려야 한다(받는 사람은 우리 사용자가 아닐 수 있다) */}
+
+          {/* 공유 링크 진입 — 인증·가드 없이 열려야 한다. 받는 사람은 우리 사용자가 아닐 수
+              있어서 세션 게이트까지 걸면 공유 기능 자체가 죽는다. */}
           <Route path="/matched-ter/shared/:token" element={<MatchedTerPage variant="shared" />} />
-          {/* BE가 지금 내려주는 shareUrl 경로(API 경로 그대로). 위 경로로 정리해달라고 요청해둔 상태라
-              그 사이에 뿌려진 링크도 열리도록 같이 받아준다.
+          {/* BE가 예전에 내려주던 shareUrl 경로. 지금은 위 경로로 고쳐서 보내지만(실측),
+              그 사이에 뿌려진 링크도 열리도록 당분간 같이 받아준다.
               ⚠️ dev에서는 확인 불가 — vite.config의 `/recommendations` 프록시가 이 주소를 가로채
               API JSON을 돌려준다. 실제 동작은 배포본(Vercel rewrite)에서만 확인된다. */}
           <Route
             path="/recommendations/places/shared/:token"
             element={<MatchedTerPage variant="shared" />}
           />
-
-          {/* 게스트 조건부: 홈에서 노출이 허용된 추천 카드로 들어온 경우에만 진입 가능 */}
-          <Route element={<RequireRecommendationAccess />}>
-            <Route path="/matched-ter/:id" element={<MatchedTerPage />} />
-          </Route>
-
-          <Route path="/report/:id" element={<ReportPage />} />
-          <Route path="/report/:id/detail" element={<ReportDetailPage />} />
-
-          {/* 장소 상세는 게스트 공개(탐색에서 이어지는 화면).
-              `GET /places/{placeId}`도 익명 200이라 그대로 뜬다(실측 2026-08-07). */}
-          <Route path="/place/:id" element={<PlaceDetailPage />} />
-
-          {/* 회원 전용 — 기록·리뷰 작성·저장·마이 */}
-          <Route element={<RequireMember />}>
-            <Route path="/matched-ter/:id/review" element={<ReviewPage />} />
-            <Route path="/matched-ter/:id/review/complete" element={<ReviewCompletePage />} />
-            <Route path="/place/:id/review" element={<PlaceReviewPage />} />
-            <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
-            <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
-            <Route path="/review/:visitId" element={<ReviewDetailPage />} />
-
-            <Route path="/my/saju" element={<SajuEditPage />} />
-            <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />
-            {/* 고민유형 재선택 — 온보딩3 화면을 그대로 쓰고 CTA·이동만 다르다 */}
-            <Route path="/my/concerns" element={<OnboardingPage3 mode="edit" />} />
-            <Route path="/my/concerns/complete" element={<ConcernEditCompletePage />} />
-            <Route path="/my/notifications" element={<NotificationPage />} />
-            <Route path="/my/notification-settings" element={<NotificationSettingsPage />} />
-            <Route path="/my/account-links" element={<AccountLinkPage />} />
-            <Route path="/my/permissions" element={<PermissionsPage />} />
-            <Route path="/my/policies" element={<PoliciesPage />} />
-            <Route path="/my/withdrawal" element={<WithdrawalPage />} />
-          </Route>
         </Route>
 
         {/* 없는 주소는 임시로 홈으로 */}

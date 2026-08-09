@@ -22,6 +22,11 @@ export const PrimaryElement = z.object({
 export type PrimaryElement = z.infer<typeof PrimaryElement>;
 
 export const RecommendationDetail = z.object({
+  /**
+   * 공유한 사람의 닉네임. 공유 조회 응답에만 있고 본인 조회에는 없다.
+   * 게스트가 공유했으면 닉네임이 없어 `null`로 온다(실측) → 화면에서 폴백을 둘 것.
+   */
+  sharerNickname: z.string().nullish(),
   placeId: z.number().int(),
   placeName: z.string(),
   imageUrl: z.string().nullish(),

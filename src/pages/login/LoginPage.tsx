@@ -27,17 +27,36 @@ export default function LoginPage() {
 
   // 소셜 로그인은 BE 미구현 → 데모에서 버튼 비활성화. 연동 시 handleLogin 복원.
   const initSession = useInitGuestSession();
+  const [guestError, setGuestError] = useState<string | null>(null);
+
+  /**
+   * 비회원 세션 발급(쿠키) 후 온보딩 진입.
+   *
+   * ⚠️ 발급에 **성공했을 때만** 넘어간다. 예전에는 `onSettled`로 실패해도 넘어갔고,
+   * "온보딩1 마운트에서 재보장"이 안전망이었다. SessionGate가 생긴 뒤로는 그 안전망에
+   * 닿지 못한다 — 게이트가 `hasGuestId: false`를 보고 온보딩1을 그리기 전에 로그인으로
+   * 되돌리기 때문이다. 그 캐시는 `staleTime: Infinity`라 스스로 낫지도 않아서,
+   * 버튼을 눌러도 아무 일도 안 일어나는 것처럼 보이는 막다른 길이 된다.
+   */
   const handleGuest = () => {
-    // 비회원 세션 발급(쿠키) 후 온보딩 진입. 실패해도 온보딩1 마운트에서 재보장.
+    if (initSession.isPending) return;
+    setGuestError(null);
     initSession.mutate(undefined, {
-      onSettled: () => navigate('/onboarding/step-1', { state: { guest: true } }),
+      onSuccess: () => navigate('/onboarding/step-1', { state: { guest: true } }),
+      onError: () => setGuestError('시작하지 못했어요. 잠시 후 다시 시도해주세요.'),
     });
   };
 
   return (
     <div className="relative mx-auto h-dvh w-full overflow-hidden bg-primary">
       {phase === 'intro' && <BallIntro onDone={() => setPhase('login')} />}
-      {phase === 'login' && <LoginContent onGuest={handleGuest} />}
+      {phase === 'login' && (
+        <LoginContent
+          onGuest={handleGuest}
+          guestPending={initSession.isPending}
+          guestError={guestError}
+        />
+      )}
     </div>
   );
 }
@@ -216,7 +235,15 @@ function BallIntro({ onDone }: { onDone: () => void }) {
   );
 }
 
-function LoginContent({ onGuest }: { onGuest: () => void }) {
+function LoginContent({
+  onGuest,
+  guestPending,
+  guestError,
+}: {
+  onGuest: () => void;
+  guestPending: boolean;
+  guestError: string | null;
+}) {
   return (
     <div className="absolute inset-0">
       {/* 흰 헤더 원 (Figma 551px, 상단 곡선 헤더) */}
@@ -245,12 +272,18 @@ function LoginContent({ onGuest }: { onGuest: () => void }) {
         className="absolute inset-x-5 flex flex-col"
         style={{ bottom: 72, animation: 'login-rise-in 0.5s ease-out 0.55s both' }}
       >
+        {guestError ? (
+          <p role="alert" className="mb-2 text-center text-xs font-bold text-white">
+            {guestError}
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={onGuest}
-          className="flex h-12 items-center justify-center rounded-full bg-white text-sm font-bold text-primary"
+          disabled={guestPending}
+          className="flex h-12 items-center justify-center rounded-full bg-white text-sm font-bold text-primary disabled:opacity-60"
         >
-          비회원으로 시작하기
+          {guestPending ? '시작하는 중…' : '비회원으로 시작하기'}
         </button>
 
         <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />

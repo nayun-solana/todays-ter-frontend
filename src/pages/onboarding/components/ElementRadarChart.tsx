@@ -93,8 +93,6 @@ function ElementTick({
 }
 
 export default function ElementRadarChart({ distribution, primaryElements }: Props) {
-  // 축 상한. 값이 전부 0이어도 축이 무너지지 않게 최소 10은 준다.
-  const maxPercentage = Math.max(10, ...distribution.map((item) => item.percentage));
   const chartData = ELEMENT_ORDER.map((code) => {
     const matchedItem = distribution.find((item) => item.element === code);
 
@@ -133,14 +131,10 @@ export default function ElementRadarChart({ distribution, primaryElements }: Pro
             tick={(props) => <ElementTick {...props} primaryLabels={primaryLabels} />}
           />
 
-          {/* 0~30 고정이면 실데이터에서 잘린다 — 실응답에 43.2%가 있었다(목 데이터 최대가 28이라
-              드러나지 않았다). 옆의 막대 목록과 모양이 어긋나지 않게 최대값에 맞춘다. */}
-          <PolarRadiusAxis
-            domain={[0, maxPercentage]}
-            tickCount={6}
-            tick={false}
-            axisLine={false}
-          />
+          {/* 0~30 고정이면 실데이터가 잘린다 — 실응답에 43.2%가 있었다(목 데이터 최대가 28이라
+              드러나지 않았다). 옆 막대 목록이 0~100 기준이므로 축도 같은 기준으로 둔다.
+              리포트마다 축을 최대값에 맞추면 분포가 달라도 같은 모양으로 그려져 막대와 어긋난다. */}
+          <PolarRadiusAxis domain={[0, 100]} tickCount={6} tick={false} axisLine={false} />
 
           <Radar
             dataKey="value"

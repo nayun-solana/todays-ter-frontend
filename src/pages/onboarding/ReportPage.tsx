@@ -145,7 +145,8 @@ export default function ReportPage() {
                   // 라벨은 BE가 준 값을 그대로 쓴다.
                   const label = item.label;
 
-                  const percentage = Math.min(Math.max(item.percentage, 0), 100);
+                  // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.
+                  const percentage = Math.round(Math.min(Math.max(item.percentage, 0), 100));
 
                   return (
                     <div

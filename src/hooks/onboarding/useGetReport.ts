@@ -51,12 +51,24 @@ export function useReportStatus(reportId: number | undefined, options?: { enable
     queryKey: reportKeys.status(reportId ?? 0),
     queryFn: () => getReportStatus(reportId!),
     enabled: (options?.enabled ?? true) && !!reportId,
+    // 일시적 실패는 폴링이 알아서 회복하지만, 계속 실패하면 화면이 0%에 갇힌다.
+    // 이 화면에는 뒤로 갈 방법이 없으므로 몇 번 실패하면 포기하고 실패로 넘긴다.
+    retry: STATUS_POLL_MAX_FAILURES,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      return status === 'completed' || status === 'failed' ? false : 1000;
+      if (status === 'completed' || status === 'failed') return false;
+      // 조회가 계속 실패하는 중이면 폴링도 멈춘다 — 멈춰야 isError가 확정돼 화면이 빠져나간다.
+      if (query.state.fetchFailureCount > STATUS_POLL_MAX_FAILURES) return false;
+      return 1000;
     },
   });
 }
+
+/**
+ * 상태 조회를 몇 번까지 눌러볼지.
+ * 한 번 실패했다고 리포트를 버리면 안 되지만, 무한정 기다리게 두면 화면이 갇힌다.
+ */
+export const STATUS_POLL_MAX_FAILURES = 4;
 
 /** 실패한 리포트 재시도 */
 export function useRetryFortuneReport() {

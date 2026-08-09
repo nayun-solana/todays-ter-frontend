@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 // hooks
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
 // components
 import AnalysisProgress from './components/CircularProgress';
@@ -13,6 +14,7 @@ const STATUS_BAR_COLOR = '#5a81fa';
 
 export default function OnboardingStep2Page() {
   const navigate = useNavigate();
+  const { isMember } = useAuthStatus();
   // state
   const [reportId, setReportId] = useState<number | null>(null);
   const [isModalDismissed, setIsModalDismissed] = useState(false);
@@ -98,10 +100,11 @@ export default function OnboardingStep2Page() {
     progressContent.length,
   );
 
-  // 최종 실패로 볼 것은 **생성 요청 자체가 거절됐거나 서버가 failed라고 말한 경우**뿐이다.
-  // 상태 조회가 한 번 실패했다고 실패로 단정하면, 잘 만들어진 리포트를 두고 온보딩1로
-  // 돌려보내 사주를 다시 입력하게 만든다. 폴링은 계속 도니 다음 응답에서 회복된다.
-  const failed = createFailed || status === 'failed';
+  // 최종 실패로 볼 것은 생성 요청이 거절됐거나, 서버가 failed라고 했거나,
+  // 상태 조회가 **여러 번 연속** 실패해 더 기다릴 수 없을 때다.
+  // 한 번 실패했다고 단정하면 잘 만들어진 리포트를 두고 사주를 다시 입력하게 만들고,
+  // 반대로 영영 기다리면 이 화면엔 나갈 방법이 없어 0%에 갇힌다.
+  const failed = createFailed || status === 'failed' || statusQuery.isError;
 
   // 완료·실패 어느 쪽이든 모달로 알린다. 예전에는 isSuccess가 true로 하드코딩돼 있어
   // 실패 분기가 렌더될 수 없었다.
@@ -143,8 +146,13 @@ export default function OnboardingStep2Page() {
           isOpen={isModalOpen}
           onClick={() => {
             setIsModalDismissed(true);
-            // 실패면 사주를 다시 입력할 수 있게 온보딩1로 돌려보낸다.
-            navigate(failed ? '/onboarding/step-1' : `/report/${reportId}`);
+            if (!failed) {
+              navigate(`/report/${reportId}`);
+              return;
+            }
+            // 게스트는 사주를 다시 입력하면 풀리지만, 회원은 온보딩1이 게스트 API로 저장해서
+            // 다시 해도 같은 실패가 반복된다(회원 사주 저장 경로가 아직 없다) → 홈으로 보낸다.
+            navigate(isMember ? '/home' : '/onboarding/step-1');
           }}
           isSuccess={!failed}
         />

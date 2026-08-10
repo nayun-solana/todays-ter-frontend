@@ -13,7 +13,7 @@ const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
-  { label: '개인정보 및 약관', path: '/my/policies' },
+  { label: '개인정보 및 약관', path: '/private' },
   { label: '로그아웃', action: 'logout' },
   { label: '회원 탈퇴', path: '/my/withdrawal' },
 ] as const;

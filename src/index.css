@@ -5,7 +5,8 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff') format('woff');
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff')
+    format('woff');
 }
 
 @font-face {
@@ -13,7 +14,8 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff') format('woff');
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff')
+    format('woff');
 }
 
 @font-face {
@@ -21,7 +23,8 @@
   font-style: normal;
   font-weight: 800;
   font-display: swap;
-  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff') format('woff');
+  src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff')
+    format('woff');
 }
 
 /* Figma 디자인 시스템 (node 2370:1227) 기준 Color·Typography 토큰 */
@@ -58,6 +61,13 @@
   --color-ohaeng-earth: #ff9853; /* 토 */
   --color-ohaeng-metal: #515151; /* 금 */
   --color-ohaeng-water: #5599ff; /* 수 */
+
+  /* category colors */
+  --color-category-love: #ff6a70; /* 연애 */
+  --color-category-career: #ad47ff; /* 커리어 */
+  --color-category-wealth: #a7e108; /* 재물 */
+  --color-category-relationship: #ff7e6a; /* 인간관계 */
+  --color-category-health: #5db1fb; /* 건강 */
 
   /* Radius */
   --radius-btn: 20px;
@@ -162,7 +172,6 @@ body {
   color: var(--color-gray-6);
   background: #fff;
 }
-
 
 @keyframes login-header-in {
   from {

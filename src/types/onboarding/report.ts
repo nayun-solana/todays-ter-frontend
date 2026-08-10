@@ -73,6 +73,21 @@ export const SajuReportCategory = z.enum([
 ]);
 export type SajuReportCategory = z.infer<typeof SajuReportCategory>;
 
+/**
+ * 종합을 제외한 상세 리포트 카테고리
+ */
+export const DetailSajuReportCategory = z.enum([
+  'LOVE',
+  'CAREER',
+  'WEALTH',
+  'RELATIONSHIP',
+  'HEALTH',
+]);
+export type DetailSajuReportCategory = z.infer<typeof DetailSajuReportCategory>;
+
+/**
+ * 종합 리포트
+ */
 export const SajuCoreType = z.enum(['DAY_STEM', 'DAY_BRANCH', 'DAY_PILLAR']);
 export type SajuCoreType = z.infer<typeof SajuCoreType>;
 
@@ -113,15 +128,64 @@ export const RecommendationItem = z.object({
 });
 export type RecommendationItem = z.infer<typeof RecommendationItem>;
 
-export const CategorySajuReportResponse = z.object({
+/**
+ * 종합(GENERAL) result
+ */
+export const GeneralSajuReportResponse = z.object({
   reportId: z.number().int(),
-  category: SajuReportCategory,
+  category: z.literal('GENERAL'),
   summary: SajuReportSummary,
   sajuCore: z.array(SajuCoreItem),
   flowAnalysis: z.array(FlowAnalysisItem),
   complementaryElement: ElementCode,
   recommendations: z.array(RecommendationItem),
 });
+export type GeneralSajuReportResponse = z.infer<typeof GeneralSajuReportResponse>;
+
+/**
+ * 종합 외 카테고리 리포트
+ */
+export const SajuReportContentBlock = z.object({
+  title: z.string(),
+  content: z.string(),
+});
+export type SajuReportContentBlock = z.infer<typeof SajuReportContentBlock>;
+
+export const SajuReportKeyPoint = z.object({
+  label: z.string(),
+  text: z.string(),
+});
+export type SajuReportKeyPoint = z.infer<typeof SajuReportKeyPoint>;
+
+export const SajuReportDetail = z.object({
+  code: DetailSajuReportCategory,
+  title: z.string(),
+  coreSummary: z.string(),
+  contentBlocks: z.array(SajuReportContentBlock),
+  keyPoints: z.array(SajuReportKeyPoint),
+});
+export type SajuReportDetail = z.infer<typeof SajuReportDetail>;
+
+/**
+ * LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH result
+ */
+export const DetailSajuReportResponse = z.object({
+  reportId: z.number().int(),
+  category: DetailSajuReportCategory,
+  detail: SajuReportDetail,
+});
+export type DetailSajuReportResponse = z.infer<typeof DetailSajuReportResponse>;
+
+/**
+ * GET 사주 리포트 result
+ *
+ * GENERAL → GeneralSajuReportResponse
+ * 그 외 → DetailSajuReportResponse
+ */
+export const CategorySajuReportResponse = z.union([
+  GeneralSajuReportResponse,
+  DetailSajuReportResponse,
+]);
 export type CategorySajuReportResponse = z.infer<typeof CategorySajuReportResponse>;
 
 // ── 사주 리포트 공유 링크 생성 응답 ──

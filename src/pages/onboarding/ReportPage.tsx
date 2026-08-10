@@ -164,7 +164,7 @@ export default function ReportPage() {
               </div>
 
               {/* 오른쪽 오행 분포 */}
-              <div className="flex w-[160px] shrink-0 flex-col gap-3">
+              <div className="flex w-40 shrink-0 flex-col gap-3">
                 {sajuReportData!.elementAnalysis.distribution.map((item) => {
                   const { label, color } = parseElementCodeandColor(item.code);
 

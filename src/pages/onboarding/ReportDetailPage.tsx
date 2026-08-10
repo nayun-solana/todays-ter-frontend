@@ -323,7 +323,7 @@ export default function ReportDetailPage() {
                     className={`flex items-center gap-3 p-2.5 rounded-2xl ${oheangList.find((o) => o.eng === detailReportData.complementaryElement)?.bgGrad} `}
                   >
                     <div
-                      className={`flex-shrink-0 w-6 h-6 rounded-2xl ${oheangList.find((o) => o.eng === detailReportData.complementaryElement)?.bg} text-white flex items-center justify-center typo-head-4`}
+                      className={`shrink-0 w-6 h-6 rounded-2xl ${oheangList.find((o) => o.eng === detailReportData.complementaryElement)?.bg} text-white flex items-center justify-center typo-head-4`}
                     >
                       {index + 1}
                     </div>

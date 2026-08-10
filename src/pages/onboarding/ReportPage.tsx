@@ -1,14 +1,13 @@
 // libraries
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 // hooks
-// import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
-//type
-import type { SajuReportResponse } from '../../types/onboarding/report';
+import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
 // asstets
 import RightIcon from '../../assets/onboarding/right.svg';
 // components
 import Button from '../../components/Button';
+import { CloseIcon } from '../../components/icons';
 import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
 import ElementRadarChart from './components/ElementRadarChart';
@@ -16,21 +15,74 @@ import ElementRadarChart from './components/ElementRadarChart';
 import type { ElementCode } from '../../types/onboarding/report';
 
 const STATUS_BAR_COLOR = '#5a81fa';
+/**
+ * 로딩·실패 자리. 예전에는 목 데이터라 이 상태 자체가 없었고, 실연동 후에는
+ * 값이 없을 때 빈 껍데기(제목 없음·0%)가 그려지는 걸 막아야 한다.
+ */
+function ReportNotice({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-primary-bg px-5 text-center">
+      <div className="flex flex-col gap-2">
+        <p className="text-lg font-extrabold text-gray-6">{title}</p>
+        {description ? <p className="text-sm text-gray-4">{description}</p> : null}
+      </div>
+      {action}
+    </div>
+  );
+}
 
 export default function ReportPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isMyReport = searchParams.get('from') === 'my';
 
-  // const { data: sajuReportData, isPending, isError, error } = useGetSajuReport(1);
+  // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
+  const reportId = Number(id);
+  const isValidId = Number.isFinite(reportId) && reportId > 0;
+  const { data: sajuReportData, isPending, isError, refetch } = useGetSajuReport(reportId);
 
-  // if (isPending) {
-  //   return <div>리포트를 불러오는 중입니다.</div>;
-  // }
+  // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
+  // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
+  if (!isValidId) {
+    return (
+      <ReportNotice
+        title="리포트를 찾을 수 없어요"
+        description="주소가 잘못되었거나 만료된 링크예요."
+        action={
+          <Button variant="primary" onClick={() => navigate('/home')}>
+            홈으로 가기
+          </Button>
+        }
+      />
+    );
+  }
 
-  // if (isError) {
-  //   console.error('사주 리포트 조회 실패:', error);
+  if (isPending) {
+    return <ReportNotice title="리포트를 불러오는 중이에요" />;
+  }
 
-  //   return <div>리포트를 불러오지 못했습니다.</div>;
-  // }
+  if (isError || !report) {
+    return (
+      <ReportNotice
+        title="리포트를 불러오지 못했어요"
+        description="잠시 후 다시 시도해주세요."
+        action={
+          <Button variant="primary" onClick={() => void refetch()}>
+            다시 시도
+          </Button>
+        }
+      />
+    );
+  }
 
   // status bar 색상 변경 (iOS Safari, Android Chrome)
   useEffect(() => {
@@ -68,50 +120,8 @@ export default function ReportPage() {
     };
   }, []);
 
-  const sajuReportData = {
-    reportId: 1,
-    reportType: 'BASIC',
-    headline: '깊게 느끼고 천천히 움직이는',
-    sajuTypeName: '수목형',
-    elementAnalysis: {
-      summary: '당신은 수와 목의 조합이 강하고, 화가 부족한 편이에요.',
-      primaryElements: ['WATER', 'WOOD'],
-      complementaryElement: 'FIRE',
-      distribution: [
-        { code: 'WOOD', percentage: 28 },
-        { code: 'FIRE', percentage: 12 },
-        { code: 'EARTH', percentage: 18 },
-        { code: 'METAL', percentage: 17 },
-        { code: 'WATER', percentage: 25 },
-      ],
-    },
-    overallTendency: {
-      title: '전반적인 성향',
-      items: [
-        {
-          code: 'EMOTION_THOUGHT',
-          title: '감정과 생각의 흐름',
-          description:
-            '생각을 오래 하고 감정을 깊게 처리하는 타입이에요. 혼자만의 시간이 에너지를 회복시켜 줍니다.',
-          displayOrder: 1,
-        },
-        {
-          code: 'CHOICE_ACTION',
-          title: '선택과 행동 방식',
-          description:
-            '새로운 시작에는 신중하지만, 실행 직전 망설임이 생길 수 있어요. 신뢰할 수 있는 공간에서 강점을 나타내는 편이에요.',
-          displayOrder: 2,
-        },
-        {
-          code: 'RECOVERY',
-          title: '회복 방식',
-          description:
-            '자연이나 물이 있는 조용한 공간에서 에너지를 빠르게 충전해요. 편안한 곳보다 여유로운 공간을 선호합니다.',
-          displayOrder: 3,
-        },
-      ],
-    },
-  } satisfies SajuReportResponse;
+  
+
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {
@@ -131,9 +141,20 @@ export default function ReportPage() {
   };
 
   return (
-    <div className="bg-primary-bg mx-auto relative">
+    <div className="relative mx-auto min-h-dvh bg-primary-bg">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
-      <div className="relative z-10 flex flex-col gap-5 px-5 pt-5.5 pb-10">
+      <div className="relative z-10 flex flex-col gap-5 px-5 pt-[calc(1.375rem+env(safe-area-inset-top))] pb-10">
+        {/* Figma 3514:5416 — 마이에서 다시 볼 때만 우상단 X로 마이페이지에 복귀한다 */}
+        {isMyReport ? (
+          <button
+            type="button"
+            aria-label="마이페이지로 닫기"
+            onClick={() => navigate('/my')}
+            className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-5 flex size-6 items-center justify-center text-white"
+          >
+            <CloseIcon />
+          </button>
+        ) : null}
         <div className="flex flex-col gap-3">
           <p className="typo-caption text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
@@ -146,7 +167,7 @@ export default function ReportPage() {
           <ContentBox type="TOP">
             <p className="typo-caption text-gray-5">{sajuReportData!.elementAnalysis.summary}</p>
             <div className="flex flex-wrap gap-1.5">
-              {sajuReportData!.elementAnalysis.primaryElements.map((element: ElementCode) => (
+              {basic.primaryElements.map((element: ElementCode) => (
                 <OhaengIcon key={element} element={element} type="primary" />
               ))}
               <OhaengIcon
@@ -160,7 +181,10 @@ export default function ReportPage() {
             <div className="flex items-center gap-4">
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
-                <ElementRadarChart elementAnalysis={sajuReportData!.elementAnalysis} />
+                <ElementRadarChart
+                  distribution={basic.elementDistribution}
+                  primaryElements={basic.primaryElements}
+                />
               </div>
 
               {/* 오른쪽 오행 분포 */}
@@ -168,11 +192,12 @@ export default function ReportPage() {
                 {sajuReportData!.elementAnalysis.distribution.map((item) => {
                   const { label, color } = parseElementCodeandColor(item.code);
 
-                  const percentage = Math.min(Math.max(item.percentage, 0), 100);
+                  // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.
+                  const percentage = Math.round(Math.min(Math.max(item.percentage, 0), 100));
 
                   return (
                     <div
-                      key={item.code}
+                      key={item.element}
                       className="grid w-full grid-cols-[16px_minmax(0,1fr)_36px] items-center gap-1.5"
                     >
                       {/* 오행 */}
@@ -218,7 +243,7 @@ export default function ReportPage() {
           <Button
             variant="primary"
             onClick={() => {
-              navigate(`/report/${sajuReportData!.reportId}/detail`);
+              navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`);
             }}
             className="flex items-center justify-center gap-3"
           >
@@ -226,13 +251,15 @@ export default function ReportPage() {
 
             <img src={RightIcon} alt="right" className="" />
           </Button>
+          {/* Figma 3514:5416 — outline CTA는 primary-bg 채움 + primary-light 테두리 */}
           <Button
             variant="secondary"
+            className="border-primary-light bg-primary-bg"
             onClick={() => {
-              navigate('/onboarding/step-3');
+              navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
             }}
           >
-            상세 분석 없이 고민유형 선택하기
+            {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
           </Button>
         </div>
       </div>

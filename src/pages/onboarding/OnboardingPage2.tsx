@@ -1,6 +1,9 @@
 // libraries
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+// hooks
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
 // components
 import AnalysisProgress from './components/CircularProgress';
 import StatusBox from './components/StatusBox';
@@ -11,9 +14,11 @@ const STATUS_BAR_COLOR = '#5a81fa';
 
 export default function OnboardingStep2Page() {
   const navigate = useNavigate();
+  const { isMember } = useAuthStatus();
   // state
-  const [progress, setProgress] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reportId, setReportId] = useState<number | null>(null);
+  const [isModalDismissed, setIsModalDismissed] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
 
   // progress 내용
   const progressContent = [
@@ -59,29 +64,57 @@ export default function OnboardingStep2Page() {
       document.body.style.backgroundColor = previousBodyBackground;
     };
   }, []);
-  // 임시 progress 증가용 effect (1초마다 1씩 증가)
+  /**
+   * 리포트 생성 시작 — 이 화면의 존재 이유다.
+   *
+   * 예전에는 API 호출이 하나도 없이 setTimeout으로 진행률만 흉내내고 `/report/1`(하드코딩)로
+   * 넘어갔다. 그래서 사주 리포트가 실제로는 만들어지지 않았고, 홈 3개 API가 계속
+   * 404 HOME404_2로 떨어져 추천이 비어 있었다.
+   *
+   * StrictMode는 이펙트를 두 번 돌린다 — 가드가 없으면 리포트가 두 개 생긴다.
+   * 이 컴포넌트는 완전히 언마운트됐다 다시 마운트되면 새로 만드는 게 맞으므로
+   * (모듈 스코프가 아니라) ref로 막는다.
+   */
+  const createReport = useCreateFortuneReport();
+  const hasRequested = useRef(false);
+
   useEffect(() => {
-    if (progress >= progressContent.length) return;
+    if (hasRequested.current) return;
+    hasRequested.current = true;
 
-    const timer = window.setTimeout(() => {
-      const nextProgress = Math.min(progress + 1, progressContent.length);
+    createReport
+      .mutateAsync()
+      .then((result) => setReportId(result.reportId))
+      .catch(() => setCreateFailed(true));
+    // 마운트 시 1회.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      setProgress(nextProgress);
+  // 생성이 끝날 때까지 상태를 폴링한다(완료·실패면 훅이 알아서 멈춘다).
+  const statusQuery = useReportStatus(reportId ?? undefined);
+  const status = statusQuery.data?.status;
 
-      if (nextProgress === progressContent.length) {
-        setIsModalOpen(true);
-      }
-    }, 1000);
+  // 서버 진행률(0~100)을 화면의 5단계로 환산한다.
+  const progress = Math.min(
+    Math.floor(((statusQuery.data?.progress ?? 0) / 100) * progressContent.length),
+    progressContent.length,
+  );
 
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [progress, progressContent.length]);
+  // 최종 실패로 볼 것은 생성 요청이 거절됐거나, 서버가 failed라고 했거나,
+  // 상태 조회가 **여러 번 연속** 실패해 더 기다릴 수 없을 때다.
+  // 한 번 실패했다고 단정하면 잘 만들어진 리포트를 두고 사주를 다시 입력하게 만들고,
+  // 반대로 영영 기다리면 이 화면엔 나갈 방법이 없어 0%에 갇힌다.
+  const failed = createFailed || status === 'failed' || statusQuery.isError;
+
+  // 완료·실패 어느 쪽이든 모달로 알린다. 예전에는 isSuccess가 true로 하드코딩돼 있어
+  // 실패 분기가 렌더될 수 없었다.
+  // 이펙트+setState가 아니라 파생값이다 — 상태에서 바로 계산되므로 굳이 동기화할 이유가 없다.
+  const isModalOpen = (status === 'completed' || failed) && !isModalDismissed;
 
   return (
     <main
       className="
-         min-h-screen bg-primary px-5 pb-[env(safe-area-inset-bottom)] pt-[calc(1.25rem+env(safe-area-inset-top))] flex flex-col gap-12 justify-center
+         min-h-screen bg-primary px-5 pb-safe pt-safe-5 flex flex-col gap-12 justify-center
       "
     >
       <div className="flex flex-col gap-7.5 items-center justify-center">
@@ -112,10 +145,16 @@ export default function OnboardingStep2Page() {
         <Modal
           isOpen={isModalOpen}
           onClick={() => {
-            setIsModalOpen(false);
-            navigate('/report/1');
+            setIsModalDismissed(true);
+            if (!failed) {
+              navigate(`/report/${reportId}`);
+              return;
+            }
+            // 게스트는 사주를 다시 입력하면 풀리지만, 회원은 온보딩1이 게스트 API로 저장해서
+            // 다시 해도 같은 실패가 반복된다(회원 사주 저장 경로가 아직 없다) → 홈으로 보낸다.
+            navigate(isMember ? '/home' : '/onboarding/step-1');
           }}
-          isSuccess={true}
+          isSuccess={!failed}
         />
       )}
     </main>

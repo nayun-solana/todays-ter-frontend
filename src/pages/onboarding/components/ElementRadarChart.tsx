@@ -9,7 +9,10 @@ import {
 import type { ElementAnalysis, ElementCode } from '../../../types/onboarding/report';
 
 type Props = {
-  elementAnalysis: ElementAnalysis;
+  /** BE 기본 리포트의 `basic.elementDistribution`. */
+  distribution: DistributionItem[];
+  /** 강조할 주 오행. `basic.primaryElements`. */
+  primaryElements: ElementCode[];
 };
 
 type TickProps = {
@@ -81,11 +84,9 @@ function ElementTick({
   );
 }
 
-export default function ElementRadarChart({ elementAnalysis }: Props) {
-  const { distribution, primaryElements } = elementAnalysis;
-
+export default function ElementRadarChart({ distribution, primaryElements }: Props) {
   const chartData = ELEMENT_ORDER.map((code) => {
-    const matchedItem = distribution.find((item) => item.code === code);
+    const matchedItem = distribution.find((item) => item.element === code);
 
     return {
       code,
@@ -122,7 +123,10 @@ export default function ElementRadarChart({ elementAnalysis }: Props) {
             tick={(props) => <ElementTick {...props} primaryLabels={primaryLabels} />}
           />
 
-          <PolarRadiusAxis domain={[0, 30]} tickCount={6} tick={false} axisLine={false} />
+          {/* 0~30 고정이면 실데이터가 잘린다 — 실응답에 43.2%가 있었다(목 데이터 최대가 28이라
+              드러나지 않았다). 옆 막대 목록이 0~100 기준이므로 축도 같은 기준으로 둔다.
+              리포트마다 축을 최대값에 맞추면 분포가 달라도 같은 모양으로 그려져 막대와 어긋난다. */}
+          <PolarRadiusAxis domain={[0, 100]} tickCount={6} tick={false} axisLine={false} />
 
           <Radar
             dataKey="value"

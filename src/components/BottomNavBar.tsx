@@ -18,6 +18,13 @@ const TABS: { key: NavTabKey; label: string; icon: string; activeIcon: string; p
   { key: 'my', label: '마이', icon: myIcon, activeIcon: myActiveIcon, position: 'left-[280px]', iconClass: 'h-[21.875px] w-5' },
 ];
 
+/**
+ * 유리 재질. backdrop-blur만으로는 뒤에 콘텐츠가 없는 화면(기록·마이 하단)에서 아무 변화가 없어
+ * 평평해 보인다. 채도 boost로 뒤 색을 끌어올리고, 위아래 안쪽 하이라이트로 유리 두께를 만든다.
+ */
+const GLASS =
+  'border border-white/60 bg-white/65 backdrop-blur-xl backdrop-saturate-150 shadow-[0_8px_24px_rgba(47,72,148,0.12),inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_1px_rgba(255,255,255,0.4)]';
+
 const ACTIVE_BACKGROUND_POSITIONS: Record<Exclude<NavTabKey, 'my'>, string> = {
   home: 'left-[4px]',
   search: 'left-[83px]',
@@ -31,9 +38,11 @@ interface BottomNavBarProps {
 
 export default function BottomNavBar({ active, onChange }: BottomNavBarProps) {
   return (
-    <nav className="fixed bottom-5 left-1/2 z-50 h-[62px] w-[332px] -translate-x-1/2">
-      <div className="absolute inset-y-0 left-0 right-[74px] rounded-[30px] bg-white/90" />
-      <div className="absolute inset-y-0 right-0 w-[61px] rounded-[30px] bg-white/90" />
+    // 탭 위치가 332px 고정이라 320px 뷰포트에선 좌우로 6px씩 삐져나온다.
+    // 구조는 그대로 두고 좁은 화면에서만 통째로 축소한다.
+    <nav className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] left-1/2 z-50 h-[62px] w-[332px] origin-bottom -translate-x-1/2 max-[359px]:scale-90">
+      <div className={cn('absolute inset-y-0 left-0 right-[74px] rounded-[30px]', GLASS)} />
+      <div className={cn('absolute inset-y-0 right-0 w-[61px] rounded-[30px]', GLASS)} />
       {active !== 'my' && (
         <span
           aria-hidden="true"

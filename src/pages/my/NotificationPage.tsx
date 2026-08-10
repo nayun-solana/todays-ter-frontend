@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import PageHeader from '../../components/PageHeader';
@@ -36,17 +36,34 @@ const NOTIFICATION_GROUPS: { label: string; items: NotificationItem[] }[] = [
 ] as const;
 
 export default function NotificationPage() {
-  const [unread] = useState(() => sessionStorage.getItem(NOTIFICATIONS_READ_KEY) !== 'true');
+  const [unread, setUnread] = useState(
+    () => sessionStorage.getItem(NOTIFICATIONS_READ_KEY) !== 'true',
+  );
 
-  useEffect(() => {
+  const markAllRead = () => {
     sessionStorage.setItem(NOTIFICATIONS_READ_KEY, 'true');
-  }, []);
+    setUnread(false);
+  };
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
-      <PageHeader title="알림" leading="close" backTo="/my" />
+      {/* 진입 경로는 홈 우상단 알림 벨 하나뿐이다(마이페이지엔 알림 링크가 없다).
+          `/my`로 고정돼 있어서 닫으면 들어온 적도 없는 마이페이지로 갔다. */}
+      <PageHeader title="알림" leading="close" backTo="/home" />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8">
+        {/* 헤더 제목 중앙 정렬을 깨지 않도록 trailing이 아니라 목록 상단에 둔다. */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={markAllRead}
+            disabled={!unread}
+            className="typo-sub-2 text-primary disabled:cursor-not-allowed disabled:text-gray-3"
+          >
+            전체 읽음
+          </button>
+        </div>
+
         {NOTIFICATION_GROUPS.map((group) => (
           <section key={group.label}>
             <h2 className="typo-head-4 text-gray-6">{group.label}</h2>

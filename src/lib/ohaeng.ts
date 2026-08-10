@@ -17,6 +17,10 @@ export function ohaengByKey(key: string | null | undefined): OhaengMeta | undefi
   return OHAENG_LIST.find((o) => o.key === key);
 }
 
-export function ohaengByLabel(label: OhaengMeta['label']): OhaengMeta | undefined {
+/**
+ * 오행 한글 표시명 → 메타. BE가 오행을 코드가 아니라 표시명("토")으로 주는 API가 있어
+ * 임의 문자열도 받는다(못 찾으면 undefined).
+ */
+export function ohaengByLabel(label: string | null | undefined): OhaengMeta | undefined {
   return OHAENG_LIST.find((o) => o.label === label);
 }

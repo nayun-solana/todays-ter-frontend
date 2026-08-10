@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
 /**
- * 사주 리포트 API 응답 계약
- * API 응답의 result를 런타임에서 검증하고,
- * TypeScript 타입은 z.infer로 파생한다.
+ * 사주 리포트 API 계약.
+ * **BE 실응답으로 검증함**(2026-08-09, 게스트 온보딩 → 리포트 생성 → 조회 전 과정 실호출).
+ *
+ * 이전 스키마는 배포 전에 추측으로 작성한 것이라 필드 이름이 BE와 거의 전부 달랐고,
+ * MSW 목이 그 모양에 맞춰져 있어 로컬에서만 동작했다. 여기 있는 것은 전부 실응답 기준이다.
  */
 
 // ── Enum ──
@@ -11,17 +13,36 @@ import { z } from 'zod';
 export const ElementCode = z.enum(['WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER']);
 export type ElementCode = z.infer<typeof ElementCode>;
 
-export const ReportType = z.enum(['BASIC']);
-export type ReportType = z.infer<typeof ReportType>;
+/**
+ * 리포트 생성 상태. BE enum은 대문자지만 `@JsonValue`로 **소문자 문자열**이 나간다
+ * (실응답 `"completed"`). 대문자로 파싱하면 zod가 throw한다.
+ */
+export const ReportStatus = z.enum(['processing', 'completed', 'failed']);
+export type ReportStatus = z.infer<typeof ReportStatus>;
 
-export const OverallTendencyCode = z.enum(['EMOTION_THOUGHT', 'CHOICE_ACTION', 'RECOVERY']);
-export type OverallTendencyCode = z.infer<typeof OverallTendencyCode>;
+/**
+ * 상세 리포트 카테고리 (`FortuneReportCategory`).
+ *
+ * ⚠️ 고민 유형(`ConcernType`)과 다르다 — 고민에는 `OTHER`가 있지만 리포트 카테고리에는 없다.
+ *    `category=OTHER`로 부르면 **400**이다(실측). 고민을 그대로 넘기지 말 것.
+ */
+export const SajuReportCategory = z.enum([
+  'GENERAL',
+  'LOVE',
+  'CAREER',
+  'WEALTH',
+  'RELATIONSHIP',
+  'HEALTH',
+]);
+export type SajuReportCategory = z.infer<typeof SajuReportCategory>;
 
-// ── 오행 분석 ──
+// ── 기본 리포트 (GET /fortune-reports/{reportId}) ──
 
 export const ElementDistribution = z.object({
-  code: ElementCode,
-  percentage: z.number().min(0).max(100),
+  element: ElementCode,
+  /** 화면 표기용 한글 한 글자("목"·"화"…). BE가 주므로 FE에서 매핑하지 않는다. */
+  label: z.string(),
+  percentage: z.number(),
 });
 export type ElementDistribution = z.infer<typeof ElementDistribution>;
 
@@ -44,20 +65,26 @@ export const OverallTendencyItem = z.object({
 export type OverallTendencyItem = z.infer<typeof OverallTendencyItem>;
 
 export const OverallTendency = z.object({
-  title: z.string(),
-  items: z.array(OverallTendencyItem),
+  label: z.string(),
+  text: z.string(),
 });
 export type OverallTendency = z.infer<typeof OverallTendency>;
 
-// ── 사주 리포트 응답 ──
+export const BasicReport = z.object({
+  typeTitle: z.string(),
+  typeName: z.string(),
+  elementSummary: z.string(),
+  primaryElements: z.array(ElementCode).default([]),
+  /** 보완 오행은 **하나**다(예전 스키마의 `complementaryElements` 배열이 아니다). */
+  complementElement: ElementCode.nullish(),
+  elementDistribution: z.array(ElementDistribution).default([]),
+  overallTendencies: z.array(OverallTendency).default([]),
+});
+export type BasicReport = z.infer<typeof BasicReport>;
 
 export const SajuReportResponse = z.object({
   reportId: z.number().int(),
-  reportType: ReportType,
-  headline: z.string(),
-  sajuTypeName: z.string(),
-  elementAnalysis: ElementAnalysis,
-  overallTendency: OverallTendency,
+  basic: BasicReport,
 });
 export type SajuReportResponse = z.infer<typeof SajuReportResponse>;
 
@@ -91,42 +118,24 @@ export type DetailSajuReportCategory = z.infer<typeof DetailSajuReportCategory>;
 export const SajuCoreType = z.enum(['DAY_STEM', 'DAY_BRANCH', 'DAY_PILLAR']);
 export type SajuCoreType = z.infer<typeof SajuCoreType>;
 
-export const FlowAnalysisType = z.enum([
-  'EMOTIONAL_FLOW',
-  'RELATIONSHIP_PATTERN',
-  'ACTION_STYLE',
-  'RECOVERY_POINT',
-]);
-export type FlowAnalysisType = z.infer<typeof FlowAnalysisType>;
-
-export const SajuReportSummary = z.object({
-  description: z.string(),
-  primaryElement: ElementCode,
-});
-export type SajuReportSummary = z.infer<typeof SajuReportSummary>;
-
-export const SajuCoreItem = z.object({
-  type: SajuCoreType,
+export const ContentBlock = z.object({
   title: z.string(),
-  value: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
+  content: z.string(),
 });
-export type SajuCoreItem = z.infer<typeof SajuCoreItem>;
+export type ContentBlock = z.infer<typeof ContentBlock>;
 
-export const FlowAnalysisItem = z.object({
-  type: FlowAnalysisType,
-  title: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
+export const KeyPoint = z.object({
+  label: z.string(),
+  text: z.string(),
 });
-export type FlowAnalysisItem = z.infer<typeof FlowAnalysisItem>;
+export type KeyPoint = z.infer<typeof KeyPoint>;
 
-export const RecommendationItem = z.object({
-  description: z.string(),
-  displayOrder: z.number().int(),
+export const ReportDetail = z.object({
+  coreSummary: z.string(),
+  contentBlocks: z.array(ContentBlock).default([]),
+  keyPoints: z.array(KeyPoint).default([]),
 });
-export type RecommendationItem = z.infer<typeof RecommendationItem>;
+export type ReportDetail = z.infer<typeof ReportDetail>;
 
 /**
  * 종합(GENERAL) result
@@ -188,10 +197,35 @@ export const CategorySajuReportResponse = z.union([
 ]);
 export type CategorySajuReportResponse = z.infer<typeof CategorySajuReportResponse>;
 
-// ── 사주 리포트 공유 링크 생성 응답 ──
+// ── 생성·진행 상태 ──
 
+/** POST /fortune-reports — 202로 즉시 반환되고, 완료는 status로 확인한다. */
+export const ReportCreateResponse = z.object({
+  reportId: z.number().int(),
+  status: ReportStatus,
+});
+export type ReportCreateResponse = z.infer<typeof ReportCreateResponse>;
+
+/** GET /fortune-reports/{reportId}/status — `failureMessage`는 실패했을 때만 온다. */
+export const ReportStatusResponse = z.object({
+  reportId: z.number().int(),
+  status: ReportStatus,
+  /** 0~100 */
+  progress: z.number(),
+  canRetry: z.boolean(),
+  retryCount: z.number().int(),
+  failureMessage: z.string().nullish(),
+});
+export type ReportStatusResponse = z.infer<typeof ReportStatusResponse>;
+
+// ── 공유 ──
+
+/**
+ * POST /fortune-reports/{reportId}/share.
+ * 추천 공유와 같은 `ShareLinkResponse` 형태다(`shareToken`은 조건부 포함).
+ */
 export const SajuReportShareResult = z.object({
-  shareId: z.string(),
-  shareUrl: z.string().url(),
+  shareToken: z.string().nullish(),
+  shareUrl: z.string(),
 });
 export type SajuReportShareResult = z.infer<typeof SajuReportShareResult>;

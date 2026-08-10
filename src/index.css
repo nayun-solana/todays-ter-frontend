@@ -166,11 +166,56 @@
   display: none;
 }
 
+/*
+ * iOS 노치·홈 인디케이터 영역(safe area).
+ *
+ * Tailwind에 내장 유틸이 없어서 지금까지는 `pb-[env(safe-area-inset-bottom)]` 같은
+ * arbitrary value를 화면마다 따로 적어왔다(온보딩2·Modal). 길고 오타가 나도 조용히 무시돼서
+ * 유틸로 한 번만 정의한다.
+ *
+ * ⚠️ `env()`는 `viewport-fit=cover`가 있어야 0이 아닌 값을 준다 — index.html에 이미 들어 있다.
+ */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility py-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+/** 기존 여백에 safe area를 더해야 하는 경우(예: 상단 20px + 노치). */
+@utility pt-safe-5 {
+  padding-top: calc(1.25rem + env(safe-area-inset-top));
+}
+
+/* 스크롤바 자리를 항상 비워둔다. 내용이 짧은 화면(기록)으로 넘어갈 때 스크롤바가 사라지면
+   뷰포트 폭이 넓어지고, left-1/2로 뷰포트 중앙에 붙는 고정 요소(하단바·고정 CTA)가 옆으로 튄다.
+   오버레이 스크롤바를 쓰는 모바일에선 gutter가 0이라 영향이 없다. */
+html {
+  min-height: 100%;
+  background: var(--color-gray-1);
+  scrollbar-gutter: stable;
+}
+
+body,
+#root {
+  min-height: 100%;
+  background: var(--color-gray-1);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-gray-6);
-  background: #fff;
 }
 
 @keyframes login-header-in {

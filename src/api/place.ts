@@ -1,4 +1,4 @@
-import { PlaceDetailResponse } from '../types/place/place';
+import { PlaceDetailResponse, PlaceReviewsResponse } from '../types/place/place';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
@@ -6,4 +6,9 @@ import type { ApiResponse } from './types';
 export async function getPlaceDetail(placeId: string): Promise<PlaceDetailResponse> {
   const response = await axiosInstance.get<ApiResponse>(`/places/${placeId}`);
   return PlaceDetailResponse.parse(getResult(response));
+}
+
+export async function getPlaceReviews(placeId: string): Promise<PlaceReviewsResponse> {
+  const response = await axiosInstance.get<ApiResponse>(`/places/${placeId}/reviews`);
+  return PlaceReviewsResponse.parse(getResult(response));
 }

@@ -4,8 +4,10 @@ interface RecommendedPlaceCardProps {
   image: string;
   badge: string;
   name: string;
-  subtitle: string;
+  /** BE에 대응 필드가 없어 optional. 시안 싱크에서 문구를 확정할 것. */
+  subtitle?: string;
   description: string;
+  /** "3.5km". 서버가 거리를 안 주면 빈 문자열. */
   distance: string;
   rating: number;
   onClick?: () => void;
@@ -37,7 +39,7 @@ export default function RecommendedPlaceCard({
         </span>
         <div className="relative flex flex-col gap-1 text-white">
           <p className="text-base font-bold">{name}</p>
-          <p className="text-xs font-normal">{subtitle}</p>
+          {subtitle && <p className="text-xs font-normal">{subtitle}</p>}
         </div>
       </div>
       {/* 하단 설명 영역 */}

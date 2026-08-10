@@ -10,11 +10,11 @@ interface EnergyCardProps {
   desc: string;
 }
 
-/** 홈 "오늘 나의 기운" 카드 — 반투명 위에 오행 오브+설명. */
+/** 홈 "나의 기운" 카드 — 반투명 위에 오행 오브+설명. */
 export default function EnergyCard({ element, label, desc }: EnergyCardProps) {
   return (
     <div className="flex w-full flex-col items-center gap-[30px] rounded-[20px] bg-white/40 px-5 py-6 shadow-[0_0_20px_0_rgba(0,0,0,0.1)]">
-      <p className="text-lg font-extrabold text-gray-6">오늘 나의 기운</p>
+      <p className="text-lg font-extrabold text-gray-6">나의 기운</p>
       <div className="flex flex-col items-center gap-5">
         <OhaengOrb element={element} size={120} />
         <div className="flex flex-col items-center gap-2.5">

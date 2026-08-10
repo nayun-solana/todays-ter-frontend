@@ -1,30 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
-import placeSampleImage from '../../assets/home/place-sample.jpg';
-import placeImage from '../../assets/place-cheonggyecheon.png';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
-import { usePlaceDetail } from '../../hooks/place/usePlace';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import { usePlaceDetail, usePlaceReviews, placeKeys } from '../../hooks/place/usePlace';
+import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
-import { ohaengByKey, ohaengByLabel } from '../../lib/ohaeng';
+import { loadNaverMaps } from '../../lib/naverMaps';
+import { ohaengByLabel } from '../../lib/ohaeng';
+import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
+import DeleteReviewModal from '../review/components/DeleteReviewModal';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
-
-// TODO: API 연동 시 교체 (Figma 시안 데이터)
-const PLACE = {
-  name: '청계전 모전교',
-  element: 'water' as const,
-  theme: '감정 회복',
-  address: '서울 중구 무교동',
-  addressDetail: '광화문역 5번 출구에서 223m',
-  feature: '수(水) 기운이 강해 감정 정리와 회복에 좋고 오늘의 흐름과 잘 맞아요.',
-};
 
 type Review = {
   id: string;
@@ -32,43 +26,9 @@ type Review = {
   date: string;
   rating: number;
   content: string;
-  photoCount: number;
+  imageUrls: string[];
   isMine?: boolean;
 };
-
-// TODO: API 연동 시 교체. isMine 후기는 목록 상단에 고정된다.
-const REVIEWS: Review[] = [
-  {
-    id: 'mine',
-    writer: '계수',
-    date: '2026.07.24',
-    rating: 5,
-    content:
-      '퇴근 후 물길을 따라 천천히 걸었어요. 복잡했던 생각이 정리되고 마음도 한결 편안해졌습니다.',
-    photoCount: 2,
-    isMine: true,
-  },
-  {
-    id: 'r1',
-    writer: '산책하는물고기',
-    date: '2026.07.21',
-    rating: 5,
-    content:
-      '비 온 다음 날 방문했는데 물소리가 시원하고 산책로도 깨끗했어요. 혼자 조용히 걷기 좋았습니다.',
-    photoCount: 2,
-  },
-  {
-    id: 'r2',
-    writer: '서울뚜벅이',
-    date: '2026.07.18',
-    rating: 4,
-    content:
-      '광화문 근처에서 잠깐 쉬고 싶을 때 들르기 좋아요. 저녁에는 조명이 켜져 분위기가 더 좋았습니다.',
-    photoCount: 1,
-  },
-];
-
-const REVIEW_IMAGES = [placeImage, placeSampleImage];
 
 /** Figma: 별 18×17, 활성 #ffd310 / 비활성 gray-3 */
 function StarRow({ rating }: { rating: number }) {
@@ -86,19 +46,97 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-function ReviewPhotos({ count }: { count: number }) {
+function ReviewPhotos({ imageUrls }: { imageUrls: string[] }) {
   return (
     <div className="flex gap-1 overflow-x-auto">
-      {Array.from({ length: count }, (_, index) => (
+      {imageUrls.map((imageUrl, index) => (
         <img
-          key={index}
-          src={REVIEW_IMAGES[index % REVIEW_IMAGES.length]}
+          key={imageUrl}
+          src={imageUrl}
           alt={`후기 사진 ${index + 1}`}
           className="size-[120px] shrink-0 rounded-btn object-cover"
         />
       ))}
     </div>
   );
+}
+
+function PlaceMap({ latitude, longitude }: { latitude: number; longitude: number }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [isMapUnavailable, setIsMapUnavailable] = useState(false);
+
+  useEffect(() => {
+    const mapElement = mapRef.current;
+    const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
+    if (!mapElement || !clientId) {
+      setIsMapUnavailable(true);
+      return;
+    }
+
+    let isUnmounted = false;
+    loadNaverMaps(clientId)
+      .then((naver) => {
+        if (isUnmounted) return;
+
+        const position = new naver.maps.LatLng(latitude, longitude);
+        const map = new naver.maps.Map(mapElement, {
+          center: position,
+          zoom: 15,
+          zoomControl: false,
+        });
+        new naver.maps.Marker({ map, position });
+      })
+      .catch(() => {
+        if (!isUnmounted) setIsMapUnavailable(true);
+      });
+
+    return () => {
+      isUnmounted = true;
+    };
+  }, [latitude, longitude]);
+
+  if (isMapUnavailable) return <div className="h-40 rounded-btn bg-placeholder" />;
+
+  return <div ref={mapRef} className="h-40 rounded-btn" />;
+}
+
+function PlaceThumbnail({ placeId, placeName }: { placeId: number; placeName: string }) {
+  const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false);
+
+  if (isThumbnailUnavailable) {
+    return <div className="mx-5 mt-[5px] h-[210px] rounded-btn bg-placeholder" />;
+  }
+
+  return (
+    <img
+      src={getPlaceThumbnailUrl(placeId)}
+      alt={placeName}
+      className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
+      onError={() => setIsThumbnailUnavailable(true)}
+    />
+  );
+}
+
+function toReview(
+  review: {
+    reviewId: number;
+    writerNickname: string;
+    rating: number;
+    content: string;
+    images: { imageUrl: string }[];
+    createdAt: string;
+  },
+  isMine = false,
+): Review {
+  return {
+    id: String(review.reviewId),
+    writer: review.writerNickname,
+    date: review.createdAt.slice(0, 10).replaceAll('-', '.'),
+    rating: review.rating,
+    content: review.content,
+    imageUrls: review.images.map((image) => image.imageUrl),
+    isMine,
+  };
 }
 
 /** 내 후기 — 목록 상단 고정. 우측 ⋮ 로 수정/삭제 */
@@ -136,8 +174,7 @@ function MyReviewCard({
       <div className="flex flex-col gap-2">
         <div ref={wrapperRef} className="relative flex h-5 items-center justify-between">
           <p className="typo-body-3 flex items-center gap-1 text-gray-6">
-            <PinIcon className="text-primary" />
-            내 리뷰
+            <PinIcon className="text-primary-light" />내 리뷰
           </p>
           <button
             type="button"
@@ -186,7 +223,7 @@ function MyReviewCard({
         <StarRow rating={review.rating} />
       </div>
 
-      <ReviewPhotos count={review.photoCount} />
+      {review.imageUrls.length > 0 ? <ReviewPhotos imageUrls={review.imageUrls} /> : null}
       {review.content ? (
         <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
       ) : null}
@@ -206,62 +243,62 @@ function ReviewItem({ review }: { review: Review }) {
           {review.date}
         </p>
       </div>
-      <ReviewPhotos count={review.photoCount} />
+      {review.imageUrls.length > 0 ? <ReviewPhotos imageUrls={review.imageUrls} /> : null}
       <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
     </article>
   );
 }
 
-function DeleteReviewDialog({
-  onClose,
-  onConfirm,
-}: {
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[25px]">
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="delete-review-title"
-        className="w-full max-w-[324px] rounded-btn bg-white px-5 pt-[30px] pb-5 shadow-dialog"
-      >
-        <div className="text-center">
-          <h2 id="delete-review-title" className="typo-head-2 text-gray-6">
-            후기를 삭제하시겠어요?
-          </h2>
-          <p className="typo-sub-2 mt-3 text-gray-6">삭제된 후기는 복구할 수 없습니다.</p>
-        </div>
-        {/* Figma: 버튼 가로 2분할 138×48 gap8 */}
-        <div className="mt-10 flex gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            취소
-          </Button>
-          <Button onClick={onConfirm}>삭제</Button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams();
-  const [tab, setTab] = useState<Tab>('지도');
-  const [reviews, setReviews] = useState(REVIEWS);
+  // 장소 상세는 게스트에게 열려 있지만(#109) 후기 작성은 회원 전용이다.
+  const { isMember } = useAuthStatus();
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() =>
+    searchParams.get('tab') === 'reviews' ? '후기' : '지도',
+  );
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const placeQuery = usePlaceDetail(id);
+  const reviewsQuery = usePlaceReviews(id);
+  const deleteReviewMutation = useDeleteRecord();
   const place = placeQuery.data;
-  const placeName = place?.placeName ?? PLACE.name;
-  const element = place ? ohaengByLabel(place.element)! : ohaengByKey(PLACE.element)!;
-  const theme = place?.hashtags[0] ?? PLACE.theme;
-  const featureQuestion = place?.description.question ?? '이 터의 특징은 무엇인가요?';
-  const feature = place?.description.answer ?? PLACE.feature;
-  const address = place?.address ?? PLACE.address;
 
-  const myReview = reviews.find((review) => review.isMine);
-  const otherReviews = reviews.filter((review) => !review.isMine);
+  if (placeQuery.isPending) {
+    return (
+      <div className="min-h-dvh w-full bg-white">
+        <PageHeader title="장소 상세" />
+        <p className="px-5 py-8 text-sm text-gray-4">장소 정보를 불러오는 중입니다.</p>
+      </div>
+    );
+  }
+
+  if (placeQuery.isError || !place) {
+    return (
+      <div className="min-h-dvh w-full bg-white">
+        <PageHeader title="장소 상세" />
+        <div className="px-5 py-8">
+          <p className="text-sm text-gray-4">장소 정보를 불러오지 못했습니다.</p>
+          <Button variant="secondary" onClick={() => placeQuery.refetch()} className="mt-4">
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const placeName = place.placeName;
+  const element = ohaengByLabel(place.element)!;
+  const theme = place.hashtags[0] ?? '터';
+  const featureQuestion = place.description.question;
+  const feature = place.description.answer;
+  const address = place.address;
+
+  const myReview = reviewsQuery.data?.myReview
+    ? toReview(reviewsQuery.data.myReview, true)
+    : undefined;
+  const otherReviews = reviewsQuery.data?.reviews.map((review) => toReview(review)) ?? [];
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white pb-[106px]">
@@ -279,11 +316,7 @@ export default function PlaceDetailPage() {
         }
       />
 
-      <img
-        src={place?.imageUrl ?? placeImage}
-        alt={placeName}
-        className="mx-5 mt-[5px] h-[210px] rounded-btn object-cover"
-      />
+      <PlaceThumbnail key={place.placeId} placeId={place.placeId} placeName={placeName} />
 
       <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{placeName}</h2>
 
@@ -317,11 +350,17 @@ export default function PlaceDetailPage() {
             <span>
               {t}
               {t === '후기' && (
-                <span className={tab === t ? 'text-primary' : 'text-gray-4'}> {reviews.length}</span>
+                <span className={tab === t ? 'text-primary' : 'text-gray-4'}>
+                  {' '}
+                  {reviewsQuery.data?.totalCount ?? place.reviewCount}
+                </span>
               )}
             </span>
             <span
-              className={cn('h-0.5 w-full rounded-[2px]', tab === t ? 'bg-primary' : 'bg-transparent')}
+              className={cn(
+                'h-0.5 w-full rounded-[2px]',
+                tab === t ? 'bg-primary' : 'bg-transparent',
+              )}
             />
           </button>
         ))}
@@ -331,18 +370,20 @@ export default function PlaceDetailPage() {
       <div className="flex-1">
         {tab === '지도' && (
           <div className="px-5 pt-4">
-            {/* ponytail: 지도 SDK는 새 dependency라 금지, SDK 결정 후 교체 */}
-            <div className="h-40 rounded-btn bg-placeholder" />
+            <PlaceMap latitude={place.latitude} longitude={place.longitude} />
             <p className="typo-body-3 mt-2.5 pl-2.5 text-gray-6">{address}</p>
-            {!place ? (
-              <p className="typo-sub-3 mt-1.5 pl-2.5 text-gray-6">{PLACE.addressDetail}</p>
-            ) : null}
           </div>
         )}
 
         {tab === '후기' && (
           <div className="pt-4">
-            {myReview ? (
+            {reviewsQuery.isPending ? (
+              <p className="px-5 py-4 text-sm text-gray-4">후기를 불러오는 중입니다.</p>
+            ) : reviewsQuery.isError ? (
+              <p className="px-5 py-4 text-sm text-gray-4">
+                후기를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+              </p>
+            ) : myReview ? (
               <>
                 <div className="px-5">
                   <MyReviewCard
@@ -354,6 +395,10 @@ export default function PlaceDetailPage() {
                 {/* Figma: 고정된 내 후기와 나머지 후기를 8px full-bleed 띠로 분리 */}
                 <div aria-hidden="true" className="mt-4 h-2 bg-gray-2" />
               </>
+            ) : otherReviews.length === 0 ? (
+              <p className="px-5 py-10 text-center text-sm text-gray-4">
+                아직 작성된 후기가 없어요.
+              </p>
             ) : null}
 
             <div className="flex flex-col gap-3 px-5 pt-4">
@@ -368,18 +413,25 @@ export default function PlaceDetailPage() {
         )}
       </div>
 
-      <div className="fixed bottom-8 left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
-        <Button onClick={() => navigate(`/place/${id}/review`)}>다녀왔어요</Button>
+      <div className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
+        {/* 후기 작성은 회원 전용이다. 게스트가 누르면 /login으로 튕겼는데,
+            눌리는 버튼이 튕기는 것보다 처음부터 잠겨 있는 편이 낫다. */}
+        <Button disabled={!isMember} onClick={() => navigate(`/place/${id}/review`)}>
+          다녀왔어요
+        </Button>
         <Button variant="secondary">길찾기</Button>
       </div>
 
       {deleteTarget ? (
-        <DeleteReviewDialog
-          onClose={() => setDeleteTarget(null)}
+        <DeleteReviewModal
+          onCancel={() => setDeleteTarget(null)}
           onConfirm={() => {
-            // TODO: 후기 삭제 API 연동
-            setReviews((current) => current.filter((review) => review.id !== deleteTarget));
-            setDeleteTarget(null);
+            deleteReviewMutation.mutate(deleteTarget, {
+              onSuccess: () => {
+                void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
+                setDeleteTarget(null);
+              },
+            });
           }}
         />
       ) : null}

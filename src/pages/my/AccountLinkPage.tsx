@@ -4,20 +4,13 @@ import { useSocialConnections } from '../../hooks/my/useMy';
 
 const PROVIDER_LABELS: Record<string, string> = {
   KAKAO: '카카오',
-  NAVER: '네이버',
+  GOOGLE: '구글',
   APPLE: '애플',
-};
-
-const FALLBACK_CONNECTION = {
-  provider: 'KAKAO',
-  linkedEmail: 'kakao@email.com',
 };
 
 export default function AccountLinkPage() {
   const connectionsQuery = useSocialConnections();
-  const linkedConnection = connectionsQuery.data
-    ? connectionsQuery.data.connections.find((connection) => connection.isLinked)
-    : FALLBACK_CONNECTION;
+  const linkedConnection = connectionsQuery.data?.socialAccounts[0];
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
@@ -31,7 +24,7 @@ export default function AccountLinkPage() {
               <span className="font-bold">
                 {PROVIDER_LABELS[linkedConnection.provider] ?? linkedConnection.provider}
               </span>
-              {linkedConnection.linkedEmail ?? '이메일 정보 없음'}
+              {linkedConnection.email}
             </p>
           ) : (
             <p className="typo-sub-2 mt-3 text-gray-5">연결된 계정이 없습니다.</p>

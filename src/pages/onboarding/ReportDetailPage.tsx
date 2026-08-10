@@ -1,6 +1,6 @@
 // libraries
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams, useSearchParams  } from 'react-router';
 // hooks
 // import { useGetCategorySajuReport } from '../../hooks/onboarding/useGetReport';
 //type
@@ -14,17 +14,26 @@ import Career from '../../assets/onboarding/3-2.svg';
 import Wealth from '../../assets/onboarding/3-3.svg';
 import Relationship from '../../assets/onboarding/3-4.svg';
 import Health from '../../assets/onboarding/3-5.svg';
-
 // components
 import NavBtn from './components/NavBtn';
 import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
 import Button from '../../components/Button';
 
+
 const STATUS_BAR_COLOR = '#5a81fa';
 
 export default function ReportDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isMyReport = searchParams.get('from') === 'my';
+  const reportPath = `/report/${id}${isMyReport ? '?from=my' : ''}`;
+
+  const handleShare = () => {
+    if (!navigator.share) return;
+    void navigator.share({ title: '오늘의 터 상세 분석' }).catch(() => undefined);
+  };
 
   const btnList = [
     { label: '종합', value: 'GENERAL', icon: '', bg: '' },
@@ -243,9 +252,9 @@ export default function ReportDetailPage() {
   return (
     <div className="">
       <div className="flex items-center justify-between bg-primary h-13 w-full text-white typo-body-3 px-5">
-        <img src={lefe_arrow} alt="뒤로가기" onClick={() => window.history.back()} />
+        <img src={lefe_arrow} alt="뒤로가기"  onClick={() => navigate(reportPath)}/>
         상세 분석
-        <img src={share} alt="공유하기" />
+        <img src={share} onClick={handleShare} alt="공유하기" />
       </div>
       <div className="flex flex-col gap-3 px-5 py-4">
         <div className="flex gap-1 overflow-x-auto -mr-5 no-scrollbar no-scrollbar::-webkit-scrollbar">

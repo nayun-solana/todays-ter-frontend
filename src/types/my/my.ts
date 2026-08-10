@@ -51,16 +51,6 @@ export const MemberWithdrawRequest = z.object({
 });
 export type MemberWithdrawRequest = z.infer<typeof MemberWithdrawRequest>;
 
-export const NotificationSettingsResponse = z.object({
-  isPushEnabled: z.boolean(),
-  isMarketingEnabled: z.boolean(),
-  isNightMarketingEnabled: z.boolean(),
-});
-export type NotificationSettingsResponse = z.infer<typeof NotificationSettingsResponse>;
-
-export const NotificationSettingsRequest = NotificationSettingsResponse;
-export type NotificationSettingsRequest = z.infer<typeof NotificationSettingsRequest>;
-
 export const PermissionSettingsResponse = z.object({
   isCameraAllowed: z.boolean(),
   isPhotoLibraryAllowed: z.boolean(),

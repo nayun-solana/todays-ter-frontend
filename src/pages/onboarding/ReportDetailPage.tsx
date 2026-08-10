@@ -38,7 +38,7 @@ export default function ReportDetailPage() {
 
   return (
     <div className="min-h-dvh bg-primary-bg pb-20 text-gray-6">
-      <header className="bg-primary pt-10 text-white">
+      <header className="bg-primary pt-safe text-white">
         <div className="flex h-15 items-center justify-between px-5">
           <button
             type="button"
@@ -138,7 +138,7 @@ export default function ReportDetailPage() {
         </section>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-bg/90 px-5 pt-3 pb-3 backdrop-blur-sm">
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-bg/90 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm">
         <div className="mx-auto max-w-[390px]">
           <Button
             onClick={() => navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3')}

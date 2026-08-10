@@ -104,14 +104,14 @@ export default function ReportPage() {
   return (
     <div className="relative mx-auto min-h-dvh bg-primary-bg">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
-      <div className="relative z-10 flex flex-col gap-5 px-5 pt-5.5 pb-10">
+      <div className="relative z-10 flex flex-col gap-5 px-5 pt-[calc(1.375rem+env(safe-area-inset-top))] pb-10">
         {/* Figma 3514:5416 — 마이에서 다시 볼 때만 우상단 X로 마이페이지에 복귀한다 */}
         {isMyReport ? (
           <button
             type="button"
             aria-label="마이페이지로 닫기"
             onClick={() => navigate('/my')}
-            className="absolute top-4 right-5 flex size-6 items-center justify-center text-white"
+            className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-5 flex size-6 items-center justify-center text-white"
           >
             <CloseIcon />
           </button>

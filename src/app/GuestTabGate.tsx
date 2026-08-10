@@ -21,7 +21,7 @@ type GuestTabGateProps = {
 export default function GuestTabGate({ title, variant }: GuestTabGateProps) {
   return (
     <div className="relative min-h-dvh bg-gray-1">
-      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="typo-head-1 text-primary">{title}</h1>
       </header>
 
@@ -37,7 +37,7 @@ export default function GuestTabGate({ title, variant }: GuestTabGateProps) {
       */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-[111px] backdrop-blur-[2px]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(4.25rem+env(safe-area-inset-top))] backdrop-blur-[2px]"
         style={{
           background:
             'linear-gradient(to bottom, rgba(255,255,255,0.2) 13.67%, rgba(255,255,255,0.8) 22.3%, #ffffff 100%)',

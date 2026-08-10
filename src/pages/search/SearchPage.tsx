@@ -194,7 +194,7 @@ export default function SearchPage() {
     <div className="w-full flex-1 bg-gray-1">
       <header
         className={cn(
-          'sticky top-0 z-40 flex h-[111px] items-end bg-white px-5 pb-3 transition-shadow',
+          'sticky top-0 z-40 bg-white px-5 pb-4 pt-safe-5 transition-shadow',
           hasScrolled && 'shadow-card',
         )}
       >

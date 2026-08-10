@@ -18,9 +18,9 @@ interface PageHeaderProps {
 
 /**
  * 하위 페이지 공통 헤더.
- * Figma 실측(7화면 동일): 높이 99px, 24×24 버튼이 x=20 / y=60,
+ * Figma 실측(7화면 동일): 24×24 버튼이 x=20 / y=60,
  * 하단 구분선 gray-3 1px, 제목 typo-body-3 gray-6 중앙.
- * → pt-[60px] + 24px 행으로 버튼 top을 60px에 정확히 맞춘다.
+ * → 노치 영역 + 20px으로 버튼 top을 맞춰 상태바까지 헤더 배경에 포함한다.
  */
 export default function PageHeader({
   title,
@@ -33,7 +33,7 @@ export default function PageHeader({
 
   return (
     <header
-      className={cn('h-[99px] border-b border-gray-3 bg-white px-5 pt-[60px]', className)}
+      className={cn('border-b border-gray-3 bg-white px-5 pb-[15px] pt-safe-5', className)}
     >
       <div className="flex h-6 items-center justify-between">
         <button

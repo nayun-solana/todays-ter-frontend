@@ -34,7 +34,7 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-5">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="text-2xl font-extrabold text-primary">내 터</h1>
       </header>
 

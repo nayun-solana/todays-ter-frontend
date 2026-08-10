@@ -12,7 +12,7 @@ export default function ReviewHeader({ title, onClose, rightSlot }: ReviewHeader
   const navigate = useNavigate();
 
   return (
-    <header className="flex items-center border-b border-gray-2 bg-white p-5">
+    <header className="flex items-center border-b border-gray-2 bg-white px-5 pb-5 pt-safe-5">
       <button
         type="button"
         aria-label="닫기"

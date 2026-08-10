@@ -456,7 +456,7 @@ export default function SajuEditPage() {
             { onSuccess: () => navigate('/my/saju/complete') },
           );
         }}
-        className="fixed bottom-8 left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         저장하고 리포트 재생성
       </Button>

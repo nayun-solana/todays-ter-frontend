@@ -120,7 +120,7 @@ export default function HomePage() {
         style={{ background: theme.bgGradient }}
       />
 
-      <div className="relative flex flex-col gap-8 px-5 pb-8 pt-[70px]">
+      <div className="relative flex flex-col gap-8 px-5 pb-8 pt-safe-5">
         {/* 인사말 + 알림 벨 */}
         <header className="flex items-start justify-between gap-3 text-white">
           <div className="flex min-w-0 flex-1 flex-col gap-5">

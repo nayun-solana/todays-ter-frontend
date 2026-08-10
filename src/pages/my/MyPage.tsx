@@ -55,7 +55,7 @@ function GuestMyPage() {
 
   return (
     <div className="relative w-full flex-1 bg-gray-1">
-      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>
 
@@ -70,7 +70,7 @@ function GuestMyPage() {
 
       {/* 헤더 아래 전체를 덮는 흐림 + 흰색 그라데이션 */}
       {/* 그라데이션 끝은 Figma상 #FFF지만, 하단바 여백(레이아웃 pb)과 이어지도록 페이지 톤으로 맞춘다 */}
-      <div className="absolute inset-x-0 top-[111px] bottom-0 flex flex-col items-center justify-center bg-linear-to-b from-white/20 via-white/80 to-gray-1 px-10 pb-4 backdrop-blur-xs">
+      <div className="absolute inset-x-0 top-[calc(4.25rem+env(safe-area-inset-top))] bottom-0 flex flex-col items-center justify-center bg-linear-to-b from-white/20 via-white/80 to-gray-1 px-10 pb-4 backdrop-blur-xs">
         <LockIcon />
         <p className="typo-body-2 mt-3 text-center whitespace-pre-line text-gray-6">
           {'로그인하고 나에게 꼭 맞는\n‘오늘의 터’를 찾아보세요'}
@@ -99,7 +99,7 @@ export default function MyPage() {
 
   return (
     <div className="w-full flex-1 bg-gray-1">
-      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>
 

@@ -3,18 +3,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getMyPage,
   getNotificationSettings,
+  getMemberSaju,
   getPermissionSettings,
   getPolicies,
   getSocialConnections,
+  updateMemberSaju,
   updateNotificationSettings,
   updatePermissionSettings,
+  withdrawMember,
 } from '../../api/my';
-import type { NotificationSettingsRequest, PermissionSettingsRequest } from '../../types/my/my';
+import type {
+  MemberSajuUpdateRequest,
+  MemberWithdrawRequest,
+  NotificationSettingsRequest,
+  PermissionSettingsRequest,
+} from '../../types/my/my';
 
 export const myKeys = {
   all: ['my'] as const,
   profile: () => [...myKeys.all, 'profile'] as const,
   socialConnections: () => [...myKeys.all, 'social-connections'] as const,
+  saju: () => [...myKeys.all, 'saju'] as const,
   notificationSettings: () => [...myKeys.all, 'notification-settings'] as const,
   permissions: () => [...myKeys.all, 'permissions'] as const,
   policies: () => [...myKeys.all, 'policies'] as const,
@@ -33,6 +42,28 @@ export function useSocialConnections() {
   return useQuery({
     queryKey: myKeys.socialConnections(),
     queryFn: getSocialConnections,
+  });
+}
+
+export function useMemberSaju() {
+  return useQuery({
+    queryKey: myKeys.saju(),
+    queryFn: getMemberSaju,
+  });
+}
+
+export function useUpdateMemberSaju() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: MemberSajuUpdateRequest) => updateMemberSaju(body),
+    onSuccess: (data) => queryClient.setQueryData(myKeys.saju(), data),
+  });
+}
+
+export function useWithdrawMember() {
+  return useMutation({
+    mutationFn: (body: MemberWithdrawRequest) => withdrawMember(body),
   });
 }
 

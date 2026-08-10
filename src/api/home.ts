@@ -8,7 +8,7 @@ import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
-// 홈 API. ⚠️ BE 미배포 → dev는 MSW mock(src/mocks/handlers.ts). 응답은 zod 검증.
+// 홈 API. 응답은 zod 검증.
 
 /** GET /home/today-energy — 오늘 나의 기운(오행) */
 export async function getTodayEnergy(): Promise<TodayEnergyResponse> {

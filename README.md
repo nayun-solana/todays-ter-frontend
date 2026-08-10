@@ -24,7 +24,7 @@ https://todays-ter-frontend.vercel.app
 | 라우팅       | React Router 8, 라우트 단위 lazy loading                       |
 | 상태·폼·통신 | TanStack Query, Zustand, React Hook Form, Axios, Zod           |
 | 시각화·모션  | Recharts, Motion, Lucide React                                 |
-| 개발 환경    | Vite, MSW, ESLint, Prettier                                    |
+| 개발 환경    | Vite, ESLint, Prettier                                         |
 
 ## 프로젝트 구조
 
@@ -36,7 +36,6 @@ src/
 ├── api/          # Axios 기반 API 호출과 공통 응답 처리
 ├── hooks/        # TanStack Query 도메인 훅
 ├── types/        # Zod 스키마와 API 타입
-└── mocks/        # 개발 환경 MSW 핸들러
 ```
 
 ## API와 개발 모킹

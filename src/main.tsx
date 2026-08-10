@@ -7,7 +7,7 @@ import App from './App.tsx';
 import { queryClient } from './app/queryClient.ts';
 
 async function unregisterLegacyMockServiceWorker() {
-  if (import.meta.env.DEV || !('serviceWorker' in navigator)) return false;
+  if (!('serviceWorker' in navigator)) return false;
 
   const registrations = await navigator.serviceWorker.getRegistrations();
   const legacyRegistrations = registrations.filter((registration) =>
@@ -22,21 +22,11 @@ async function unregisterLegacyMockServiceWorker() {
   return results.some(Boolean);
 }
 
-/** dev 전용 MSW 목 시작 (BE 미배포 엔드포인트 선개발). prod 빌드엔 포함 안 됨. */
-async function enableMocking() {
-  if (!import.meta.env.DEV) return;
-  const { worker } = await import('./mocks/browser');
-  // 목에 없는 요청(에셋·실 API)은 그대로 통과.
-  await worker.start({ onUnhandledRequest: 'bypass' });
-}
-
 async function bootstrap() {
   if (await unregisterLegacyMockServiceWorker()) {
     window.location.reload();
     return;
   }
-
-  await enableMocking();
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

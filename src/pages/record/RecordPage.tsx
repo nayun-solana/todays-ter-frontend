@@ -15,7 +15,7 @@ const RECORD_TABS: readonly PillTabItem<RecordTab>[] = [
 
 const TAB_TO_API_TYPE: Record<RecordTab, MyPlaceListType> = {
   saved: 'saved',
-  visited: 'recordId',
+  visited: 'visited',
 };
 
 /** "2026-06-29" → "저장일 06/29" */
@@ -30,7 +30,7 @@ export default function RecordPage() {
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
   const listType = TAB_TO_API_TYPE[activeTab];
   const placesQuery = useMyPlaces(listType);
-  const places = placesQuery.data ?? [];
+  const places = placesQuery.data?.places ?? [];
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
@@ -48,7 +48,7 @@ export default function RecordPage() {
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
             {places.map((place) => (
-              <li key={place.visitId ?? place.placeId}>
+              <li key={place.placeId}>
                 <RecordPlaceCard
                   name={place.placeName}
                   categories={place.categories}
@@ -56,8 +56,8 @@ export default function RecordPage() {
                   day={place.element}
                   imageUrl={place.thumbnailUrl ?? undefined}
                   onClick={
-                    activeTab === 'visited' && place.visitId != null
-                      ? () => navigate(`/review/${place.visitId}`)
+                    activeTab === 'visited'
+                      ? () => navigate(`/place/${place.placeId}?tab=reviews`)
                       : undefined
                   }
                 />

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { useVisitedReviewDetail } from '../../hooks/review/useReview';
+import { useDeleteRecord } from '../../hooks/record/useRecord';
 import Button from './components/Button';
 import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
@@ -15,8 +16,10 @@ function formatVerifiedAt(date: string) {
 }
 
 export default function ReviewDetailPage() {
+  const navigate = useNavigate();
   const { visitId } = useParams();
   const reviewQuery = useVisitedReviewDetail(visitId);
+  const deleteRecordMutation = useDeleteRecord();
   const review = reviewQuery.data;
   const photos = review?.imageUrls ?? [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -56,7 +59,7 @@ export default function ReviewDetailPage() {
               <ReviewMoreMenu
                 onEdit={() => {
                   setIsMenuOpen(false);
-                  // TODO: 후기 수정 화면 이동
+                  if (review) navigate(`/place/${review.placeId}/review/edit`);
                 }}
                 onDelete={() => {
                   setIsMenuOpen(false);
@@ -80,9 +83,7 @@ export default function ReviewDetailPage() {
               <p className="text-xs text-gray-4">
                 방문 인증 완료 · {formatVerifiedAt(review.visitVerifiedAt)}
               </p>
-              <h2 className="mt-2 truncate text-base font-bold text-gray-6">
-                {review.placeName}
-              </h2>
+              <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
             </div>
           </section>
 
@@ -117,10 +118,17 @@ export default function ReviewDetailPage() {
         <DeleteReviewModal
           onCancel={() => setIsDeleteModalOpen(false)}
           onConfirm={() => {
-            // TODO: 후기 삭제 API 연동
-            setIsDeleteModalOpen(false);
+            if (!visitId) return;
+            deleteRecordMutation.mutate(visitId, {
+              onSuccess: () => navigate('/record', { replace: true }),
+            });
           }}
         />
+      ) : null}
+      {deleteRecordMutation.isError ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          후기 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.
+        </p>
       ) : null}
     </div>
   );

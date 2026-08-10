@@ -1,26 +1,55 @@
 import { z } from 'zod';
 
 export const MyPageResponse = z.object({
-  reportId: z.number().int().nonnegative(),
+  memberId: z.number().int().positive(),
+  email: z.string().min(1),
   nickname: z.string().min(1),
-  profileImageUrl: z.string().url().nullable(),
+  status: z.enum(['ACTIVE', 'WITHDRAWN']),
 });
 export type MyPageResponse = z.infer<typeof MyPageResponse>;
 
-const SocialProvider = z.enum(['KAKAO', 'NAVER', 'APPLE']);
+const SocialProvider = z.enum(['KAKAO', 'GOOGLE', 'APPLE']);
 
 export const SocialConnectionsResponse = z.object({
-  policyUrl: z.string().url(),
-  connections: z.array(
+  socialAccounts: z.array(
     z.object({
       provider: SocialProvider,
-      isLinked: z.boolean(),
-      linkedEmail: z.string().email().nullable(),
-      linkedAt: z.string().nullable(),
+      email: z.string().min(1),
     }),
   ),
 });
 export type SocialConnectionsResponse = z.infer<typeof SocialConnectionsResponse>;
+
+export const MemberSajuResponse = z.object({
+  calendarType: z.enum(['SOLAR', 'LUNAR']),
+  birthDate: z.string().min(1),
+  birthTime: z.string(),
+  birthTimeUnknown: z.boolean(),
+});
+export type MemberSajuResponse = z.infer<typeof MemberSajuResponse>;
+
+export const MemberSajuUpdateRequest = z.object({
+  calendarType: z.enum(['SOLAR', 'LUNAR']),
+  birthDate: z.string().min(1),
+  birthTime: z.string(),
+  birthTimeUnknown: z.boolean(),
+});
+export type MemberSajuUpdateRequest = z.infer<typeof MemberSajuUpdateRequest>;
+
+export const WithdrawReason = z.enum([
+  'LOW_USAGE',
+  'POOR_RECOMMENDATION',
+  'PRIVACY_CONCERN',
+  'MISSING_FEATURES',
+  'INCONVENIENT_APP',
+  'OTHER',
+]);
+export type WithdrawReason = z.infer<typeof WithdrawReason>;
+
+export const MemberWithdrawRequest = z.object({
+  withdrawReason: WithdrawReason,
+});
+export type MemberWithdrawRequest = z.infer<typeof MemberWithdrawRequest>;
 
 export const NotificationSettingsResponse = z.object({
   isPushEnabled: z.boolean(),

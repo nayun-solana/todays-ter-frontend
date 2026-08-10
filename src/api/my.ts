@@ -5,6 +5,9 @@ import {
   PoliciesResponse,
   SocialConnectionsResponse,
   UpdatedAtResponse,
+  MemberSajuResponse,
+  MemberWithdrawRequest,
+  MemberSajuUpdateRequest,
   type NotificationSettingsRequest,
   type PermissionSettingsRequest,
 } from '../types/my/my';
@@ -13,13 +16,27 @@ import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
 export async function getMyPage(): Promise<MyPageResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/mypage');
+  const response = await axiosInstance.get<ApiResponse>('/members/me');
   return MyPageResponse.parse(getResult(response));
 }
 
 export async function getSocialConnections(): Promise<SocialConnectionsResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/mypage/social-connections');
+  const response = await axiosInstance.get<ApiResponse>('/members/me/social-accounts');
   return SocialConnectionsResponse.parse(getResult(response));
+}
+
+export async function getMemberSaju(): Promise<MemberSajuResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/members/me/saju');
+  return MemberSajuResponse.parse(getResult(response));
+}
+
+export async function updateMemberSaju(body: MemberSajuUpdateRequest): Promise<MemberSajuResponse> {
+  const response = await axiosInstance.put<ApiResponse>('/members/me/saju', body);
+  return MemberSajuResponse.parse(getResult(response));
+}
+
+export async function withdrawMember(body: MemberWithdrawRequest): Promise<void> {
+  await axiosInstance.delete<ApiResponse>('/members/me', { data: body });
 }
 
 export async function getNotificationSettings(): Promise<NotificationSettingsResponse> {

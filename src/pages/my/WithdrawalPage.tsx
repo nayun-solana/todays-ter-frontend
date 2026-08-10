@@ -6,7 +6,10 @@ import withdrawWarning from '../../assets/my/withdraw-warning.svg';
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon, CloseIcon } from '../../components/icons';
+import { useWithdrawMember } from '../../hooks/my/useMy';
 import { cn } from '../../lib/cn';
+import { useAuthStore } from '../../stores/authStore';
+import type { WithdrawReason } from '../../types/my/my';
 
 const REASONS = [
   '사용 빈도가 낮아요',
@@ -16,6 +19,15 @@ const REASONS = [
   '앱 사용이 불편해요',
   '기타',
 ] as const;
+
+const REASON_CODES: Record<(typeof REASONS)[number], WithdrawReason> = {
+  '사용 빈도가 낮아요': 'LOW_USAGE',
+  '추천이 잘 맞지 않아요': 'POOR_RECOMMENDATION',
+  '개인정보가 걱정돼요': 'PRIVACY_CONCERN',
+  '원하는 기능이 부족해요': 'MISSING_FEATURES',
+  '앱 사용이 불편해요': 'INCONVENIENT_APP',
+  기타: 'OTHER',
+};
 
 const DELETED_ITEMS = [
   '소셜 로그인 연동 정보',
@@ -111,6 +123,8 @@ function WithdrawalCompletePage() {
 }
 
 export default function WithdrawalPage() {
+  const clearAccessToken = useAuthStore((state) => state.clearAccessToken);
+  const withdrawMutation = useWithdrawMember();
   const [reason, setReason] = useState<(typeof REASONS)[number] | null>(null);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [confirmedNotice, setConfirmedNotice] = useState(false);
@@ -131,8 +145,8 @@ export default function WithdrawalPage() {
           <div className="mt-3 text-gray-5">
             <h2 className="typo-head-4">탈퇴 전 꼭 확인해주세요</h2>
             <p className="typo-sub-2 mt-2">
-              회원 탈퇴 시 오늘의 터에서 사용하던 계정 정보와 개인화 추천 기록이 삭제됩니다.
-              탈퇴 후에는 기존 사주 리포트, 저장한 터, 방문 기록을 다시 확인할 수 없습니다.
+              회원 탈퇴 시 오늘의 터에서 사용하던 계정 정보와 개인화 추천 기록이 삭제됩니다. 탈퇴
+              후에는 기존 사주 리포트, 저장한 터, 방문 기록을 다시 확인할 수 없습니다.
             </p>
           </div>
         </section>
@@ -218,7 +232,7 @@ export default function WithdrawalPage() {
       </main>
 
       <Button
-        disabled={!reason || !confirmedNotice}
+        disabled={!reason || !confirmedNotice || withdrawMutation.isPending}
         onClick={() => setConfirmOpen(true)}
         className="fixed bottom-[calc(1.875rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
@@ -229,10 +243,25 @@ export default function WithdrawalPage() {
         <ConfirmDialog
           onClose={() => setConfirmOpen(false)}
           onConfirm={() => {
-            setConfirmOpen(false);
-            setCompleted(true);
+            if (!reason) return;
+
+            withdrawMutation.mutate(
+              { withdrawReason: REASON_CODES[reason] },
+              {
+                onSuccess: () => {
+                  clearAccessToken();
+                  setConfirmOpen(false);
+                  setCompleted(true);
+                },
+              },
+            );
           }}
         />
+      ) : null}
+      {withdrawMutation.isError ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해주세요.
+        </p>
       ) : null}
     </div>
   );

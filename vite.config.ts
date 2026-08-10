@@ -12,7 +12,6 @@ const API_TARGET = 'https://today-ter.kr';
 /**
  * 운영 서버로 넘길 경로 목록.
  * BE가 `/api` 접두어 없이 도메인 루트에 경로를 열어둬서(`/home`, `/places`, ...) 하나씩 나열해야 한다.
- * MSW(dev)는 서비스워커라 프록시보다 먼저 가로채므로, 목이 있는 경로는 계속 목이 응답한다.
  */
 const API_PATHS = [
   '/api',
@@ -69,10 +68,7 @@ export default defineConfig({
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
         ],
       },
-      workbox: {
-        navigateFallback: 'index.html',
-        globIgnores: ['**/mockServiceWorker.js'],
-      },
+      workbox: { navigateFallback: 'index.html' },
     }),
   ],
   server: { proxy },

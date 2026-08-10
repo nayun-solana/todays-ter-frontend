@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router';
 
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import Button from '../../components/Button';
-import OhaengOrb from '../../components/OhaengOrb';
 import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
@@ -13,7 +12,7 @@ const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
-  { label: '개인정보 및 약관', path: '/my/policies' },
+  { label: '개인정보 및 약관', path: '/private' },
   { label: '로그아웃', action: 'logout' },
   { label: '회원 탈퇴', path: '/my/withdrawal' },
 ] as const;
@@ -107,34 +106,18 @@ export default function MyPage() {
       <main className="px-5 pt-3">
         <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
           <div className="flex flex-col items-center gap-2">
-            {profile?.profileImageUrl ? (
-              <img
-                src={profile.profileImageUrl}
-                alt={`${profile.nickname} 프로필`}
-                className="size-25 rounded-full object-cover"
-              />
-            ) : (
-              <DefaultAvatar />
-            )}
+            <DefaultAvatar />
             <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
-          </div>
-          <div className="flex gap-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-water px-3 py-2 typo-body-4 text-white">
-              주 오행 : 수 <OhaengOrb element="water" size={16} />
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-fire px-3 py-2 typo-body-4 text-white">
-              보완 오행 : 화 <OhaengOrb element="fire" size={16} />
-            </span>
           </div>
         </section>
 
         <button
           type="button"
           disabled={!profile}
-          onClick={() => profile && navigate(`/report/${profile.reportId}?from=my`)}
+          onClick={() => profile && navigate('/my/saju')}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {profile ? `${profile.nickname}님의 사주리포트 다시보기` : '사주리포트 불러오는 중'}
+          {profile ? '사주 정보 수정하기' : '회원 정보 불러오는 중'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (

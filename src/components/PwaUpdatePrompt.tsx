@@ -14,7 +14,7 @@ export default function PwaUpdatePrompt() {
   return (
     <section
       aria-live="polite"
-      className="fixed right-5 bottom-5 left-5 z-50 mx-auto flex max-w-[360px] items-center justify-between gap-3 rounded-btn bg-gray-6 px-4 py-3 text-gray-1 shadow-dialog"
+      className="fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] left-5 z-50 mx-auto flex max-w-[360px] items-center justify-between gap-3 rounded-btn bg-gray-6 px-4 py-3 text-gray-1 shadow-dialog"
     >
       <p className="typo-sub-3">새 버전이 있어요.</p>
       <button

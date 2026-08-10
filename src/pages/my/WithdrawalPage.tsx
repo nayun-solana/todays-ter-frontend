@@ -82,7 +82,7 @@ function WithdrawalCompletePage() {
         type="button"
         onClick={() => navigate('/login')}
         aria-label="닫기"
-        className="absolute top-[60px] right-5 flex size-6 items-center justify-center text-gray-5"
+        className="absolute top-[calc(1.25rem+env(safe-area-inset-top))] right-5 flex size-6 items-center justify-center text-gray-5"
       >
         <CloseIcon />
       </button>
@@ -102,7 +102,7 @@ function WithdrawalCompletePage() {
 
       <Button
         onClick={() => navigate('/login')}
-        className="fixed bottom-[30px] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed bottom-[calc(1.875rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         시작 화면으로 돌아가기
       </Button>
@@ -220,7 +220,7 @@ export default function WithdrawalPage() {
       <Button
         disabled={!reason || !confirmedNotice}
         onClick={() => setConfirmOpen(true)}
-        className="fixed bottom-[30px] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed bottom-[calc(1.875rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
         탈퇴 신청하기
       </Button>

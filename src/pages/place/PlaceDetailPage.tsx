@@ -395,6 +395,10 @@ export default function PlaceDetailPage() {
                 {/* Figma: 고정된 내 후기와 나머지 후기를 8px full-bleed 띠로 분리 */}
                 <div aria-hidden="true" className="mt-4 h-2 bg-gray-2" />
               </>
+            ) : otherReviews.length === 0 ? (
+              <p className="px-5 py-10 text-center text-sm text-gray-4">
+                아직 작성된 후기가 없어요.
+              </p>
             ) : null}
 
             <div className="flex flex-col gap-3 px-5 pt-4">

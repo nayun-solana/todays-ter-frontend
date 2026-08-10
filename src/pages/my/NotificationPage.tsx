@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 
 import PageHeader from '../../components/PageHeader';
+import { shouldMarkNotificationsRead } from '../../lib/notificationScroll';
 
 const NOTIFICATIONS_READ_KEY = 'todays-ter:notifications-read';
 
@@ -39,11 +40,32 @@ export default function NotificationPage() {
   const [unread, setUnread] = useState(
     () => sessionStorage.getItem(NOTIFICATIONS_READ_KEY) !== 'true',
   );
+  const previousScrollY = useRef(0);
+  const hasScrolledDown = useRef(false);
 
-  const markAllRead = () => {
-    sessionStorage.setItem(NOTIFICATIONS_READ_KEY, 'true');
-    setUnread(false);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > previousScrollY.current) hasScrolledDown.current = true;
+
+      if (
+        unread &&
+        shouldMarkNotificationsRead({
+          currentScrollY,
+          previousScrollY: previousScrollY.current,
+          hasScrolledDown: hasScrolledDown.current,
+        })
+      ) {
+        sessionStorage.setItem(NOTIFICATIONS_READ_KEY, 'true');
+        setUnread(false);
+      }
+
+      previousScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [unread]);
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
@@ -52,18 +74,6 @@ export default function NotificationPage() {
       <PageHeader title="알림" leading="close" backTo="/home" />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8">
-        {/* 헤더 제목 중앙 정렬을 깨지 않도록 trailing이 아니라 목록 상단에 둔다. */}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={markAllRead}
-            disabled={!unread}
-            className="typo-sub-2 text-primary disabled:cursor-not-allowed disabled:text-gray-3"
-          >
-            전체 읽음
-          </button>
-        </div>
-
         {NOTIFICATION_GROUPS.map((group) => (
           <section key={group.label}>
             <h2 className="typo-head-4 text-gray-6">{group.label}</h2>

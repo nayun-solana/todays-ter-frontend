@@ -7,8 +7,10 @@ import filterHealth from '../../assets/search/filter-health.svg';
 import filterLove from '../../assets/search/filter-love.svg';
 import filterMoney from '../../assets/search/filter-money.svg';
 import filterRelationship from '../../assets/search/filter-relationship.svg';
+import iconArrowUp from '../../assets/search/icon-arrow-up.svg';
 import iconFilter from '../../assets/search/icon-filter.svg';
 import iconMap from '../../assets/search/icon-map.svg';
+import iconReset from '../../assets/search/icon-reset.svg';
 import themeOther from '../../assets/search/theme-other.svg';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
@@ -208,8 +210,8 @@ export default function SearchPage() {
             type="search"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            aria-label="장소 이름으로 검색"
-            placeholder="장소 이름으로 검색"
+            aria-label="장소 검색하기"
+            placeholder="장소 검색하기"
             className="w-full bg-transparent font-sans text-sm font-normal text-gray-6 outline-none placeholder:text-gray-3"
           />
         </label>
@@ -297,9 +299,9 @@ export default function SearchPage() {
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="맨 위로 이동"
-          className="fixed right-5 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-30 flex size-11 items-center justify-center rounded-full bg-primary text-xl font-bold text-white shadow-card-lg"
+          className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 flex size-10 items-center justify-center rounded-full bg-gray-2"
         >
-          ↑
+          <img src={iconArrowUp} alt="" className="h-4 w-[18px] rotate-90" />
         </button>
       ) : null}
 
@@ -329,9 +331,24 @@ export default function SearchPage() {
               onClick={(event) => event.stopPropagation()}
               className="max-h-[calc(100dvh-env(safe-area-inset-top))] w-full overflow-y-auto rounded-t-[20px] bg-white px-5 pt-[30px] pb-[calc(30px+env(safe-area-inset-bottom))]"
             >
-              <h2 id="search-filter-title" className="typo-head-2 text-gray-6">
-                탐색 필터
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 id="search-filter-title" className="typo-head-2 text-gray-6">
+                  탐색 필터
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraftRegion(null);
+                    setDraftTheme(null);
+                    setDraftElement(null);
+                  }}
+                  aria-label="필터 초기화"
+                  className="typo-body-3 flex h-5 items-center gap-1.5 text-primary"
+                >
+                  초기화
+                  <img src={iconReset} alt="" className="size-[13px]" />
+                </button>
+              </div>
 
               <div className="mt-5 space-y-5">
                 <FilterGroup label="오행">
@@ -344,17 +361,13 @@ export default function SearchPage() {
                         aria-pressed={isSelected}
                         onClick={() => setDraftElement(isSelected ? null : item.key)}
                         className={cn(
-                          'flex h-[34px] items-center justify-center gap-1 rounded-btn px-4 text-xs leading-4 shadow-card',
+                          'flex h-[34px] items-center justify-center gap-1 rounded-btn border px-4 text-xs leading-4 shadow-card',
                           isSelected
-                            ? cn(
-                                ohaengByKey(item.key)!.bg,
-                                'border-transparent font-bold text-white',
-                              )
-                            : 'border border-gray-2 bg-white text-gray-4',
+                            ? 'border-primary bg-white font-bold text-primary'
+                            : 'border-gray-2 bg-white text-gray-4',
                         )}
                       >
                         {item.label}
-                        {isSelected ? <OhaengOrb element={item.key} size={16} /> : null}
                       </button>
                     );
                   })}
@@ -373,10 +386,10 @@ export default function SearchPage() {
                           setDraftRegion(isAll || isSelected ? null : (item.code as RegionCode))
                         }
                         className={cn(
-                          'h-[34px] rounded-btn px-4 text-xs leading-4 shadow-card',
+                          'h-[34px] rounded-btn border px-4 text-xs leading-4 shadow-card',
                           isSelected
-                            ? 'border border-primary bg-white font-bold text-primary'
-                            : 'border border-gray-2 bg-white text-gray-4',
+                            ? 'border-primary bg-white font-bold text-primary'
+                            : 'border-gray-2 bg-white text-gray-4',
                         )}
                       >
                         {item.name}
@@ -395,10 +408,10 @@ export default function SearchPage() {
                         aria-pressed={isSelected}
                         onClick={() => setDraftTheme(isSelected ? null : (theme.code as ThemeType))}
                         className={cn(
-                          'flex h-[34px] items-center gap-1 rounded-btn px-4 text-xs leading-4 shadow-card',
+                          'flex h-[34px] items-center gap-1 rounded-btn border px-4 text-xs leading-4 shadow-card',
                           isSelected
-                            ? 'border border-primary bg-white font-bold text-primary'
-                            : 'border border-gray-2 bg-white text-gray-4',
+                            ? 'border-primary bg-white font-bold text-primary'
+                            : 'border-gray-2 bg-white text-gray-4',
                         )}
                       >
                         <img

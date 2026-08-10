@@ -208,8 +208,8 @@ export default function SearchPage() {
             type="search"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            aria-label="지도에서 탐색"
-            placeholder="지도에서 탐색"
+            aria-label="장소 이름으로 검색"
+            placeholder="장소 이름으로 검색"
             className="w-full bg-transparent font-sans text-sm font-normal text-gray-6 outline-none placeholder:text-gray-3"
           />
         </label>
@@ -418,7 +418,7 @@ export default function SearchPage() {
                 onClick={applyFilters}
                 className="typo-body-3 mt-[30px] h-12 w-full rounded-btn bg-primary px-5 text-white"
               >
-                간이 리포트 생성하기
+                필터 적용하기
               </button>
             </motion.section>
           </motion.div>

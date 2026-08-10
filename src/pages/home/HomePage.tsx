@@ -6,9 +6,9 @@ import notificationBell from '../../assets/notification-bell.svg';
 import notificationDot from '../../assets/notification-dot.svg';
 import GuestLoginPrompt from '../../components/GuestLoginPrompt';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { useNotifications } from '../../hooks/notification/useNotification';
+import { useUnreadNotificationCount } from '../../hooks/notification/useNotification';
 import { formatKoreanDate } from '../../lib/date';
-import { hasUnreadNotifications as hasUnreadNotificationItems } from '../../lib/notification';
+import { hasUnreadNotificationCount } from '../../lib/notification';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -49,7 +49,8 @@ export default function HomePage() {
   // isAuthPending = 부팅 세션 복원 중. 이때 게스트로 단정해 게이트를 띄우면,
   // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
   const { isMember, isPending: isAuthPending } = useAuthStatus();
-  const notificationsQuery = useNotifications({ enabled: isMember, poll: true });
+  // 홈은 알림 목록을 받지 않는다 — 배지에 필요한 건 미읽음 개수뿐이다.
+  const unreadCountQuery = useUnreadNotificationCount({ enabled: isMember, poll: true });
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
@@ -149,7 +150,7 @@ export default function HomePage() {
               </>
             )}
           </div>
-          {/* 회원 홈에서는 60초 폴링과 홈 재진입/창 포커스 시 조회한 목록으로 배지를 갱신한다. */}
+          {/* 회원 홈에서는 60초 폴링과 홈 재진입/창 포커스 시 조회한 미읽음 개수로 배지를 갱신한다. */}
           {isMember && (
             <button
               type="button"
@@ -162,7 +163,7 @@ export default function HomePage() {
                 alt=""
                 className="absolute top-[2.5px] left-1 h-[21px] w-[18px]"
               />
-              {hasUnreadNotificationItems(notificationsQuery.data) ? (
+              {hasUnreadNotificationCount(unreadCountQuery.data) ? (
                 <img
                   src={notificationDot}
                   alt=""

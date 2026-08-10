@@ -3,15 +3,24 @@ import {
   NotificationReadAllResponse,
   NotificationReadResponse,
   NotificationSettingsResponse,
+  UnreadNotificationCountResponse,
+  type NotificationListParams,
   type NotificationSettingsRequest,
 } from '../types/notification/notification';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
-export async function getNotifications(): Promise<NotificationListResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/notifications');
+export async function getNotifications(
+  params: NotificationListParams,
+): Promise<NotificationListResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/notifications', { params });
   return NotificationListResponse.parse(getResult(response));
+}
+
+export async function getUnreadNotificationCount(): Promise<UnreadNotificationCountResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/notifications/unread-count');
+  return UnreadNotificationCountResponse.parse(getResult(response));
 }
 
 export async function markNotificationAsRead(

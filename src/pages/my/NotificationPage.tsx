@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router';
 
 import notificationGear from '../../assets/notification-gear.svg';
@@ -10,12 +10,13 @@ import PageHeader from '../../components/PageHeader';
 import {
   useMarkAllNotificationsAsRead,
   useMarkNotificationAsRead,
-  useNotifications,
+  useNotificationList,
+  useUnreadNotificationCount,
 } from '../../hooks/notification/useNotification';
 import {
   formatNotificationTime,
   groupNotifications,
-  hasUnreadNotifications,
+  hasUnreadNotificationCount,
 } from '../../lib/notification';
 import type { NotificationItem } from '../../types/notification/notification';
 
@@ -77,14 +78,36 @@ function NotificationCard({
 }
 
 export default function NotificationPage() {
-  const notificationsQuery = useNotifications();
+  const notificationsQuery = useNotificationList();
+  // 첫 10개가 모두 읽음이어도 더 오래된 page에 미읽음이 남을 수 있어, 목록이 아니라 전체 개수로 판단한다.
+  const unreadCountQuery = useUnreadNotificationCount();
   const markNotificationAsRead = useMarkNotificationAsRead();
   const markAllNotificationsAsRead = useMarkAllNotificationsAsRead();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const groups = useMemo(
-    () => groupNotifications(notificationsQuery.data?.notifications ?? []),
+    () =>
+      groupNotifications(
+        notificationsQuery.data?.pages.flatMap((page) => page.notifications) ?? [],
+      ),
     [notificationsQuery.data],
   );
-  const hasUnread = hasUnreadNotifications(notificationsQuery.data);
+  const hasUnread = hasUnreadNotificationCount(unreadCountQuery.data);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    const { fetchNextPage, hasNextPage, isFetchingNextPage } = notificationsQuery;
+    if (!target || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void fetchNextPage();
+      },
+      { rootMargin: '160px' },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [notificationsQuery]);
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
@@ -148,6 +171,11 @@ export default function NotificationPage() {
             </div>
           </section>
         ))}
+
+        <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+        {notificationsQuery.isFetchingNextPage ? (
+          <p className="typo-sub-2 text-center text-gray-4">알림을 더 불러오는 중입니다.</p>
+        ) : null}
       </main>
     </div>
   );

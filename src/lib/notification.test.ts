@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatNotificationTime, groupNotifications, hasUnreadNotifications } from './notification';
+import {
+  formatNotificationTime,
+  groupNotifications,
+  hasUnreadNotificationCount,
+} from './notification';
 
 const today = '2026-08-10T09:00:00+09:00';
 
@@ -15,9 +19,23 @@ const notification = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('notification helpers', () => {
-  it('detects unread notifications from the list', () => {
-    expect(hasUnreadNotifications({ notifications: [notification()] })).toBe(true);
-    expect(hasUnreadNotifications({ notifications: [notification({ isRead: true })] })).toBe(false);
+  it('shows the badge only when the unread count is positive', () => {
+    expect(hasUnreadNotificationCount({ unreadCount: 1 })).toBe(true);
+    expect(hasUnreadNotificationCount({ unreadCount: 0 })).toBe(false);
+    expect(hasUnreadNotificationCount(undefined)).toBe(false);
+  });
+
+  // 읽은 알림은 이력으로 남는다 — 읽음 처리해도 카드가 사라지면 안 된다.
+  it('keeps read notifications in the grouped history', () => {
+    const groups = groupNotifications(
+      [
+        notification({ notificationId: 1, isRead: true }),
+        notification({ notificationId: 2, isRead: false }),
+      ],
+      new Date(today),
+    );
+
+    expect(groups[0].items.map((item) => item.notificationId)).toEqual([1, 2]);
   });
 
   it('groups notifications into today, yesterday, and date labels', () => {

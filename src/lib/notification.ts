@@ -1,6 +1,6 @@
 import type {
   NotificationItem,
-  NotificationListResponse,
+  UnreadNotificationCountResponse,
 } from '../types/notification/notification';
 
 export type NotificationGroup = {
@@ -25,11 +25,8 @@ function dateLabel(key: string, todayKey: string, yesterdayKey: string) {
   return month && day ? `${Number(month)}월 ${Number(day)}일` : key;
 }
 
-export function hasUnreadNotifications(response?: NotificationListResponse) {
-  if (!response) return false;
-  return (
-    response.unreadCount ?? response.notifications.filter((notification) => !notification.isRead).length
-  ) > 0;
+export function hasUnreadNotificationCount(response?: UnreadNotificationCountResponse) {
+  return (response?.unreadCount ?? 0) > 0;
 }
 
 export function formatNotificationTime(createdAt: string, now = new Date()) {

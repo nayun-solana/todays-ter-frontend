@@ -11,6 +11,7 @@ import axiosInstance from './axiosInstance';
 import {
   getNotifications,
   getNotificationSettings,
+  getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   updateNotificationSettings,
@@ -30,7 +31,7 @@ const responseWith = (result: unknown) => ({
 beforeEach(() => vi.clearAllMocks());
 
 describe('notification API', () => {
-  it('gets notifications', async () => {
+  it('gets the first notification page without a cursor', async () => {
     const result = {
       notifications: [
         {
@@ -42,11 +43,32 @@ describe('notification API', () => {
           createdAt: '2026-08-10T09:00:00+09:00',
         },
       ],
+      nextCursor: 'cursor-2',
+      hasNext: true,
     };
     mockedAxios.get.mockResolvedValue(responseWith(result));
 
-    await expect(getNotifications()).resolves.toEqual(result);
-    expect(mockedAxios.get).toHaveBeenCalledWith('/notifications');
+    await expect(getNotifications({ size: 10 })).resolves.toEqual(result);
+    expect(mockedAxios.get).toHaveBeenCalledWith('/notifications', {
+      params: { size: 10 },
+    });
+  });
+
+  it('gets a notification page with cursor params', async () => {
+    const result = { notifications: [], nextCursor: null, hasNext: false };
+    mockedAxios.get.mockResolvedValue(responseWith(result));
+
+    await expect(getNotifications({ size: 10, cursor: 'cursor-1' })).resolves.toEqual(result);
+    expect(mockedAxios.get).toHaveBeenCalledWith('/notifications', {
+      params: { size: 10, cursor: 'cursor-1' },
+    });
+  });
+
+  it('gets the unread notification count', async () => {
+    mockedAxios.get.mockResolvedValue(responseWith({ unreadCount: 3 }));
+
+    await expect(getUnreadNotificationCount()).resolves.toEqual({ unreadCount: 3 });
+    expect(mockedAxios.get).toHaveBeenCalledWith('/notifications/unread-count');
   });
 
   it('marks one notification as read', async () => {

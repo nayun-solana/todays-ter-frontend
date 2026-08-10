@@ -11,11 +11,23 @@ export const NotificationItem = z.object({
 });
 export type NotificationItem = z.infer<typeof NotificationItem>;
 
+/** 최신순 cursor pagination. 마지막 page는 nextCursor=null, hasNext=false. */
 export const NotificationListResponse = z.object({
   notifications: z.array(NotificationItem),
-  unreadCount: z.number().int().nonnegative().optional(),
+  nextCursor: z.string().nullable(),
+  hasNext: z.boolean(),
 });
 export type NotificationListResponse = z.infer<typeof NotificationListResponse>;
+
+export type NotificationListParams = {
+  size?: number;
+  cursor?: string;
+};
+
+export const UnreadNotificationCountResponse = z.object({
+  unreadCount: z.number().int().nonnegative(),
+});
+export type UnreadNotificationCountResponse = z.infer<typeof UnreadNotificationCountResponse>;
 
 export const NotificationReadResponse = z.object({
   notificationId: z.number().int().positive(),

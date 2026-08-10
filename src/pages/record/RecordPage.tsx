@@ -15,7 +15,7 @@ const RECORD_TABS: readonly PillTabItem<RecordTab>[] = [
 
 const TAB_TO_API_TYPE: Record<RecordTab, MyPlaceListType> = {
   saved: 'saved',
-  visited: 'recordId',
+  visited: 'visited',
 };
 
 /** "2026-06-29" → "저장일 06/29" */
@@ -30,7 +30,7 @@ export default function RecordPage() {
   const [activeTab, setActiveTab] = useState<RecordTab>('saved');
   const listType = TAB_TO_API_TYPE[activeTab];
   const placesQuery = useMyPlaces(listType);
-  const places = placesQuery.data ?? [];
+  const places = placesQuery.data?.places ?? [];
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
@@ -47,22 +47,29 @@ export default function RecordPage() {
           <p className="mt-4 text-sm text-gray-4">목록을 불러오지 못했습니다.</p>
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
-            {places.map((place) => (
-              <li key={place.visitId ?? place.placeId}>
+            {places.map((place) => {
+              /** 다녀온 터 상세: GET /records/{recordId} */
+              const recordId = place.recordId ?? place.visitId;
+
+              return (
+              <li key={recordId ?? place.placeId}>
                 <RecordPlaceCard
                   name={place.placeName}
                   categories={place.categories}
                   dateLabel={dateLabel(place.savedDate)}
                   day={place.element}
-                  imageUrl={place.thumbnailUrl ?? undefined}
+                  imageUrl={place.thumbnailUrl || undefined}
                   onClick={
-                    activeTab === 'visited' && place.visitId != null
-                      ? () => navigate(`/review/${place.visitId}`)
-                      : undefined
+                    activeTab === 'saved'
+                      ? () => navigate(`/place/${place.placeId}`)
+                      : recordId != null
+                        ? () => navigate(`/review/${recordId}`)
+                        : undefined
                   }
                 />
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
 

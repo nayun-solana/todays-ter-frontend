@@ -105,7 +105,7 @@ export default function FileAttachButton({
       <input
         id={inputId}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,.jpg,.jpeg,.png"
         multiple
         className="hidden"
         onChange={handleChange}

@@ -103,23 +103,42 @@ export const handlers = [
   // 사주 리포트(/fortune-reports/**)는 BE 배포 완료 → 목 제거, 실 API로 통과시킨다.
   // 예전 목은 존재하지 않는 경로(/saju-reports/*)를 추측 스키마로 흉내내고 있었다.
 
+  // ── 기록/후기(/records/**): BE 배포 → 실 API ──
+  // ⚠️ `*/records/:id` 쓰면 S3 객체 URL
+  // (https://…amazonaws.com/records/uuid.png)까지 매칭된다.
+  // SW passthrough가 cross-origin 이미지 GET을 깨뜨려 403이 난다.
+  // API는 Vite 프록시 same-origin(`/records/:id`)만 통과시킨다.
+  http.get('/records/:id', () => passthrough()),
+  http.post('/records/images', () => passthrough()),
+  http.post('/records', () => passthrough()),
+
   // ── 장소 목록·필터·에디터픽: BE 배포 완료 → 항상 실 API로 통과 ──
   // 실측(2026-08-10): 익명·게스트·회원 모두 200이고, 응답이 src/types/search/search.ts의
   // zod 스키마를 그대로 통과한다. 목을 남겨두면 로컬만 목 데이터를 보게 되어
   // **스키마 불일치가 로컬에서 영영 안 드러난다**(Vercel rewrite 누락 건과 같은 함정).
   //
-  // ⚠️ 아래 `*/places/:placeId` 목이 와일드카드라 이 두 경로를 placeId로 잡아먹는다.
-  // MSW는 먼저 등록된 핸들러가 이기므로, 지우는 것만으로는 부족하고 명시적 passthrough가 필요하다.
   http.get('*/places/explore-filters', () => passthrough()),
   http.get('*/places/editor-picks', () => passthrough()),
+  // GET /places/me — 저장/다녀온 터 목록 API 연동완료
+  http.get('*/places/me', () => passthrough()),
+  // 목록 thumbnailUrl: "/places/{id}/thumbnail" — 장소 상세 목보다 먼저 통과
+  http.get('/places/:placeId/thumbnail', () => passthrough()),
   http.get('*/places', () => passthrough()),
 
   // GET /places/:placeId — 장소 상세 기본 정보
   // 실 API는 게스트에게 401이라 아직 목을 남긴다. BE develop의 SecurityConfig에는
   // `/places/*` permitAll이 있지만 배포본은 401이다(실측 2026-08-10, 이슈 #134).
   // 게스트에게 200이 확인되면 이 목도 passthrough로 바꿀 것.
+  //
+  // `*/places/:placeId` 와일드카드가 CDN 썸네일 URL(`/places/thumbnail` 등)까지
+  // 가로채서 404 JSON을 내려주는 문제가 있다. 숫자 id만 목으로 두고 나머지는 실요청 통과.
   http.get('*/places/:placeId', ({ params }) => {
-    const place = SEARCH_PLACES.find((item) => String(item.placeId) === params.placeId);
+    const placeId = String(params.placeId);
+    if (!/^\d+$/.test(placeId)) {
+      return passthrough();
+    }
+
+    const place = SEARCH_PLACES.find((item) => String(item.placeId) === placeId);
 
     if (!place) {
       return HttpResponse.json(
@@ -213,148 +232,4 @@ export const handlers = [
       ],
     }),
   ),
-
-  // GET /my-places/visited/:visitId — 다녀온 터 후기 상세
-  http.get('*/my-places/visited/:visitId', ({ params }) => {
-    const visitId = Number(params.visitId);
-    const VISITED_REVIEWS: Record<
-      number,
-      {
-        placeId: number;
-        placeName: string;
-        visitVerifiedAt: string;
-        rating: number;
-        content: string;
-        imageUrls: string[];
-      }
-    > = {
-      101: {
-        placeId: 25,
-        placeName: '남산타워',
-        visitVerifiedAt: '2026-06-25',
-        rating: 5,
-        content: '오늘은 흙의 기운 받으러 남산타워로!',
-        imageUrls: [],
-      },
-      102: {
-        placeId: 2,
-        placeName: '한강공원',
-        visitVerifiedAt: '2026-06-24',
-        rating: 4,
-        content:
-          '생각이 많았던 날이었는데, 물길을 따라 걷다 보니 마음이 조금 가라앉았다. 조용히 혼자 있기 좋은 터였다.',
-        imageUrls: [],
-      },
-      103: {
-        placeId: 31,
-        placeName: '성수동 카페거리',
-        visitVerifiedAt: '2026-06-23',
-        rating: 4,
-        content: '오늘은 불의 기운 받으러 성수동으로!',
-        imageUrls: [],
-      },
-      104: {
-        placeId: 13,
-        placeName: '북촌 한옥마을',
-        visitVerifiedAt: '2026-06-22',
-        rating: 3,
-        content: '골목을 걸으며 목의 기운을 충전했다.',
-        imageUrls: [],
-      },
-    };
-
-    const review = VISITED_REVIEWS[visitId] ?? VISITED_REVIEWS[102];
-
-    return ok({
-      visitId: Number.isFinite(visitId) ? visitId : 102,
-      placeId: review.placeId,
-      placeName: review.placeName,
-      visitVerifiedAt: review.visitVerifiedAt,
-      rating: review.rating,
-      content: review.content,
-      imageUrls: review.imageUrls,
-      createdAt: '2026-07-19T10:00:00',
-      updatedAt: '2026-07-19T10:00:00',
-    });
-  }),
-
-  // GET /my-places?type=saved|recordId — 저장한 터 / 다녀온 터 목록
-  http.get('*/my-places', ({ request }) => {
-    const type = new URL(request.url).searchParams.get('type');
-
-    if (type === 'saved') {
-      return ok([
-        {
-          placeId: 1,
-          placeName: '경복궁',
-          thumbnailUrl: null,
-          categories: ['재물', '커리어'],
-          savedDate: '2026-06-29',
-          element: '토',
-        },
-        {
-          placeId: 2,
-          placeName: '청계천',
-          thumbnailUrl: null,
-          categories: ['연애', '건강'],
-          savedDate: '2026-06-28',
-          element: '수',
-        },
-        {
-          placeId: 3,
-          placeName: '용산 호텔 라운지',
-          thumbnailUrl: null,
-          categories: ['커리어'],
-          savedDate: '2026-06-27',
-          element: '화',
-        },
-      ]);
-    }
-
-    if (type === 'recordId') {
-      return ok([
-        {
-          placeId: 25,
-          visitId: 101,
-          placeName: '남산타워',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800&q=80',
-          categories: ['연애'],
-          savedDate: '2026-06-25',
-          element: '토',
-        },
-        {
-          placeId: 2,
-          visitId: 102,
-          placeName: '한강공원',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800&q=80',
-          categories: ['건강'],
-          savedDate: '2026-06-24',
-          element: '수',
-        },
-        {
-          placeId: 31,
-          visitId: 103,
-          placeName: '성수동 카페거리',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
-          categories: ['재물', '커리어'],
-          savedDate: '2026-06-23',
-          element: '화',
-        },
-        {
-          placeId: 13,
-          visitId: 104,
-          placeName: '북촌 한옥마을',
-          thumbnailUrl: null,
-          categories: ['건강'],
-          savedDate: '2026-06-22',
-          element: '목',
-        },
-      ]);
-    }
-
-    return HttpResponse.json(
-      { isSuccess: false, code: 'COMMON400', message: 'type이 올바르지 않습니다.' },
-      { status: 400 },
-    );
-  }),
 ];

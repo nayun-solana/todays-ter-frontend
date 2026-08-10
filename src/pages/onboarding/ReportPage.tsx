@@ -49,6 +49,7 @@ export default function ReportPage() {
   const reportId = Number(id);
   const isValidId = Number.isFinite(reportId) && reportId > 0;
   const { data: sajuReportData, isPending, isError, refetch } = useGetSajuReport(reportId);
+  const report = sajuReportData?.basic;
 
   // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
   // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
@@ -70,7 +71,7 @@ export default function ReportPage() {
     return <ReportNotice title="리포트를 불러오는 중이에요" />;
   }
 
-  if (isError || !report) {
+  if (isError || !sajuReportData) {
     return (
       <ReportNotice
         title="리포트를 불러오지 못했어요"
@@ -120,9 +121,6 @@ export default function ReportPage() {
     };
   }, []);
 
-  
-
-
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {
       case 'WOOD':
@@ -158,21 +156,23 @@ export default function ReportPage() {
         <div className="flex flex-col gap-3">
           <p className="typo-caption text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
-            <p className="typo-body-2 text-white">{sajuReportData!.headline}</p>
+            <p className="typo-body-2 text-white">{report!.typeTitle}</p>
 
-            <p className="typo-head-1 text-white">{sajuReportData!.sajuTypeName}</p>
+            <p className="typo-head-1 text-white">{report!.typeName}</p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <ContentBox type="TOP">
-            <p className="typo-caption text-gray-5">{sajuReportData!.elementAnalysis.summary}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {basic.primaryElements.map((element: ElementCode) => (
-                <OhaengIcon key={element} element={element} type="primary" />
-              ))}
+            <p className="typo-caption text-gray-5">{report!.elementSummary}</p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-2">
+                {report!.primaryElements.map((element: ElementCode) => (
+                  <OhaengIcon key={element} element={element} type="primary" />
+                ))}
+              </div>
               <OhaengIcon
-                key={sajuReportData!.elementAnalysis.complementaryElement}
-                element={sajuReportData!.elementAnalysis.complementaryElement}
+                key={report!.complementElement}
+                element={report!.complementElement!}
                 type="complementary"
               />
             </div>
@@ -182,16 +182,17 @@ export default function ReportPage() {
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
                 <ElementRadarChart
-                  distribution={basic.elementDistribution}
-                  primaryElements={basic.primaryElements}
+                  distribution={report!.elementDistribution}
+                  primaryElements={report!.primaryElements}
                 />
               </div>
 
               {/* 오른쪽 오행 분포 */}
               <div className="flex w-40 shrink-0 flex-col gap-3">
-                {sajuReportData!.elementAnalysis.distribution.map((item) => {
-                  const { label, color } = parseElementCodeandColor(item.code);
-
+                {report!.elementDistribution.map((item) => {
+                  const { color } = parseElementCodeandColor(item.element);
+                  // 라벨은 BE가 준 값을 그대로 쓴다.
+                  const label = item.label;
                   // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.
                   const percentage = Math.round(Math.min(Math.max(item.percentage, 0), 100));
 
@@ -230,10 +231,10 @@ export default function ReportPage() {
           </ContentBox>
           <ContentBox type="TEXT" title="전반적인 성향">
             <div className="flex flex-col gap-3">
-              {sajuReportData!.overallTendency.items.map((item) => (
-                <div key={item.code} className="flex flex-col gap-1">
-                  <p className="typo-caption text-primary">{item.title}</p>
-                  <p className="typo-sub-3 text-gray-5">{item.description}</p>
+              {report!.overallTendencies.map((item) => (
+                <div key={item.label} className="flex flex-col gap-1">
+                  <p className="typo-caption text-primary">{item.label}</p>
+                  <p className="typo-sub-3 text-gray-5">{item.text}</p>
                 </div>
               ))}
             </div>

@@ -6,7 +6,14 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from 'recharts';
-import type { ElementAnalysis, ElementCode } from '../../../types/onboarding/report';
+import type { ElementCode } from '../../../types/onboarding/report';
+
+type DistributionItem = {
+  element: ElementCode;
+  /** BE가 주는 한글 라벨. 차트 축 라벨은 아래 ELEMENT_LABEL을 그대로 쓴다(순서 고정이 필요해서). */
+  label: string;
+  percentage: number;
+};
 
 type Props = {
   /** BE 기본 리포트의 `basic.elementDistribution`. */

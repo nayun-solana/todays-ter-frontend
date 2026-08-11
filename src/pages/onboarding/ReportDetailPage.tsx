@@ -5,6 +5,7 @@ import Button from '../../components/Button';
 import {
   useCreateSajuReportShare,
   useGetCategorySajuReport,
+  useSharedSajuReportDetail,
 } from '../../hooks/onboarding/useGetReport';
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
 import type {
@@ -117,18 +118,30 @@ function ReportNotice({
   );
 }
 
-export default function ReportDetailPage() {
+type ReportDetailPageProps = {
+  /**
+   * 공유 링크로 들어온 화면(`/report/shared/:token`).
+   * 보는 사람이 리포트 주인이 아니므로 발급·수정 액션이 전부 빠지고, 데이터도 공유 전용
+   * 엔드포인트에서 온다(인증 불필요).
+   */
+  variant?: 'default' | 'shared';
+};
+
+export default function ReportDetailPage({ variant = 'default' }: ReportDetailPageProps) {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id, token } = useParams();
   const [searchParams] = useSearchParams();
+  const isShared = variant === 'shared';
   const reportId = Number(id);
-  const isValidId = Number.isInteger(reportId) && reportId > 0;
+  const isValidId = isShared ? !!token : Number.isInteger(reportId) && reportId > 0;
   const isMyReport = searchParams.get('from') === 'my';
   const isSajuEditReport = searchParams.get('source') === 'saju-edit';
   const isReadOnlyMyReport = isMyReport && !isSajuEditReport;
   const reportPath = `/report/${id}${getContextQuery(searchParams)}`;
   const [selectedCategory, setSelectedCategory] = useState<SajuReportCategory>('GENERAL');
-  const reportQuery = useGetCategorySajuReport(reportId, selectedCategory);
+  const ownQuery = useGetCategorySajuReport(isShared ? Number.NaN : reportId, selectedCategory);
+  const sharedQuery = useSharedSajuReportDetail(isShared ? token : undefined, selectedCategory);
+  const reportQuery = isShared ? sharedQuery : ownQuery;
 
   // 공유 링크는 서버가 발급한다(POST /fortune-reports/{id}/share → shareUrl).
   // 예전에는 `navigator.share({ title })`만 불러서 **링크 없이 제목만** 공유됐고,
@@ -140,7 +153,8 @@ export default function ReportDetailPage() {
   // 버튼에 포인터·포커스가 닿을 때 미리 받아둔다 — 클릭 시점에 await가 끼면
   // iOS에서 navigator.share가 사용자 제스처를 잃어 막힌다.
   const prepareShare = () => {
-    if (shareUrl !== null || shareMutation.isPending) return;
+    // 공유받은 화면에서는 발급할 대상이 없다(내 리포트가 아니다).
+    if (isShared || shareUrl !== null || shareMutation.isPending) return;
     shareMutation.mutate(undefined, { onSuccess: (result) => setShareUrl(result.shareUrl) });
   };
 
@@ -200,6 +214,7 @@ export default function ReportDetailPage() {
 
   const selectedButton = CATEGORY_BUTTONS.find((button) => button.value === selectedCategory)!;
   const detail = reportQuery.data.detail;
+  const sharerNickname = isShared ? sharedQuery.data?.sharerNickname : null;
 
   const handleShare = async () => {
     const url =
@@ -223,26 +238,41 @@ export default function ReportDetailPage() {
       <header className="flex h-13 w-full items-center justify-between bg-primary px-5 text-white typo-body-3">
         <button
           type="button"
-          aria-label="기본 리포트로 돌아가기"
-          onClick={() => navigate(reportPath)}
+          aria-label={isShared ? '홈으로' : '기본 리포트로 돌아가기'}
+          onClick={() => navigate(isShared ? '/home' : reportPath)}
           className="flex size-6 items-center justify-center"
         >
           <img src={lefe_arrow} alt="" />
         </button>
         <span>상세 분석</span>
-        <button
-          type="button"
-          aria-label="공유하기"
-          onClick={() => void handleShare()}
-          onPointerEnter={prepareShare}
-          onFocus={prepareShare}
-          className="flex size-6 items-center justify-center"
-        >
-          <img src={share} alt="" />
-        </button>
+        {isShared ? (
+          // 남의 리포트라 공유 링크를 발급할 수 없다. 자리는 남겨 제목을 가운데로 유지한다.
+          <span className="size-6" aria-hidden />
+        ) : (
+          <button
+            type="button"
+            aria-label="공유하기"
+            onClick={() => void handleShare()}
+            onPointerEnter={prepareShare}
+            onFocus={prepareShare}
+            className="flex size-6 items-center justify-center"
+          >
+            <img src={share} alt="" />
+          </button>
+        )}
       </header>
 
       <main className="flex flex-col gap-3 bg-primary-bg px-5 py-4">
+        {/* 공유받은 화면임을 알린다 — 이 해석은 공유한 사람의 사주 기준이다.
+            게스트가 공유하면 닉네임이 없어 null로 온다(실측) → "공유한 분"으로 부른다. */}
+        {isShared ? (
+          <p className="typo-sub-2 rounded-xl bg-white px-4 py-3 text-gray-5">
+            {sharerNickname
+              ? `${sharerNickname}님이 공유한 사주 리포트예요.`
+              : '공유받은 사주 리포트예요.'}
+          </p>
+        ) : null}
+
         <div className="-mr-5 flex gap-1 overflow-x-auto no-scrollbar">
           {CATEGORY_BUTTONS.map(({ label, value }) => (
             <NavBtn
@@ -263,7 +293,16 @@ export default function ReportDetailPage() {
           <CategoryDetail detail={detail} category={selectedCategory} icon={selectedButton.icon} />
         )}
 
-        {!isReadOnlyMyReport ? (
+        {isShared ? (
+          <Button
+            variant="primary"
+            onClick={() => navigate('/home')}
+            className="mt-1 flex items-center justify-center gap-3"
+          >
+            <p>나도 사주 리포트 만들기</p>
+            <img src={RightIcon} alt="" />
+          </Button>
+        ) : !isReadOnlyMyReport ? (
           <Button
             variant="primary"
             onClick={() => navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3')}

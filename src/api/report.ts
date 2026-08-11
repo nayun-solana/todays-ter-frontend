@@ -4,6 +4,7 @@ import {
   ReportStatusResponse,
   SajuReportResponse,
   SajuReportShareResult,
+  SharedSajuReportResponse,
   type SajuReportCategory,
 } from '../types/onboarding/report';
 import axiosInstance from './axiosInstance';
@@ -60,6 +61,25 @@ export async function getCategorySajuReport({
     params: { category },
   });
   return CategorySajuReportResponse.parse(getResult(res));
+}
+
+/**
+ * GET /fortune-reports/shared/{shareToken}/details — 공유 링크로 여는 상세.
+ * **인증이 필요 없다** — 받는 사람은 우리 서비스 사용자가 아닐 수 있다.
+ * `category`는 본인 조회와 마찬가지로 필수다(빼면 400).
+ */
+export async function getSharedSajuReportDetail({
+  shareToken,
+  category,
+}: {
+  shareToken: string;
+  category: SajuReportCategory;
+}): Promise<SharedSajuReportResponse> {
+  const res = await axiosInstance.get<ApiResponse>(
+    `/fortune-reports/shared/${shareToken}/details`,
+    { params: { category } },
+  );
+  return SharedSajuReportResponse.parse(getResult(res));
 }
 
 /** POST /fortune-reports/{reportId}/share — 공유 링크 생성. */

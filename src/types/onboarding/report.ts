@@ -183,6 +183,19 @@ export const CategorySajuReportResponse = z.discriminatedUnion('category', [
 ]);
 export type CategorySajuReportResponse = z.infer<typeof CategorySajuReportResponse>;
 
+/**
+ * GET /fortune-reports/shared/{shareToken}/details — 공유 링크로 여는 상세.
+ * 본인 조회와 형태가 같고 `sharerNickname`만 더 온다.
+ * 게스트가 공유했으면 닉네임이 없어 `null`로 온다(실측) → 화면에서 폴백을 둘 것.
+ */
+const SharerNickname = z.object({ sharerNickname: z.string().nullish() });
+
+export const SharedSajuReportResponse = z.discriminatedUnion('category', [
+  GeneralSajuReportResponse.extend(SharerNickname.shape),
+  DetailSajuReportResponse.extend(SharerNickname.shape),
+]);
+export type SharedSajuReportResponse = z.infer<typeof SharedSajuReportResponse>;
+
 // ── 생성·진행 상태 ──
 
 /** POST /fortune-reports — 202로 즉시 반환되고, 완료는 status로 확인한다. */

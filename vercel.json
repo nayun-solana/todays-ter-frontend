@@ -1,8 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/recommendations/places/shared/:token", "destination": "/index.html" },
-
     { "source": "/api/:path(.+)", "destination": "https://today-ter.kr/api/:path" },
     { "source": "/auth/:path(.+)", "destination": "https://today-ter.kr/auth/:path" },
     { "source": "/home/:path(.+)", "destination": "https://today-ter.kr/home/:path" },

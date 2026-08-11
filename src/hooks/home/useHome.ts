@@ -18,10 +18,18 @@ function retryUnlessOnboardingRequired(failureCount: number, error: unknown) {
 }
 
 export const homeKeys = {
+  /** 홈 4개를 한 번에 무효화할 때 쓰는 프리픽스. 리포트를 만들면 홈이 통째로 달라진다. */
+  all: ['home'] as const,
   todayEnergy: ['home', 'today-energy'] as const,
   header: ['home', 'header'] as const,
   routines: ['home', 'energy-routines'] as const,
-  recommended: ['home', 'recommended-place'] as const,
+  /**
+   * 좌표가 키에 들어간다 — 좌표에 따라 distanceKm이 달라지므로 같은 캐시로 묶으면 안 된다.
+   * 좌표 없이 부르는 곳(SessionGate 뒤의 추천 접근 가드)은 별도 캐시를 쓰게 되는데,
+   * 그쪽은 거리를 안 보고 visibleCount만 읽으므로 요청 한 번 더 나가는 비용만 진다.
+   */
+  recommended: (coords?: { latitude: number; longitude: number }) =>
+    ['home', 'recommended-place', coords ?? null] as const,
 };
 
 /** 오늘 나의 기운(오행) */
@@ -51,10 +59,15 @@ export function useEnergyRoutines() {
  * 오늘 가장 잘 맞는 터.
  * 라우트 가드에서도 같은 캐시를 재사용한다 — 홈을 거쳐 왔으면 즉시, 직접 진입이면 이때 조회된다.
  */
-export function useRecommendedPlaces(options?: { enabled?: boolean }) {
+export function useRecommendedPlaces(options?: {
+  enabled?: boolean;
+  coords?: { latitude: number; longitude: number } | null;
+}) {
+  const coords = options?.coords ?? undefined;
+
   return useQuery({
-    queryKey: homeKeys.recommended,
-    queryFn: getRecommendedPlaces,
+    queryKey: homeKeys.recommended(coords),
+    queryFn: () => getRecommendedPlaces(coords),
     enabled: options?.enabled ?? true,
     retry: retryUnlessOnboardingRequired,
   });

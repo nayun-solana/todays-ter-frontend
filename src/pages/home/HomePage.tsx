@@ -15,6 +15,7 @@ import {
   useRecommendedPlaces,
   useTodayEnergy,
 } from '../../hooks/home/useHome';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { toOhaengKey } from '../../types/home/homeEnergy';
 import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
@@ -55,7 +56,9 @@ export default function HomePage() {
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
   const routinesQuery = useEnergyRoutines();
-  const recommendedQuery = useRecommendedPlaces();
+  // 좌표가 있으면 카드에 거리가 찍힌다. 거부·미지원이면 좌표 없이 그대로 조회한다.
+  const coords = useGeolocation();
+  const recommendedQuery = useRecommendedPlaces({ coords });
 
   const header = headerQuery.data;
   const routines = routinesQuery.data;
@@ -208,9 +211,7 @@ export default function HomePage() {
             <section className="flex flex-col gap-4">
               <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
               <div className="flex flex-col gap-3">
-                {recommendedState === 'loading' && (
-                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
-                )}
+                {recommendedState === 'loading' && <RecommendedPlaceCardSkeleton />}
                 {recommendedState === 'failed' && (
                   <SectionError
                     message="추천 터를 불러오지 못했어요."
@@ -226,7 +227,7 @@ export default function HomePage() {
                 {/* 잠금 게이트는 가릴 추천이 실제로 더 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
                 {recommendedState === 'ready' && hasLockedMore && isAuthPending && (
                   // 회원 판정 전 — 게이트를 띄우면 복원되는 회원에게 깜빡였다 사라진다. 자리만 잡는다.
-                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+                  <RecommendedPlaceCardSkeleton />
                 )}
                 {recommendedState === 'ready' && hasLockedMore && !isAuthPending && (
                   // 서버가 잠긴 카드는 아예 내려주지 않으므로 가릴 대상이 없다 —
@@ -283,12 +284,40 @@ function OnboardingPrompt({ onStart }: { onStart: () => void }) {
 }
 
 /** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
+/**
+ * 추천 카드 로딩 자리.
+ *
+ * 예전에는 224px짜리 빈 블록 하나였다. 흰 배경 위에 흰색 반투명이라 배경과 거의 구분되지
+ * 않아 "카드가 올 자리"가 아니라 그냥 빈 구멍처럼 보였다. 실제 카드와 같은 구조
+ * (이미지 120px + 하단 설명 영역)를 세워 두면 뜰 내용을 미리 짐작할 수 있고,
+ * 로드된 뒤 레이아웃이 튀지 않는다.
+ */
+function RecommendedPlaceCardSkeleton() {
+  return (
+    <div role="status" aria-label="추천 터 불러오는 중" className="w-full animate-pulse">
+      {/* 이미지 자리 — 실제 카드와 같은 120px */}
+      <div className="flex h-[120px] flex-col justify-between rounded-t-[20px] bg-gray-3 px-[18px] py-4">
+        <span className="h-6 w-16 rounded-md bg-white/50" />
+        <span className="h-4 w-32 rounded bg-white/60" />
+      </div>
+      {/* 하단 설명 자리 */}
+      <div className="flex flex-col gap-2.5 rounded-b-[20px] bg-white p-[15px] shadow-[0_0_15px_0_rgba(0,0,0,0.05)]">
+        <span className="h-3 w-full rounded bg-gray-2" />
+        <span className="h-3 w-2/3 rounded bg-gray-2" />
+        <span className="h-3 w-20 rounded bg-gray-2" />
+      </div>
+    </div>
+  );
+}
+
 function BlockSkeleton({ className, label }: { className: string; label: string }) {
   return (
     <div
       role="status"
       aria-label={label}
-      className={`w-full animate-pulse bg-white/60 ${className}`}
+      // 배경(gray-1 #fafafa) 위에 흰색 반투명이면 거의 구분되지 않아 빈 구멍처럼 보였다.
+      // 카드가 올 자리라는 걸 알리려면 배경보다 확실히 어두워야 한다.
+      className={`w-full animate-pulse bg-gray-2 ${className}`}
     />
   );
 }

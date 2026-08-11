@@ -312,16 +312,15 @@ export default function PlaceDetailPage() {
         title="장소 상세"
         className="border-b-0"
         trailing={
+          // 저장도 회원 전용이다. 게스트가 누르면 /login으로 튕겼는데, 아래 '다녀왔어요'와
+          // 같은 화면에서 규칙이 정반대였다(그쪽은 잠금). 장소를 보다가 저장을 눌렀다고
+          // 로그인 화면으로 끌려가면 보던 맥락이 끊긴다 — 처음부터 잠가 둔다.
           <button
             type="button"
-            aria-label={place.isSaved ? '저장 해제' : '저장'}
+            aria-label={isMember ? (place.isSaved ? '저장 해제' : '저장') : '저장 (로그인 필요)'}
             aria-pressed={place.isSaved}
-            disabled={bookmark.isPending}
-            onClick={() =>
-              isMember
-                ? bookmark.mutate(!place.isSaved)
-                : navigate('/login', { state: { from: `/place/${id}` } })
-            }
+            disabled={!isMember || bookmark.isPending}
+            onClick={() => bookmark.mutate(!place.isSaved)}
             className="flex size-6 items-center justify-center text-gray-4 disabled:opacity-40"
           >
             <Bookmark

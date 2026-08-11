@@ -80,7 +80,9 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
   // 오행은 code로 매핑한다 — 표시명("토")은 BE가 문구를 다듬으면 같이 깨진다.
   const meta = ohaengByKey(data.primaryElement ? toOhaengKey(data.primaryElement.code) : 'water')!;
-  const canShare = !isShared && !shareUnavailable;
+  // 저장·공유 모두 회원 전용으로 잠근다. 예전에는 저장을 누르면 /login으로 보냈는데,
+  // 보던 화면이 끊기고 같은 화면의 '다녀왔어요'(잠금)와 규칙도 어긋났다.
+  const canShare = !isShared && !shareUnavailable && isMember;
 
   const handleShare = async () => {
     const url = shareUrl ?? (await ensureShareUrl());
@@ -108,13 +110,11 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
         isSaved={data.isSaved ?? false}
         // 연타로 PATCH가 겹치지 않게 진행 중에는 잠근다.
         onToggleBookmark={
-          isShared || bookmark.isPending
+          isShared || !isMember || bookmark.isPending
             ? undefined
-            : () =>
-                isMember
-                  ? bookmark.mutate(!(data.isSaved ?? false))
-                  : navigate('/login', { state: { from: `/matched-ter/${id}` } })
+            : () => bookmark.mutate(!(data.isSaved ?? false))
         }
+        disabledReason={isMember ? undefined : '로그인 필요'}
         showActions={!isShared}
       />
 

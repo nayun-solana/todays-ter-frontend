@@ -8,11 +8,22 @@ type Props = {
   isOpen: boolean;
   onClick: () => void;
   isSuccess: boolean;
+  /**
+   * 실패 모달의 버튼 문구. 기본값은 '다시 시도'다.
+   * 서버가 재시도를 허용하지 않으면(canRetry=false) 이 버튼은 재시도가 아니라 화면을
+   * 빠져나가는 동작을 하므로, 호출부가 문구를 실제 동작에 맞게 바꿀 수 있어야 한다.
+   */
+  failureActionLabel?: string;
 };
 
 const MODAL_STATUS_BAR_COLOR = '#243364';
 
-export default function Modal({ isOpen, onClick, isSuccess }: Props) {
+export default function Modal({
+  isOpen,
+  onClick,
+  isSuccess,
+  failureActionLabel = '다시 시도',
+}: Props) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -121,7 +132,7 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
           className="flex h-12 w-full items-center justify-center rounded-btn bg-primary py-4"
         >
           <span className="text-sm font-bold text-white">
-            {isSuccess ? '리포트 보러가기' : '다시 시도'}
+            {isSuccess ? '리포트 보러가기' : failureActionLabel}
           </span>
         </button>
       </div>

@@ -54,9 +54,11 @@ export type PlaceBookmark = z.infer<typeof PlaceBookmark>;
 
 /**
  * POST /recommendations/places/{placeId}/share 응답.
- * shareUrl은 BE 환경변수로 조립되는데 지금은 API 경로가 그대로 들어가 있어
- * FE에 존재하지 않는 주소(`/recommendations/places/shared/{token}`)가 내려온다.
- * 그래서 실제로 공유하는 링크는 shareToken으로 FE가 직접 만든다(shareLinkFrom).
+ *
+ * 예전에는 shareUrl에 API 경로(`/recommendations/places/shared/{token}`)가 그대로 들어가
+ * FE에 없는 주소를 내려줬다. 지금은 `/matched-ter/shared/{token}`로 고쳐져 있다(실측 2026-08-12).
+ * 그래도 링크는 계속 shareToken으로 FE가 직접 만든다(`shareLinkFrom`) — BE 환경변수로
+ * 조립되는 값이라 배포 환경이 늘어나면 도메인이 어긋날 수 있고, 경로는 FE가 소유한 정보다.
  */
 export const ShareLink = z.object({
   shareToken: z.string().min(1),

@@ -31,7 +31,8 @@ export default function ReviewCompletePage() {
         </Button>
         <Button
           variant="secondary"
-          onClick={() => navigate('/record', { replace: true })}
+          /** 방금 쓴 기록은 다녀온 터에만 보이므로 해당 탭으로 바로 보낸다. */
+          onClick={() => navigate('/record?tab=visited', { replace: true })}
         >
           기록에서 보기
         </Button>

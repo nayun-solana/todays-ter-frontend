@@ -1,8 +1,9 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { toPng } from 'html-to-image';
 import { Download, X } from 'lucide-react';
 
 import type { ApiError } from '../../../api/types';
-import waterBg from '../../../assets/ohaeng/water-bg.png';
+import defaultBg from '../../../assets/review/default.png';
 import earthIcon from '../../../assets/review/earth.png';
 import fireIcon from '../../../assets/review/fire.png';
 import metalIcon from '../../../assets/review/metal.png';
@@ -52,10 +53,10 @@ const ELEMENT_SHAPE_SIZE: Record<PlaceDay, number> = {
 
 /** 장식 도형 위치 */
 const SOLID_SHAPES = [
-  { left: '20%', bottom: 172 },
-  { left: '40%', bottom: 144 },
-  { left: '62%', bottom: 154 },
-  { left: '80%', bottom: 188 },
+  { left: '20%', bottom: 182 },
+  { left: '40%', bottom: 154 },
+  { left: '62%', bottom: 164 },
+  { left: '80%', bottom: 198 },
 ] as const;
 
 /** 패널 구멍 위치 */
@@ -147,7 +148,7 @@ function PanelWithHoles({
         />
 
         <div className="relative z-10 flex h-full items-center justify-center px-6">
-          <p className="break-keep text-center text-xl font-extrabold leading-snug text-white">
+          <p className="whitespace-pre-line break-keep text-center text-xl font-extrabold leading-snug text-white">
             {message}
           </p>
         </div>
@@ -159,15 +160,21 @@ function PanelWithHoles({
 function ActionButton({
   label,
   children,
+  onClick,
+  disabled,
 }: {
   label: string;
   children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="flex size-10 items-center justify-center rounded-full bg-primary-bg text-primary shadow-btn"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex size-10 items-center justify-center rounded-full bg-primary-bg text-primary shadow-btn disabled:opacity-50"
     >
       {children}
     </button>
@@ -189,10 +196,33 @@ export default function ShareCardModal({
   /** 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게 */
   const element: PlaceDay = listElement ?? card?.element ?? '수';
   const fill = DAY_FILL[element];
+  const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;
+  const cardRef = useRef<HTMLElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const remoteUrl = !isImageMissingError ? card?.imageUrl?.trim() || null : null;
-  const bgSrc = remoteUrl && failedUrl !== remoteUrl ? remoteUrl : waterBg;
+  const bgSrc = remoteUrl && failedUrl !== remoteUrl ? remoteUrl : defaultBg;
   const canShowCard = Boolean(card) || isImageMissingError;
+
+  async function handleDownload() {
+    if (!cardRef.current || isDownloading) return;
+
+    setIsDownloading(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = `todays-ter-${placeName.replace(/[\\/:*?"<>|]/g, '_')}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // 외부 이미지 CORS 등으로 실패할 수 있음
+    } finally {
+      setIsDownloading(false);
+    }
+  }
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -231,10 +261,14 @@ export default function ShareCardModal({
         ) : !canShowCard ? (
           <p className="py-20 text-sm text-white">공유 카드를 불러오지 못했습니다.</p>
         ) : (
-          <article className="relative h-[400px] w-full overflow-hidden rounded-[28px] shadow-xl">
+          <article
+            ref={cardRef}
+            className="relative h-[400px] w-full overflow-hidden rounded-[28px] shadow-xl"
+          >
             <img
               src={bgSrc}
               alt={placeName}
+              crossOrigin="anonymous"
               className="absolute inset-0 size-full object-cover"
               onError={() => {
                 if (remoteUrl) setFailedUrl(remoteUrl);
@@ -251,12 +285,18 @@ export default function ShareCardModal({
               </div>
             ))}
 
-            <PanelWithHoles fill={fill} message={placeName} element={element} />
+            <PanelWithHoles fill={fill} message={shareMessage} element={element} />
           </article>
         )}
 
         <div className="mt-5 flex items-center gap-4">
-          <ActionButton label="다운로드">
+          <ActionButton
+            label="다운로드"
+            onClick={() => {
+              void handleDownload();
+            }}
+            disabled={!canShowCard || isDownloading}
+          >
             <Download size={20} aria-hidden />
           </ActionButton>
           <button

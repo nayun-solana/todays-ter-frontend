@@ -109,6 +109,8 @@ export const handlers = [
   // SW passthrough가 cross-origin 이미지 GET을 깨뜨려 403이 난다.
   // API는 Vite 프록시 same-origin(`/records/:id`)만 통과시킨다.
   http.get('/records/:id', () => passthrough()),
+  http.patch('/records/:id', () => passthrough()),
+  http.delete('/records/:id', () => passthrough()),
   http.post('/records/images', () => passthrough()),
   http.post('/records', () => passthrough()),
 

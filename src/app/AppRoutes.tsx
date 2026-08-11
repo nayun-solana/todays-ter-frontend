@@ -133,6 +133,7 @@ export default function AppRoutes() {
               <Route path="/place/:id/review/edit" element={<PlaceReviewPage mode="edit" />} />
               <Route path="/place/:id/review/complete" element={<PlaceReviewCompletePage />} />
               <Route path="/review/:recordId" element={<ReviewDetailPage />} />
+              <Route path="/review/:recordId/edit" element={<ReviewPage mode="edit" />} />
 
               <Route path="/my/saju" element={<SajuEditPage />} />
               <Route path="/my/saju/complete" element={<SajuReportCompletePage />} />

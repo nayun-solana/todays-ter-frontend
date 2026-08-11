@@ -2,7 +2,9 @@ import {
   CreateRecordRequest,
   CreateRecordResponse,
   RecordImagesUploadResponse,
+  UpdateRecordRequest,
   type CreateRecordRequest as CreateRecordRequestType,
+  type UpdateRecordRequest as UpdateRecordRequestType,
 } from '../types/record/createRecord';
 import { MyPlaceListResponse, type MyPlaceListType } from '../types/record/myPlace';
 import { RecordDetail } from '../types/review/visitedReview';
@@ -63,6 +65,19 @@ export async function createRecord(body: CreateRecordRequestType) {
   return CreateRecordResponse.parse(getResult(response));
 }
 
+/** 다녀온 터 기록/후기 수정 — PATCH /records/{id} */
+export async function updateRecord(id: number | string, body: UpdateRecordRequestType) {
+  const payload = UpdateRecordRequest.parse(body);
+  const response = await axiosInstance.patch<ApiResponse>(`/records/${id}`, payload);
+  return getResult(response);
+}
+
+/** 다녀온 터 기록/후기 삭제 — DELETE /records/{id} */
+export async function deleteRecord(id: number | string) {
+  const response = await axiosInstance.delete<ApiResponse>(`/records/${id}`);
+  return getResult(response);
+}
+
 /**
  * 이미지 업로드(있을 때) → 기록/후기 생성.
  * Swagger: 이미지를 먼저 올리고 imageId를 받아 POST /records에 넘긴다.
@@ -89,4 +104,35 @@ export async function submitRecord(input: {
     content: input.content,
     imageIds,
   });
+}
+
+/**
+ * 기록/후기 수정.
+ * replaceImages면 imageIds를 최종 목록으로 보냄(기존 유지 id + 신규 업로드).
+ */
+export async function submitRecordUpdate(input: {
+  recordId: number | string;
+  rating: number;
+  content: string;
+  files?: File[];
+  /** 이미지 목록을 교체할지. true면 keepImageIds + 신규 업로드로 imageIds 전송 */
+  replaceImages?: boolean;
+  keepImageIds?: number[];
+}) {
+  const files = input.files ?? [];
+  const body: UpdateRecordRequestType = {
+    rating: input.rating,
+    content: input.content,
+  };
+
+  if (input.replaceImages) {
+    let uploadedIds: number[] = [];
+    if (files.length > 0) {
+      const uploaded = await uploadRecordImages(files);
+      uploadedIds = uploaded.images.map((image) => image.imageId);
+    }
+    body.imageIds = [...(input.keepImageIds ?? []), ...uploadedIds];
+  }
+
+  return updateRecord(input.recordId, body);
 }

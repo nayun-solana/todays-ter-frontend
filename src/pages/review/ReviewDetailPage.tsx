@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
-import { useLocation, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
+import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { useRecordDetail } from '../../hooks/review/useReview';
+import { recordDetailImagesOf } from '../../types/review/visitedReview';
 import type { PlaceDay } from '../record/components/RecordPlaceCard';
 import ShareCardModal from '../record/components/ShareCardModal';
 import Button from './components/Button';
@@ -21,12 +23,14 @@ function formatDate(date: string) {
 }
 
 export default function ReviewDetailPage() {
+  const navigate = useNavigate();
   const { recordId } = useParams();
   const { state } = useLocation();
   const listElement = (state as ReviewDetailLocationState | null)?.element;
   const reviewQuery = useRecordDetail(recordId);
+  const deleteRecord = useDeleteRecord();
   const review = reviewQuery.data;
-  const photos = review?.imageUrls ?? [];
+  const photos = review ? recordDetailImagesOf(review).map((image) => image.imageUrl) : [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -65,7 +69,7 @@ export default function ReviewDetailPage() {
               <ReviewMoreMenu
                 onEdit={() => {
                   setIsMenuOpen(false);
-                  // TODO: 후기 수정 화면 이동
+                  if (recordId) navigate(`/review/${recordId}/edit`);
                 }}
                 onDelete={() => {
                   setIsMenuOpen(false);
@@ -130,10 +134,17 @@ export default function ReviewDetailPage() {
 
       {isDeleteModalOpen ? (
         <DeleteReviewModal
-          onCancel={() => setIsDeleteModalOpen(false)}
+          onCancel={() => {
+            if (!deleteRecord.isPending) setIsDeleteModalOpen(false);
+          }}
           onConfirm={() => {
-            // TODO: 후기 삭제 API 연동
-            setIsDeleteModalOpen(false);
+            if (!recordId || deleteRecord.isPending) return;
+            deleteRecord.mutate(recordId, {
+              onSuccess: () => {
+                setIsDeleteModalOpen(false);
+                navigate('/record', { replace: true });
+              },
+            });
           }}
         />
       ) : null}

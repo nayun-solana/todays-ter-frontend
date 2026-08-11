@@ -43,6 +43,22 @@ export const CreateRecordResponse = z.object({
 });
 export type CreateRecordResponse = z.infer<typeof CreateRecordResponse>;
 
+/**
+ * PATCH /records/{id} 요청 body.
+ * 보낸 필드만 수정. imageIds는 최종 유지 목록으로 전체 교체.
+ */
+export const UpdateRecordRequest = z
+  .object({
+    rating: z.number().int().min(1).max(5).optional(),
+    content: z.string().optional(),
+    imageIds: z.array(z.number().int().nonnegative()).optional(),
+  })
+  .refine(
+    (body) => body.rating != null || body.content != null || body.imageIds != null,
+    { message: '수정할 필드가 없습니다.' },
+  );
+export type UpdateRecordRequest = z.infer<typeof UpdateRecordRequest>;
+
 /** 상세 조회용 id — RECORD면 recordId, REVIEW면 reviewId */
 export function recordDetailIdOf(
   result: Pick<CreateRecordResponse, 'recordId' | 'reviewId'>,

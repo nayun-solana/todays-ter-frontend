@@ -49,7 +49,7 @@ export default function RecordPage() {
           <ul className="mt-4 flex flex-col gap-3">
             {places.map((place) => {
               /** 다녀온 터 상세: GET /records/{recordId} */
-              const recordId = place.recordId ?? place.visitId;
+              const recordId = place.recordId;
 
               return (
                 <li key={recordId ?? place.placeId}>
@@ -62,7 +62,7 @@ export default function RecordPage() {
                     onClick={
                       activeTab === 'saved'
                         ? () => navigate(`/place/${place.placeId}`)
-                        : recordId != null
+                        : recordId != null && recordId > 0
                           ? () =>
                               navigate(`/review/${recordId}`, {
                                 state: { element: place.element },

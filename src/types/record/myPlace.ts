@@ -12,7 +12,7 @@ export type MyPlaceElement = z.infer<typeof MyPlaceElement>;
 export const MyPlaceItem = z.object({
   placeId: z.number().int().nonnegative(),
   /** 다녀온 터 상세 조회 키 — GET /records/{recordId} */
-  recordId: z.number().int().positive().optional(),
+  recordId: z.number().int().positive().optional().nullish(),
   /** @deprecated recordId 사용 */
   visitId: z.number().int().positive().optional(),
   placeName: z.string().min(1),

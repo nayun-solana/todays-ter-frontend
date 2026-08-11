@@ -1,20 +1,17 @@
 import {
   MyPageResponse,
-  PermissionSettingsResponse,
   PoliciesResponse,
   SocialConnectionsResponse,
-  UpdatedAtResponse,
   MemberSajuResponse,
   MemberWithdrawRequest,
   MemberSajuUpdateRequest,
-  type PermissionSettingsRequest,
 } from '../types/my/my';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
 export async function getMyPage(): Promise<MyPageResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/members/me');
+  const response = await axiosInstance.get<ApiResponse>('/mypage');
   return MyPageResponse.parse(getResult(response));
 }
 
@@ -35,18 +32,6 @@ export async function updateMemberSaju(body: MemberSajuUpdateRequest): Promise<M
 
 export async function withdrawMember(body: MemberWithdrawRequest): Promise<void> {
   await axiosInstance.delete<ApiResponse>('/members/me', { data: body });
-}
-
-export async function getPermissionSettings(): Promise<PermissionSettingsResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/mypage/permissions');
-  return PermissionSettingsResponse.parse(getResult(response));
-}
-
-export async function updatePermissionSettings(
-  body: PermissionSettingsRequest,
-): Promise<UpdatedAtResponse> {
-  const response = await axiosInstance.patch<ApiResponse>('/mypage/permissions', body);
-  return UpdatedAtResponse.parse(getResult(response));
 }
 
 export async function getPolicies(): Promise<PoliciesResponse> {

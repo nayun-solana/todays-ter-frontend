@@ -21,6 +21,7 @@ const API_PATHS = [
   '/recommendations',
   '/fortune-reports',
   '/members',
+  '/mypage',
   '/records',
   '/notifications',
 ];

@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
 export const MyPageResponse = z.object({
-  memberId: z.number().int().positive(),
-  email: z.string().min(1),
+  reportId: z.number().int().positive(),
   nickname: z.string().min(1),
-  status: z.enum(['ACTIVE', 'WITHDRAWN']),
+  profileImageUrl: z.string().url().nullish(),
 });
 export type MyPageResponse = z.infer<typeof MyPageResponse>;
 
@@ -50,21 +49,6 @@ export const MemberWithdrawRequest = z.object({
   withdrawReason: WithdrawReason,
 });
 export type MemberWithdrawRequest = z.infer<typeof MemberWithdrawRequest>;
-
-export const PermissionSettingsResponse = z.object({
-  isCameraAllowed: z.boolean(),
-  isPhotoLibraryAllowed: z.boolean(),
-  isLocationAllowed: z.boolean(),
-});
-export type PermissionSettingsResponse = z.infer<typeof PermissionSettingsResponse>;
-
-export const PermissionSettingsRequest = PermissionSettingsResponse;
-export type PermissionSettingsRequest = z.infer<typeof PermissionSettingsRequest>;
-
-export const UpdatedAtResponse = z.object({
-  updatedAt: z.string().min(1),
-});
-export type UpdatedAtResponse = z.infer<typeof UpdatedAtResponse>;
 
 const PolicyType = z.enum(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'MARKETING_CONSENT']);
 

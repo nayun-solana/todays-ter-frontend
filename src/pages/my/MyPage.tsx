@@ -6,7 +6,6 @@ import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
-import { useCurrentFortuneReport } from '../../hooks/onboarding/useGetReport';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
@@ -88,10 +87,8 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { isMember, isPending: isAuthPending } = useAuthStatus();
   const myPageQuery = useMyPage(isMember);
-  const currentReportQuery = useCurrentFortuneReport(isMember);
   const logoutMutation = useLogout();
   const profile = myPageQuery.data;
-  const currentReportId = currentReportQuery.data?.reportId;
 
   // 부팅 복원 전의 isMember=false는 "게스트"가 아니라 "아직 모름"이다.
   if (isAuthPending) {
@@ -109,27 +106,29 @@ export default function MyPage() {
       <main className="px-5 pt-3">
         <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
           <div className="flex flex-col items-center gap-2">
-            <DefaultAvatar />
+            {profile?.profileImageUrl ? (
+              <img
+                src={profile.profileImageUrl}
+                alt="프로필 이미지"
+                className="size-25 rounded-full object-cover"
+              />
+            ) : (
+              <DefaultAvatar />
+            )}
             <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
           </div>
         </section>
 
         <button
           type="button"
-          disabled={!profile || currentReportQuery.isPending}
+          disabled={!profile}
           onClick={() => {
             if (!profile) return;
-            navigate(currentReportId ? `/report/${currentReportId}?from=my` : '/my/saju');
+            navigate(`/report/${profile.reportId}?from=my`);
           }}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {!profile
-            ? '회원 정보 불러오는 중'
-            : currentReportQuery.isPending
-              ? '리포트 정보 불러오는 중'
-              : currentReportId
-                ? '사주 리포트 다시보기'
-                : '사주 정보 수정하기'}
+          {profile ? '사주 리포트 다시보기' : '회원 정보 불러오는 중'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (
@@ -137,12 +136,6 @@ export default function MyPage() {
             마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
           </p>
         ) : null}
-        {currentReportQuery.isError ? (
-          <p className="typo-sub-2 mt-2 text-gray-4">
-            리포트 정보를 불러오지 못했습니다. 사주 정보를 수정할 수 있어요.
-          </p>
-        ) : null}
-
         <section className="mt-6">
           <h2 className="typo-head-3 text-gray-6">설정</h2>
           {/* Figma: 카드 p16/20, 행 높이 20px, 행 사이 gap12 + gray-2 구분선 */}

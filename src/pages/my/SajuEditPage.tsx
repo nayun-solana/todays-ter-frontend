@@ -4,9 +4,8 @@ import { useLocation, useNavigate } from 'react-router';
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
-import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
 import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
-import { useMyPage } from '../../hooks/my/useMy';
 
 type DateField = 'year' | 'month' | 'day';
 type DateValue = { year: number; month: number; day: number };

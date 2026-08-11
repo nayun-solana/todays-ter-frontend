@@ -44,6 +44,13 @@ export default function ReportPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const isMyReport = searchParams.get('from') === 'my';
+  const isSajuEditReport = searchParams.get('source') === 'saju-edit';
+  const isReadOnlyMyReport = isMyReport && !isSajuEditReport;
+
+  const reportContext = new URLSearchParams();
+  if (isMyReport) reportContext.set('from', 'my');
+  if (isSajuEditReport) reportContext.set('source', 'saju-edit');
+  const reportContextQuery = reportContext.toString();
 
   // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
   const reportId = Number(id);
@@ -244,7 +251,7 @@ export default function ReportPage() {
           <Button
             variant="primary"
             onClick={() => {
-              navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`);
+              navigate(`/report/${id}/detail${reportContextQuery ? `?${reportContextQuery}` : ''}`);
             }}
             className="flex items-center justify-center gap-3"
           >
@@ -252,16 +259,17 @@ export default function ReportPage() {
 
             <img src={RightIcon} alt="right" className="" />
           </Button>
-          {/* Figma 3514:5416 — outline CTA는 primary-bg 채움 + primary-light 테두리 */}
-          <Button
-            variant="secondary"
-            className="border-primary-light bg-primary-bg"
-            onClick={() => {
-              navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
-            }}
-          >
-            {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
-          </Button>
+          {!isReadOnlyMyReport ? (
+            <Button
+              variant="secondary"
+              className="border-primary-light bg-primary-bg"
+              onClick={() => {
+                navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
+              }}
+            >
+              {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

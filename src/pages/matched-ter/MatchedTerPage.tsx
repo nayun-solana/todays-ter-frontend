@@ -114,6 +114,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
             ? undefined
             : () => bookmark.mutate(!(data.isSaved ?? false))
         }
+        disabledReason={isMember ? undefined : '로그인 필요'}
         showActions={!isShared}
       />
 

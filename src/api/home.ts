@@ -28,8 +28,16 @@ export async function getEnergyRoutines(): Promise<EnergyRoutinesResponse> {
   return EnergyRoutinesResponse.parse(getResult(res));
 }
 
-/** GET /home/recommended-place — 오늘 가장 잘 맞는 터 */
-export async function getRecommendedPlaces(): Promise<RecommendedPlacesResponse> {
-  const res = await axiosInstance.get<ApiResponse>('/home/recommended-place');
+/**
+ * GET /home/recommended-place — 오늘 가장 잘 맞는 터.
+ * 좌표를 함께 보내야 서버가 `distanceKm`을 채운다(안 보내면 항상 null, 실측).
+ * 추천 목록 자체는 좌표와 무관하다 — 거리 표시만 달라진다.
+ */
+export async function getRecommendedPlaces(
+  coords?: { latitude: number; longitude: number },
+): Promise<RecommendedPlacesResponse> {
+  const res = await axiosInstance.get<ApiResponse>('/home/recommended-place', {
+    params: coords,
+  });
   return RecommendedPlacesResponse.parse(getResult(res));
 }

@@ -15,6 +15,7 @@ import {
   useRecommendedPlaces,
   useTodayEnergy,
 } from '../../hooks/home/useHome';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { toOhaengKey } from '../../types/home/homeEnergy';
 import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
@@ -50,17 +51,14 @@ export default function HomePage() {
   // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
   const { isMember, isPending: isAuthPending } = useAuthStatus();
   // 홈은 알림 목록을 받지 않는다 — 배지에 필요한 건 미읽음 개수뿐이다.
-  //
-  // ⚠️ 지금은 꺼둔다. BE에 알림 도메인이 아직 없어서 `/notifications/unread-count`가
-  // **유효한 회원 토큰으로도 401**이다(실측 2026-08-12, BE 레포에 컨트롤러 없음).
-  // 켜두면 회원이 홈에 머무는 동안 60초마다 401만 반복된다 — 배지는 어차피 안 뜬다.
-  // BE가 붙으면 `{ enabled: isMember, poll: true }`로 되돌리면 된다(#153).
-  const unreadCountQuery = useUnreadNotificationCount({ enabled: false, poll: false });
+  const unreadCountQuery = useUnreadNotificationCount({ enabled: isMember, poll: true });
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
   const routinesQuery = useEnergyRoutines();
-  const recommendedQuery = useRecommendedPlaces();
+  // 좌표가 있으면 카드에 거리가 찍힌다. 거부·미지원이면 좌표 없이 그대로 조회한다.
+  const coords = useGeolocation();
+  const recommendedQuery = useRecommendedPlaces({ coords });
 
   const header = headerQuery.data;
   const routines = routinesQuery.data;
@@ -317,7 +315,9 @@ function BlockSkeleton({ className, label }: { className: string; label: string 
     <div
       role="status"
       aria-label={label}
-      className={`w-full animate-pulse bg-white/60 ${className}`}
+      // 배경(gray-1 #fafafa) 위에 흰색 반투명이면 거의 구분되지 않아 빈 구멍처럼 보였다.
+      // 카드가 올 자리라는 걸 알리려면 배경보다 확실히 어두워야 한다.
+      className={`w-full animate-pulse bg-gray-2 ${className}`}
     />
   );
 }

@@ -230,7 +230,7 @@ export default function ReportDetailPage({ variant = 'default' }: ReportDetailPa
     }
 
     setShareUrl(url);
-    await runShare({ url, title: '오늘의 터 사주 리포트', text: '내 사주 리포트를 공유해요.' });
+    await runShare({ url, title: '오늘의 터 사주 리포트' });
   };
 
   return (

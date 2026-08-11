@@ -51,40 +51,6 @@ export default function ReportPage() {
   const { data: sajuReportData, isPending, isError, refetch } = useGetSajuReport(reportId);
   const report = sajuReportData?.basic;
 
-  // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
-  // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
-  if (!isValidId) {
-    return (
-      <ReportNotice
-        title="리포트를 찾을 수 없어요"
-        description="주소가 잘못되었거나 만료된 링크예요."
-        action={
-          <Button variant="primary" onClick={() => navigate('/home')}>
-            홈으로 가기
-          </Button>
-        }
-      />
-    );
-  }
-
-  if (isPending) {
-    return <ReportNotice title="리포트를 불러오는 중이에요" />;
-  }
-
-  if (isError || !sajuReportData) {
-    return (
-      <ReportNotice
-        title="리포트를 불러오지 못했어요"
-        description="잠시 후 다시 시도해주세요."
-        action={
-          <Button variant="primary" onClick={() => void refetch()}>
-            다시 시도
-          </Button>
-        }
-      />
-    );
-  }
-
   // status bar 색상 변경 (iOS Safari, Android Chrome)
   useEffect(() => {
     const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -120,6 +86,40 @@ export default function ReportPage() {
       document.body.style.backgroundColor = previousBodyBackground;
     };
   }, []);
+
+  // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
+  // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
+  if (!isValidId) {
+    return (
+      <ReportNotice
+        title="리포트를 찾을 수 없어요"
+        description="주소가 잘못되었거나 만료된 링크예요."
+        action={
+          <Button variant="primary" onClick={() => navigate('/home')}>
+            홈으로 가기
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (isPending) {
+    return <ReportNotice title="리포트를 불러오는 중이에요" />;
+  }
+
+  if (isError || !sajuReportData) {
+    return (
+      <ReportNotice
+        title="리포트를 불러오지 못했어요"
+        description="잠시 후 다시 시도해주세요."
+        action={
+          <Button variant="primary" onClick={() => void refetch()}>
+            다시 시도
+          </Button>
+        }
+      />
+    );
+  }
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {

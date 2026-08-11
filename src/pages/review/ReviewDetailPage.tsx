@@ -50,7 +50,7 @@ export default function ReviewDetailPage() {
   }, [isMenuOpen]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1" data-record-id={recordId}>
+    <div className="flex min-h-dvh flex-col bg-gray-1" data-record-id={recordId}>
       <ReviewHeader
         title="후기 상세"
         rightSlot={

@@ -102,74 +102,28 @@ export type SajuReportResponse = z.infer<typeof SajuReportResponse>;
 // 카테고리별 사주 리포트
 // ─────────────────────────────────────
 
-/** GET /fortune-reports/me — 현재 회원이 조회할 리포트 id. */
-export const CurrentReportResponse = z.object({
-  reportId: z.number().int().positive(),
-});
-export type CurrentReportResponse = z.infer<typeof CurrentReportResponse>;
-
 // ── 상세 리포트 (GET /fortune-reports/{reportId}/details?category=) ──
 
-// GENERAL
+/** 상세 리포트 내부의 공통 라벨·본문 구조. */
+export const LabeledText = z.object({
+  label: z.string(),
+  text: z.string(),
+});
+export type LabeledText = z.infer<typeof LabeledText>;
 
-export const SajuCoreType = z.enum(['DAY_STEM', 'DAY_BRANCH', 'DAY_PILLAR']);
-export type SajuCoreType = z.infer<typeof SajuCoreType>;
-
-export const FlowAnalysisType = z.enum([
-  'EMOTIONAL_FLOW',
-  'RELATIONSHIP_PATTERN',
-  'ACTION_STYLE',
-  'RECOVERY_POINT',
-]);
-export type FlowAnalysisType = z.infer<typeof FlowAnalysisType>;
-
-export const SajuReportSummary = z.object({
+export const PillarCard = z.object({
+  label: z.string(),
+  displayText: z.string(),
   description: z.string(),
-  primaryElement: ElementCode,
 });
-export type SajuReportSummary = z.infer<typeof SajuReportSummary>;
+export type PillarCard = z.infer<typeof PillarCard>;
 
-export const SajuCoreItem = z.object({
-  type: SajuCoreType,
-  title: z.string(),
-  value: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
+export const DayPillarCards = z.object({
+  dayStem: PillarCard,
+  dayBranch: PillarCard,
+  dayPillar: PillarCard,
 });
-export type SajuCoreItem = z.infer<typeof SajuCoreItem>;
-
-export const FlowAnalysisItem = z.object({
-  type: FlowAnalysisType,
-  title: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
-});
-export type FlowAnalysisItem = z.infer<typeof FlowAnalysisItem>;
-
-export const RecommendationItem = z.object({
-  description: z.string(),
-  displayOrder: z.number().int(),
-});
-export type RecommendationItem = z.infer<typeof RecommendationItem>;
-
-/**
- * GENERAL 카테고리 응답
- */
-export const GeneralSajuReportResponse = z.object({
-  reportId: z.number().int(),
-  category: z.literal('GENERAL'),
-
-  summary: SajuReportSummary,
-  sajuCore: z.array(SajuCoreItem),
-  flowAnalysis: z.array(FlowAnalysisItem),
-
-  complementaryElement: ElementCode,
-
-  recommendations: z.array(RecommendationItem),
-});
-export type GeneralSajuReportResponse = z.infer<typeof GeneralSajuReportResponse>;
-
-// LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
+export type DayPillarCards = z.infer<typeof DayPillarCards>;
 
 export const SajuReportContentBlock = z.object({
   title: z.string(),
@@ -177,41 +131,52 @@ export const SajuReportContentBlock = z.object({
 });
 export type SajuReportContentBlock = z.infer<typeof SajuReportContentBlock>;
 
-export const SajuReportKeyPoint = z.object({
-  label: z.string(),
+export const ActionItem = z.object({
+  order: z.number().int(),
+  type: z.string(),
   text: z.string(),
 });
-export type SajuReportKeyPoint = z.infer<typeof SajuReportKeyPoint>;
+export type ActionItem = z.infer<typeof ActionItem>;
 
+export const ComplementActionGuide = z.object({
+  element: ElementCode,
+  label: z.string(),
+  actions: z.array(ActionItem),
+});
+export type ComplementActionGuide = z.infer<typeof ComplementActionGuide>;
+
+/** GENERAL과 개별 카테고리가 공유하는 실제 상세 응답 구조. */
 export const SajuReportDetail = z.object({
-  code: DetailSajuReportCategory,
-  title: z.string(),
+  // 개별 카테고리 응답에만 내려오지만, Swagger 응답에서는 선택 필드다.
+  code: DetailSajuReportCategory.nullish(),
+  title: z.string().nullish(),
   coreSummary: z.string(),
-
+  primaryElements: z.array(ElementCode).default([]),
+  dayPillars: DayPillarCards.nullish(),
   contentBlocks: z.array(SajuReportContentBlock).default([]),
-  keyPoints: z.array(SajuReportKeyPoint).default([]),
+  flowAnalysis: z.array(LabeledText).default([]),
+  keyPoints: z.array(LabeledText).default([]),
 });
 export type SajuReportDetail = z.infer<typeof SajuReportDetail>;
 
-/**
- * GENERAL을 제외한 카테고리 응답
- */
+/** GENERAL 카테고리 응답. */
+export const GeneralSajuReportResponse = z.object({
+  reportId: z.number().int(),
+  category: z.literal('GENERAL'),
+  detail: SajuReportDetail,
+  complementActionGuide: ComplementActionGuide.nullish(),
+});
+export type GeneralSajuReportResponse = z.infer<typeof GeneralSajuReportResponse>;
+
+/** LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH 카테고리 응답. */
 export const DetailSajuReportResponse = z.object({
   reportId: z.number().int(),
   category: DetailSajuReportCategory,
   detail: SajuReportDetail,
+  complementActionGuide: ComplementActionGuide.nullish(),
 });
 export type DetailSajuReportResponse = z.infer<typeof DetailSajuReportResponse>;
 
-/**
- * 카테고리별 사주 리포트 응답
- *
- * GENERAL
- * → GeneralSajuReportResponse
- *
- * LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
- * → DetailSajuReportResponse
- */
 export const CategorySajuReportResponse = z.discriminatedUnion('category', [
   GeneralSajuReportResponse,
   DetailSajuReportResponse,

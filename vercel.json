@@ -20,8 +20,13 @@
     },
 
     { "source": "/fortune-reports", "destination": "https://today-ter.kr/fortune-reports" },
+    { "source": "/mypage/:path(.+)", "destination": "https://today-ter.kr/mypage/:path" },
+    { "source": "/mypage", "destination": "https://today-ter.kr/mypage" },
     { "source": "/records", "destination": "https://today-ter.kr/records" },
-    { "source": "/notifications/:path(.+)", "destination": "https://today-ter.kr/notifications/:path" },
+    {
+      "source": "/notifications/:path(.+)",
+      "destination": "https://today-ter.kr/notifications/:path"
+    },
     { "source": "/notifications", "destination": "https://today-ter.kr/notifications" },
 
     { "source": "/(.*)", "destination": "/index.html" }

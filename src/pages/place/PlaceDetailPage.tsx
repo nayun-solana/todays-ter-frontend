@@ -430,7 +430,7 @@ export default function PlaceDetailPage() {
         )}
       </div>
 
-      <div className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-full max-w-[390px] -translate-x-1/2 gap-[7px] px-5">
+      <div className="fixed inset-x-0 bottom-[calc(2rem+env(safe-area-inset-bottom))] z-10 flex gap-[7px] px-5">
         {/* 후기 작성은 회원 전용이다. 게스트가 누르면 /login으로 튕겼는데,
             눌리는 버튼이 튕기는 것보다 처음부터 잠겨 있는 편이 낫다. */}
         <Button disabled={!isMember} onClick={() => navigate(`/place/${id}/review`)}>

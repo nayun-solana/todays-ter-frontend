@@ -3,17 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getMyPage,
   getMemberSaju,
-  getPermissionSettings,
   getPolicies,
   getSocialConnections,
   updateMemberSaju,
-  updatePermissionSettings,
   withdrawMember,
 } from '../../api/my';
 import type {
   MemberSajuUpdateRequest,
   MemberWithdrawRequest,
-  PermissionSettingsRequest,
 } from '../../types/my/my';
 
 export const myKeys = {
@@ -21,7 +18,6 @@ export const myKeys = {
   profile: () => [...myKeys.all, 'profile'] as const,
   socialConnections: () => [...myKeys.all, 'social-connections'] as const,
   saju: () => [...myKeys.all, 'saju'] as const,
-  permissions: () => [...myKeys.all, 'permissions'] as const,
   policies: () => [...myKeys.all, 'policies'] as const,
 };
 
@@ -60,31 +56,6 @@ export function useUpdateMemberSaju() {
 export function useWithdrawMember() {
   return useMutation({
     mutationFn: (body: MemberWithdrawRequest) => withdrawMember(body),
-  });
-}
-
-export function usePermissionSettings() {
-  return useQuery({
-    queryKey: myKeys.permissions(),
-    queryFn: getPermissionSettings,
-  });
-}
-
-export function useUpdatePermissionSettings() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (body: PermissionSettingsRequest) => updatePermissionSettings(body),
-    onMutate: async (body) => {
-      await queryClient.cancelQueries({ queryKey: myKeys.permissions() });
-      const previous = queryClient.getQueryData(myKeys.permissions());
-      queryClient.setQueryData(myKeys.permissions(), body);
-      return { previous };
-    },
-    onError: (_error, _body, context) => {
-      queryClient.setQueryData(myKeys.permissions(), context?.previous);
-    },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: myKeys.permissions() }),
   });
 }
 

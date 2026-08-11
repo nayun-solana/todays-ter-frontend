@@ -1,10 +1,9 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
   createFortuneReport,
   createSajuReportShare,
   getCategorySajuReport,
-  getCurrentFortuneReport,
   getReportStatus,
   getSajuReportSummary,
   retryFortuneReport,
@@ -12,27 +11,11 @@ import {
 import type { SajuReportCategory } from '../../types/onboarding/report';
 
 export const reportKeys = {
-  current: () => ['fortune-report', 'current'] as const,
   summary: (reportId: number) => ['fortune-report', reportId] as const,
   status: (reportId: number) => ['fortune-report', reportId, 'status'] as const,
   detail: (reportId: number, category: SajuReportCategory) =>
     ['fortune-report', reportId, 'detail', category] as const,
 };
-
-export function setCurrentReportCache(queryClient: QueryClient, reportId: number) {
-  queryClient.setQueryData(reportKeys.current(), { reportId });
-}
-
-/** 현재 회원이 조회할 리포트 id */
-export function useCurrentFortuneReport(enabled = true) {
-  return useQuery({
-    queryKey: reportKeys.current(),
-    queryFn: getCurrentFortuneReport,
-    enabled,
-    // 마이페이지에 들어올 때 서버의 최신 reportId를 확인한다.
-    refetchOnMount: 'always',
-  });
-}
 
 /** 기본 리포트 조회 */
 export function useGetSajuReport(reportId: number) {
@@ -54,16 +37,7 @@ export function useGetCategorySajuReport(reportId: number, category: SajuReportC
 
 /** 리포트 생성 시작 (202) */
 export function useCreateFortuneReport() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createFortuneReport,
-    onSuccess: (data) => {
-      if (data.status !== 'failed') {
-        setCurrentReportCache(queryClient, data.reportId);
-      }
-    },
-  });
+  return useMutation({ mutationFn: createFortuneReport });
 }
 
 /**
@@ -98,16 +72,7 @@ export const STATUS_POLL_MAX_FAILURES = 4;
 
 /** 실패한 리포트 재시도 */
 export function useRetryFortuneReport() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (reportId: number) => retryFortuneReport(reportId),
-    onSuccess: (data) => {
-      if (data.status !== 'failed') {
-        setCurrentReportCache(queryClient, data.reportId);
-      }
-    },
-  });
+  return useMutation({ mutationFn: (reportId: number) => retryFortuneReport(reportId) });
 }
 
 /** 리포트 공유 링크 생성 */

@@ -15,7 +15,7 @@ export default function PlaceReviewCompletePage() {
     (state as CompleteLocationState | null)?.placeName ?? '청계천 모전교';
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1">
+    <div className="flex min-h-dvh flex-col bg-gray-1">
       <div className="flex flex-1 flex-col items-center justify-center px-5">
         <img src={checkIcon} alt="" className="size-10" />
         <h1 className="mt-8 text-center text-xl font-extrabold text-gray-6">

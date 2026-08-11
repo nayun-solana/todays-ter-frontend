@@ -154,7 +154,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       {shareResult && <ShareToast result={shareResult} />}
 
       {/* 하단 고정 액션바. 공유 화면에서는 후기 작성이 남의 추천에 붙으므로 감춘다. */}
-      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         {isShared ? (
           <Button variant="primary" onClick={() => navigate('/home')}>
             나도 추천 받기
@@ -268,7 +268,7 @@ function DetailLoadFailed({ onRetry, onBack }: { onRetry: () => void; onBack: ()
 /** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
 function MatchedTerSkeleton({ isShared }: { isShared: boolean }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-28" aria-busy="true">
+    <div className="flex min-h-dvh flex-col bg-white pb-28" aria-busy="true">
       <MatchedTerAppBar title="나와 어울리는 터" showActions={!isShared} />
       <div className="flex flex-col gap-5 px-5 pt-4">
         <span className="sr-only" role="status">

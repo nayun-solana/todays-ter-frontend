@@ -74,7 +74,7 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1">
+    <div className="flex min-h-dvh flex-col bg-gray-1">
       <ReviewHeader title="방문 기록하기" />
 
       {viewState === 'loading' ? (
@@ -191,7 +191,7 @@ function EditReviewForm({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1">
+    <div className="flex min-h-dvh flex-col bg-gray-1">
       <ReviewHeader title="후기 수정하기" />
 
       <div className="flex flex-1 flex-col gap-3">
@@ -260,7 +260,7 @@ export default function ReviewPage({ mode = 'create' }: ReviewPageProps) {
   if (isEdit) {
     if (reviewQuery.isPending) {
       return (
-        <div className="flex min-h-screen flex-col bg-gray-1">
+        <div className="flex min-h-dvh flex-col bg-gray-1">
           <ReviewHeader title="후기 수정하기" />
           <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
         </div>
@@ -269,7 +269,7 @@ export default function ReviewPage({ mode = 'create' }: ReviewPageProps) {
 
     if (reviewQuery.isError || !reviewQuery.data || !recordId) {
       return (
-        <div className="flex min-h-screen flex-col bg-gray-1">
+        <div className="flex min-h-dvh flex-col bg-gray-1">
           <ReviewHeader title="후기 수정하기" />
           <p className="px-5 py-8 text-sm text-gray-4">후기를 불러오지 못했습니다.</p>
         </div>

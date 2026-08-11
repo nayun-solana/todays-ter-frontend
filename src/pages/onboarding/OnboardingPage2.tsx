@@ -114,7 +114,7 @@ export default function OnboardingStep2Page() {
   return (
     <main
       className="
-         min-h-screen bg-primary px-5 pb-safe pt-safe-5 flex flex-col gap-12 justify-center
+         min-h-dvh bg-primary px-5 pb-safe pt-safe-5 flex flex-col gap-12 justify-center
       "
     >
       <div className="flex flex-col gap-7.5 items-center justify-center">

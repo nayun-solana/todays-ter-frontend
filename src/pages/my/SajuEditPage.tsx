@@ -1,15 +1,12 @@
 import { type RefObject, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
 import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
-import {
-  useCreateFortuneReport,
-  useCurrentFortuneReport,
-  useReportStatus,
-} from '../../hooks/onboarding/useGetReport';
+import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
+import { useMyPage } from '../../hooks/my/useMy';
 
 type DateField = 'year' | 'month' | 'day';
 type DateValue = { year: number; month: number; day: number };
@@ -300,7 +297,10 @@ export default function SajuEditPage() {
 
   useEffect(() => {
     if (regeneratingReportId && reportStatusQuery.data?.status === 'completed') {
-      navigate('/my/saju/complete', { replace: true });
+      navigate('/my/saju/complete', {
+        replace: true,
+        state: { reportId: regeneratingReportId },
+      });
     }
   }, [navigate, regeneratingReportId, reportStatusQuery.data?.status]);
 
@@ -510,8 +510,16 @@ export default function SajuEditPage() {
 
 export function SajuReportCompletePage() {
   const navigate = useNavigate();
-  const currentReportQuery = useCurrentFortuneReport();
-  const reportId = currentReportQuery.data?.reportId;
+  const location = useLocation();
+  const locationState = location.state as { reportId?: unknown } | null;
+  const reportIdFromState =
+    typeof locationState?.reportId === 'number' &&
+    Number.isInteger(locationState.reportId) &&
+    locationState.reportId > 0
+      ? locationState.reportId
+      : undefined;
+  const myPageQuery = useMyPage(!reportIdFromState);
+  const reportId = reportIdFromState ?? myPageQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -530,7 +538,9 @@ export function SajuReportCompletePage() {
         <Button
           disabled={!reportId}
           onClick={() => {
-            if (reportId) navigate(`/report/${reportId}?from=my`, { replace: true });
+            if (reportId) {
+              navigate(`/report/${reportId}?from=my&source=saju-edit`, { replace: true });
+            }
           }}
         >
           {reportId ? '재생성된 리포트 보러가기' : '리포트 불러오는 중'}

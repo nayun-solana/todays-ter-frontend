@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const MyPageResponse = z.object({
-  reportId: z.number().int().positive(),
+  /** BE가 아직 안 내려준다(`/members/me`에 없음). 경로가 열리면 필수로 되돌릴 것. */
+  reportId: z.number().int().positive().nullish(),
   nickname: z.string().min(1),
   profileImageUrl: z.string().url().nullish(),
 });

@@ -2,7 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import Button from '../../components/Button';
-import { useGetCategorySajuReport } from '../../hooks/onboarding/useGetReport';
+import {
+  useCreateSajuReportShare,
+  useGetCategorySajuReport,
+} from '../../hooks/onboarding/useGetReport';
+import { useShareAction } from '../../hooks/recommendation/useShareAction';
 import type {
   ComplementActionGuide,
   ElementCode,
@@ -126,6 +130,20 @@ export default function ReportDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState<SajuReportCategory>('GENERAL');
   const reportQuery = useGetCategorySajuReport(reportId, selectedCategory);
 
+  // 공유 링크는 서버가 발급한다(POST /fortune-reports/{id}/share → shareUrl).
+  // 예전에는 `navigator.share({ title })`만 불러서 **링크 없이 제목만** 공유됐고,
+  // navigator.share가 없는 환경(데스크톱)에서는 아무 반응도 없었다.
+  const shareMutation = useCreateSajuReportShare(reportId);
+  const { share: runShare, result: shareResult, notify: notifyShare } = useShareAction();
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+
+  // 버튼에 포인터·포커스가 닿을 때 미리 받아둔다 — 클릭 시점에 await가 끼면
+  // iOS에서 navigator.share가 사용자 제스처를 잃어 막힌다.
+  const prepareShare = () => {
+    if (shareUrl !== null || shareMutation.isPending) return;
+    shareMutation.mutate(undefined, { onSuccess: (result) => setShareUrl(result.shareUrl) });
+  };
+
   useEffect(() => {
     const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const themeColor = existingThemeColor ?? document.createElement('meta');
@@ -183,9 +201,21 @@ export default function ReportDetailPage() {
   const selectedButton = CATEGORY_BUTTONS.find((button) => button.value === selectedCategory)!;
   const detail = reportQuery.data.detail;
 
-  const handleShare = () => {
-    if (!navigator.share) return;
-    void navigator.share({ title: '오늘의 터 상세 분석' }).catch(() => undefined);
+  const handleShare = async () => {
+    const url =
+      shareUrl ??
+      (await shareMutation
+        .mutateAsync()
+        .then((result) => result.shareUrl)
+        .catch(() => null));
+
+    if (url === null) {
+      notifyShare('unavailable');
+      return;
+    }
+
+    setShareUrl(url);
+    await runShare({ url, title: '오늘의 터 사주 리포트', text: '내 사주 리포트를 공유해요.' });
   };
 
   return (
@@ -203,7 +233,9 @@ export default function ReportDetailPage() {
         <button
           type="button"
           aria-label="공유하기"
-          onClick={handleShare}
+          onClick={() => void handleShare()}
+          onPointerEnter={prepareShare}
+          onFocus={prepareShare}
           className="flex size-6 items-center justify-center"
         >
           <img src={share} alt="" />
@@ -242,9 +274,25 @@ export default function ReportDetailPage() {
           </Button>
         ) : null}
       </main>
+
+      {shareResult !== null ? (
+        <div
+          role="status"
+          className="typo-body-3 fixed bottom-10 left-1/2 z-20 -translate-x-1/2 rounded-full bg-gray-6/90 px-4 py-2 text-white"
+        >
+          {SHARE_TOAST_TEXT[shareResult]}
+        </div>
+      ) : null}
     </div>
   );
 }
+
+const SHARE_TOAST_TEXT = {
+  shared: '공유했어요',
+  copied: '링크가 복사되었어요',
+  failed: '링크 복사에 실패했어요',
+  unavailable: '공유 링크를 만들지 못했어요',
+} as const;
 
 function GeneralDetail({
   detail,

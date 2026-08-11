@@ -23,7 +23,7 @@ const responseWith = (result: unknown) => ({
 beforeEach(() => vi.clearAllMocks());
 
 describe('my page API', () => {
-  it('gets the profile and current report id from /mypage', async () => {
+  it('gets the profile from /members/me', async () => {
     const result = {
       reportId: 83721,
       nickname: '사용자닉네임',
@@ -32,6 +32,6 @@ describe('my page API', () => {
     mockedAxios.get.mockResolvedValue(responseWith(result));
 
     await expect(getMyPage()).resolves.toEqual(result);
-    expect(mockedAxios.get).toHaveBeenCalledWith('/mypage');
+    expect(mockedAxios.get).toHaveBeenCalledWith('/members/me');
   });
 });

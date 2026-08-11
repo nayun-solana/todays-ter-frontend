@@ -396,8 +396,8 @@ export default function PlaceDetailPage() {
                 <div aria-hidden="true" className="mt-4 h-2 bg-gray-2" />
               </>
             ) : otherReviews.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-gray-4">
-                아직 작성된 후기가 없어요.
+              <p className="typo-body-2 px-5 py-[34px] text-center text-gray-5">
+                아직 등록된 후기가 없어요
               </p>
             ) : null}
 

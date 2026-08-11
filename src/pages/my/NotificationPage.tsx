@@ -18,6 +18,7 @@ import {
   groupNotifications,
   hasUnreadNotificationCount,
 } from '../../lib/notification';
+import { shouldMarkNotificationsRead } from '../../lib/notificationScroll';
 import type { NotificationItem } from '../../types/notification/notification';
 
 function NotificationTypeIcon({ type }: { type: string }) {
@@ -84,6 +85,8 @@ export default function NotificationPage() {
   const markNotificationAsRead = useMarkNotificationAsRead();
   const markAllNotificationsAsRead = useMarkAllNotificationsAsRead();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const previousScrollY = useRef(0);
+  const hasScrolledDown = useRef(false);
   const groups = useMemo(
     () =>
       groupNotifications(
@@ -92,6 +95,30 @@ export default function NotificationPage() {
     [notificationsQuery.data],
   );
   const hasUnread = hasUnreadNotificationCount(unreadCountQuery.data);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > previousScrollY.current) hasScrolledDown.current = true;
+
+      if (
+        hasUnread &&
+        !markAllNotificationsAsRead.isPending &&
+        shouldMarkNotificationsRead({
+          currentScrollY,
+          previousScrollY: previousScrollY.current,
+          hasScrolledDown: hasScrolledDown.current,
+        })
+      ) {
+        markAllNotificationsAsRead.mutate();
+      }
+
+      previousScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasUnread, markAllNotificationsAsRead]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -126,17 +153,6 @@ export default function NotificationPage() {
       />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8" aria-busy={notificationsQuery.isPending}>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => markAllNotificationsAsRead.mutate()}
-            disabled={!hasUnread || markAllNotificationsAsRead.isPending}
-            className="typo-sub-2 text-primary disabled:cursor-not-allowed disabled:text-gray-3"
-          >
-            전체 읽음
-          </button>
-        </div>
-
         {notificationsQuery.isPending ? (
           <p className="typo-sub-2 text-gray-4">알림을 불러오는 중입니다.</p>
         ) : null}

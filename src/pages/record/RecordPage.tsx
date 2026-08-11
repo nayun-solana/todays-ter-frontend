@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 import { useMyPlaces } from '../../hooks/record/useRecord';
@@ -18,6 +17,11 @@ const TAB_TO_API_TYPE: Record<RecordTab, MyPlaceListType> = {
   visited: 'visited',
 };
 
+/** 후기 작성 완료 등 외부에서 특정 탭으로 진입시키기 위해 URL로 탭을 노출한다. */
+function parseTab(value: string | null): RecordTab {
+  return value === 'visited' || value === 'saved' ? value : 'saved';
+}
+
 /** "2026-06-29" → "저장일 06/29" */
 function dateLabel(savedDate: string) {
   const [, month, day] = savedDate.split('-');
@@ -27,7 +31,14 @@ function dateLabel(savedDate: string) {
 
 export default function RecordPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<RecordTab>('saved');
+  const [searchParams, setSearchParams] = useSearchParams();
+  /**
+   * 탭 상태를 URL에만 두어 새로고침·공유에도 같은 탭이 열리게 한다.
+   * 탭 전환은 뒤로가기로 되돌릴 만한 이동이 아니고 히스토리만 쌓이므로 replace로 바꾼다.
+   */
+  const activeTab = parseTab(searchParams.get('tab'));
+  const setActiveTab = (tab: RecordTab) =>
+    setSearchParams({ tab }, { replace: true });
   const listType = TAB_TO_API_TYPE[activeTab];
   const placesQuery = useMyPlaces(listType);
   const places = placesQuery.data?.places ?? [];

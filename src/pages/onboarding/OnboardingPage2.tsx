@@ -180,6 +180,11 @@ export default function OnboardingStep2Page() {
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
+          // 재시도할 수 없는 실패에서 '다시 시도'라고 적어두면, 눌렀을 때 화면을 빠져나가는
+          // 동작과 문구가 어긋난다. 실제로 하는 일을 그대로 쓴다.
+          failureActionLabel={
+            canRetry ? (retryReport.isPending ? '다시 시도하는 중…' : '다시 시도') : '확인'
+          }
           onClick={() => {
             // 재시도는 이 화면에 머무르며 진행률을 다시 보여주는 흐름이다 —
             // 여기서 dismiss하면 재시도가 또 실패해도 모달이 못 뜬다.

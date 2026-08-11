@@ -38,7 +38,14 @@ export default function RecordPage() {
    */
   const activeTab = parseTab(searchParams.get('tab'));
   const setActiveTab = (tab: RecordTab) =>
-    setSearchParams({ tab }, { replace: true });
+    // 객체를 통째로 넘기면 다른 쿼리 파라미터가 같이 지워진다 — tab만 갈아끼운다.
+    setSearchParams(
+      (previous) => {
+        previous.set('tab', tab);
+        return previous;
+      },
+      { replace: true },
+    );
   const listType = TAB_TO_API_TYPE[activeTab];
   const placesQuery = useMyPlaces(listType);
   const places = placesQuery.data?.places ?? [];

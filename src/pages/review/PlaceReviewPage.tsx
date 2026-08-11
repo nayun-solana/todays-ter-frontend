@@ -21,7 +21,8 @@ interface PlaceReviewPageProps {
 
 export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProps) {
   const navigate = useNavigate();
-  const { id: placeId } = useParams();
+  const { id: placeIdParam } = useParams();
+  const placeId = Number(placeIdParam);
   const isEdit = mode === 'edit';
   const placeQuery = usePlaceDetail(placeId);
   const reviewsQuery = usePlaceReviews(isEdit ? placeId : undefined);
@@ -51,9 +52,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
     uploadImagesMutation.isPending;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gray-1" data-place-id={placeId}>
-      {/* 수정 화면은 Figma 실측(헤더 99px, X 12×12 @20,60)에 맞춰 PageHeader를 쓴다.
-          작성 화면은 기존 ReviewHeader 유지 — 다른 후기 플로우와 공유하는 컴포넌트라 건드리지 않음 */}
+    <div className="flex min-h-dvh flex-col bg-gray-1" data-place-id={placeIdParam}>
       {isEdit ? (
         <PageHeader
           title="후기 수정하기"
@@ -66,8 +65,8 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
       )}
 
       <div className="flex flex-1 flex-col gap-3">
-        <section className="flex items-center gap-5 bg-white border-b border-gray-2 px-5 py-4">
-          <div className="size-[100px] shrink-0 rounded-xl bg-gray-3" />
+        <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
+          <div className="size-25 shrink-0 rounded-xl bg-gray-3" />
           <div className="min-w-0 flex-1">
             <p className="text-xs text-gray-4">
               {placeQuery.data?.isVisited ? '방문 인증 완료' : '방문 장소'}
@@ -78,7 +77,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-2 bg-white p-5 mx-4">
+        <section className="mx-4 rounded-2xl border border-gray-2 bg-white p-5">
           <h3 className="text-sm font-bold text-gray-6">별점을 선택해주세요</h3>
           <StarRating value={rating} onChange={setRating} className="mt-3" />
 
@@ -102,7 +101,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
             placeQuery.isError ||
             (isEdit && (reviewsQuery.isPending || reviewsQuery.isError))
           }
-          className="mb-5 mx-5 w-auto"
+          className="mx-5 mb-5 w-auto"
           onClick={async () => {
             if (!placeId || !canSubmit || !placeQuery.data) return;
 

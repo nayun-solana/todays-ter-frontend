@@ -5,6 +5,11 @@ import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
 import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import {
+  useCreateFortuneReport,
+  useCurrentFortuneReport,
+  useReportStatus,
+} from '../../hooks/onboarding/useGetReport';
 
 type DateField = 'year' | 'month' | 'day';
 type DateValue = { year: number; month: number; day: number };
@@ -263,6 +268,9 @@ export default function SajuEditPage() {
   const navigate = useNavigate();
   const sajuQuery = useMemberSaju();
   const updateSajuMutation = useUpdateMemberSaju();
+  const createReportMutation = useCreateFortuneReport();
+  const [regeneratingReportId, setRegeneratingReportId] = useState<number | null>(null);
+  const reportStatusQuery = useReportStatus(regeneratingReportId ?? undefined);
   const [draft, setDraft] = useState<SajuForm | null>(null);
   const [openField, setOpenField] = useState<DateField | null>(null);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
@@ -279,6 +287,22 @@ export default function SajuEditPage() {
       hasSelectedTime !== serverForm!.hasTime ||
       pickerTime.hour !== serverForm!.time.hour ||
       pickerTime.minute !== serverForm!.time.minute);
+  const regenerationFailed =
+    createReportMutation.isError ||
+    reportStatusQuery.isError ||
+    reportStatusQuery.data?.status === 'failed';
+  const isRegenerating =
+    updateSajuMutation.isPending ||
+    createReportMutation.isPending ||
+    (!!regeneratingReportId &&
+      !regenerationFailed &&
+      reportStatusQuery.data?.status !== 'completed');
+
+  useEffect(() => {
+    if (regeneratingReportId && reportStatusQuery.data?.status === 'completed') {
+      navigate('/my/saju/complete', { replace: true });
+    }
+  }, [navigate, regeneratingReportId, reportStatusQuery.data?.status]);
 
   const setDate = (update: (current: DateValue) => DateValue) => {
     setDraft((current) => {
@@ -317,6 +341,29 @@ export default function SajuEditPage() {
         day: Math.min(next.day, daysInMonth(next.year, next.month)),
       };
     });
+  };
+
+  const submit = async () => {
+    if ((!changed && !regenerationFailed) || isRegenerating) return;
+
+    setRegeneratingReportId(null);
+
+    try {
+      await updateSajuMutation.mutateAsync({
+        calendarType,
+        birthDate: formatDate(date),
+        birthTime: hasSelectedTime
+          ? `${String(pickerTime.hour).padStart(2, '0')}:${String(pickerTime.minute).padStart(2, '0')}`
+          : '',
+        birthTimeUnknown: !hasSelectedTime,
+      });
+
+      // 사주 저장이 끝난 뒤 새 리포트 생성을 시작하고, 완료될 때까지 상태를 폴링한다.
+      const report = await createReportMutation.mutateAsync();
+      setRegeneratingReportId(report.reportId);
+    } catch {
+      // mutation의 isError를 화면의 재시도 안내에 사용한다.
+    }
   };
 
   return (
@@ -442,27 +489,19 @@ export default function SajuEditPage() {
       </main>
 
       <Button
-        disabled={!changed || updateSajuMutation.isPending}
-        onClick={() => {
-          updateSajuMutation.mutate(
-            {
-              calendarType,
-              birthDate: formatDate(date),
-              birthTime: hasSelectedTime
-                ? `${String(pickerTime.hour).padStart(2, '0')}:${String(pickerTime.minute).padStart(2, '0')}`
-                : '',
-              birthTimeUnknown: !hasSelectedTime,
-            },
-            { onSuccess: () => navigate('/my/saju/complete') },
-          );
-        }}
+        disabled={(!changed && !regenerationFailed) || isRegenerating}
+        onClick={() => void submit()}
         className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
-        저장하고 리포트 재생성
+        {isRegenerating ? '리포트 재생성 중...' : '저장하고 리포트 재생성'}
       </Button>
       {updateSajuMutation.isError ? (
         <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
           사주 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.
+        </p>
+      ) : regenerationFailed ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          리포트 재생성에 실패했습니다. 다시 시도해주세요.
         </p>
       ) : null}
     </div>
@@ -471,22 +510,38 @@ export default function SajuEditPage() {
 
 export function SajuReportCompletePage() {
   const navigate = useNavigate();
+  const currentReportQuery = useCurrentFortuneReport();
+  const reportId = currentReportQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
       <main className="flex flex-1 -translate-y-6 flex-col items-center justify-center gap-8 text-center text-gray-6">
         <CheckIcon />
         <div>
-          <h1 className="typo-head-2">사주 정보 수정 완료</h1>
+          <h1 className="typo-head-2">리포트 재생성 완료</h1>
           <p className="typo-sub-2 mt-3">
             수정된 사주를 바탕으로
             <br />
-            새로운 추천부터 적용돼요.
+            리포트가 재생성되었어요!
           </p>
         </div>
       </main>
-      <div className="px-5 pb-8">
-        <Button onClick={() => navigate('/my', { replace: true })}>마이페이지로 돌아가기</Button>
+      <div className="flex flex-col gap-2 px-5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <Button
+          disabled={!reportId}
+          onClick={() => {
+            if (reportId) navigate(`/report/${reportId}?from=my`, { replace: true });
+          }}
+        >
+          {reportId ? '재생성된 리포트 보러가기' : '리포트 불러오는 중'}
+        </Button>
+        <Button
+          variant="secondary"
+          className="border-primary-light bg-primary-bg"
+          onClick={() => navigate('/my', { replace: true })}
+        >
+          마이페이지로 돌아가기
+        </Button>
       </div>
     </div>
   );

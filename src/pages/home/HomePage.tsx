@@ -1,11 +1,14 @@
-import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { isOnboardingRequired } from '../../api/onboardingRequired';
 import placeSample from '../../assets/home/place-sample.jpg';
+import notificationBell from '../../assets/notification-bell.svg';
+import notificationDot from '../../assets/notification-dot.svg';
 import GuestLoginPrompt from '../../components/GuestLoginPrompt';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import { useUnreadNotificationCount } from '../../hooks/notification/useNotification';
 import { formatKoreanDate } from '../../lib/date';
+import { hasUnreadNotificationCount } from '../../lib/notification';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -46,6 +49,8 @@ export default function HomePage() {
   // isAuthPending = 부팅 세션 복원 중. 이때 게스트로 단정해 게이트를 띄우면,
   // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
   const { isMember, isPending: isAuthPending } = useAuthStatus();
+  // 홈은 알림 목록을 받지 않는다 — 배지에 필요한 건 미읽음 개수뿐이다.
+  const unreadCountQuery = useUnreadNotificationCount({ enabled: isMember, poll: true });
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
@@ -145,20 +150,26 @@ export default function HomePage() {
               </>
             )}
           </div>
-          {/* 알림 진입점. 지금까지 알림 화면으로 갈 경로가 아예 없었다.
-              알림은 회원 전용이라 게스트에겐 아예 노출하지 않는다 — 눌러봐야 로그인으로
-              튕길 버튼을 보여줄 이유가 없다(에디터 오행 픽과 같은 기준).
-              인사말 API와 무관한 고정 요소라 로딩·실패 상태에서도 그대로 둔다.
-              ⚠️ 시안에는 안 읽은 알림 빨간 점이 있지만 미확인 개수를 주는 API가 없다 —
-                 NotificationPage 데이터도 아직 하드코딩 목이라 벨 배지는 후속으로 남긴다. */}
+          {/* 회원 홈에서는 60초 폴링과 홈 재진입/창 포커스 시 조회한 미읽음 개수로 배지를 갱신한다. */}
           {isMember && (
             <button
               type="button"
               aria-label="알림"
               onClick={() => navigate('/my/notifications')}
-              className="shrink-0 pt-0.5"
+              className="relative size-6 shrink-0"
             >
-              <Bell className="size-6" strokeWidth={2} />
+              <img
+                src={notificationBell}
+                alt=""
+                className="absolute top-[2.5px] left-1 h-[21px] w-[18px]"
+              />
+              {hasUnreadNotificationCount(unreadCountQuery.data) ? (
+                <img
+                  src={notificationDot}
+                  alt=""
+                  className="absolute top-0 right-0 size-[3px]"
+                />
+              ) : null}
             </button>
           )}
         </header>

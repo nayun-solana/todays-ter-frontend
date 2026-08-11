@@ -1,17 +1,26 @@
-import { useEffect, useId, type ReactNode } from 'react';
-import { Download, Paperclip, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { toPng } from 'html-to-image';
+import { Download, X } from 'lucide-react';
 
+import type { ApiError } from '../../../api/types';
+import defaultBg from '../../../assets/review/default.png';
+import earthIcon from '../../../assets/review/earth.png';
+import fireIcon from '../../../assets/review/fire.png';
+import metalIcon from '../../../assets/review/metal.png';
+import treeIcon from '../../../assets/review/tree.png';
+import waterIcon from '../../../assets/review/water.png';
+import { usePlaceShareCard } from '../../../hooks/place/usePlace';
 import type { PlaceDay } from './RecordPlaceCard';
 
-export type ShareCardPlace = {
-  name: string;
-  day: PlaceDay;
-  shareMessage: string;
-  imageUrl: string;
-};
+/** Google Places 대표 이미지 없음 등 — 배경만 로컬 폴백 */
+const SHARE_CARD_IMAGE_MISSING_CODE = 'PLACE404_3';
 
 type ShareCardModalProps = {
-  place: ShareCardPlace;
+  placeId: number;
+  /** API 실패(PLACE404_3) 시 카드에 표시할 장소명 */
+  fallbackPlaceName?: string;
+  /** 다녀온 터 목록에서 넘긴 오행(기운) — 공유 카드 색·도형에 사용 */
+  element?: PlaceDay;
   onClose: () => void;
 };
 
@@ -23,24 +32,35 @@ const DAY_FILL: Record<PlaceDay, string> = {
   토: 'var(--color-ohaeng-earth)',
 };
 
-/** 물방울 path */
-const DROPLET_PATH =
-  'M20 1C20 1 5 18 5 30c0 8.3 6.7 15 15 15s15-6.7 15-15C35 18 20 1 20 1Z';
+/** 오행별 장식·구멍 실루엣 */
+const ELEMENT_SHAPE: Record<PlaceDay, string> = {
+  화: fireIcon,
+  수: waterIcon,
+  목: treeIcon,
+  금: metalIcon,
+  토: earthIcon,
+};
 
-/** 물방울 사이즈 */
-const DROPLET_SIZE = 18;
-const HOLE_SCALE = 0.45;
+const DEFAULT_SHAPE_SIZE = 20;
+/** 토 아이콘만 조금 크게 */
+const ELEMENT_SHAPE_SIZE: Record<PlaceDay, number> = {
+  화: DEFAULT_SHAPE_SIZE,
+  수: DEFAULT_SHAPE_SIZE,
+  목: DEFAULT_SHAPE_SIZE,
+  금: DEFAULT_SHAPE_SIZE,
+  토: 28,
+};
 
-/** 단색 물방울 위치 */
-const SOLID_DROPLETS = [
-  { left: '20%', bottom: 172 },
-  { left: '40%', bottom: 144 },
-  { left: '62%', bottom: 154 },
-  { left: '80%', bottom: 188 },
+/** 장식 도형 위치 */
+const SOLID_SHAPES = [
+  { left: '20%', bottom: 182 },
+  { left: '40%', bottom: 154 },
+  { left: '62%', bottom: 164 },
+  { left: '80%', bottom: 198 },
 ] as const;
 
-/** 물방울 구멍 위치 */
-const HOLE_DROPLETS = [
+/** 패널 구멍 위치 */
+const HOLE_SHAPES = [
   { x: 26, y: -2 },
   { x: 74, y: 10 },
   { x: 148, y: 3 },
@@ -48,62 +68,87 @@ const HOLE_DROPLETS = [
   { x: 278, y: 2 },
 ] as const;
 
-function SolidDroplet({ fill }: { fill: string }) {
-  return (
-    <svg
-      width={DROPLET_SIZE}
-      height={DROPLET_SIZE * 1.2}
-      viewBox="0 0 40 48"
-      aria-hidden
-    >
-      <path d={DROPLET_PATH} fill={fill} />
-    </svg>
-  );
+function shapeMaskStyle(shapeSrc: string, fill: string, size: number): CSSProperties {
+  return {
+    width: size,
+    height: size,
+    backgroundColor: fill,
+    WebkitMaskImage: `url(${shapeSrc})`,
+    maskImage: `url(${shapeSrc})`,
+    WebkitMaskSize: 'contain',
+    maskSize: 'contain',
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+    maskPosition: 'center',
+    maskMode: 'luminance',
+  };
 }
 
-function BluePanelWithHoles({
+function panelHoleMaskStyle(shapeSrc: string, fill: string, size: number): CSSProperties {
+  const holeSize = `${size}px`;
+
+  return {
+    backgroundColor: fill,
+    WebkitMaskImage: [
+      'linear-gradient(#fff, #fff)',
+      ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
+    ].join(', '),
+    maskImage: [
+      'linear-gradient(#fff, #fff)',
+      ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
+    ].join(', '),
+    WebkitMaskPosition: [
+      '0 0',
+      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
+    ].join(', '),
+    maskPosition: [
+      '0 0',
+      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
+    ].join(', '),
+    // mask-size는 "가로 세로" 한 쌍. 정사각이면 값 하나만 써도 됨(가로=세로).
+    WebkitMaskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
+    maskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    maskMode: 'luminance',
+    WebkitMaskComposite: 'xor',
+    maskComposite: 'exclude',
+  };
+}
+
+function SolidShape({ fill, element }: { fill: string; element: PlaceDay }) {
+  const size = ELEMENT_SHAPE_SIZE[element];
+  return <div aria-hidden style={shapeMaskStyle(ELEMENT_SHAPE[element], fill, size)} />;
+}
+
+function PanelWithHoles({
   fill,
   message,
+  element,
 }: {
   fill: string;
   message: string;
+  element: PlaceDay;
 }) {
-  const maskId = useId();
+  const size = ELEMENT_SHAPE_SIZE[element]-4;
 
   return (
     <div className="absolute inset-x-0 bottom-0">
-      {/* 단색 패널 위쪽: 흰색 페이드 */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-full h-28 bg-linear-to-b from-transparent to-white"
         aria-hidden
       />
 
       <div className="relative pb-10 pt-13">
-        <svg
-          className="absolute inset-0 size-full"
-          viewBox="0 0 300 140"
-          preserveAspectRatio="none"
+        <div
+          className="absolute inset-0"
           aria-hidden
-        >
-          <defs>
-            <mask id={maskId} maskUnits="userSpaceOnUse">
-              {/* white = 단색 아이콘, black = 구멍 */}
-              <rect width="300" height="140" fill="white" />
-              {HOLE_DROPLETS.map((hole) => (
-                <path
-                  key={`${hole.x}-${hole.y}`}
-                  d={DROPLET_PATH}
-                  fill="black"
-                  transform={`translate(${hole.x} ${hole.y}) scale(${HOLE_SCALE})`}
-                />
-              ))}
-            </mask>
-          </defs>
-          <rect width="300" height="140" fill={fill} mask={`url(#${maskId})`} />
-        </svg>
+          style={panelHoleMaskStyle(ELEMENT_SHAPE[element], fill, size)}
+        />
 
         <div className="relative z-10 flex h-full items-center justify-center px-6">
-          <p className="break-keep text-center text-xl font-extrabold leading-snug text-white">
+          <p className="whitespace-pre-line break-keep text-center text-xl font-extrabold leading-snug text-white">
             {message}
           </p>
         </div>
@@ -115,23 +160,69 @@ function BluePanelWithHoles({
 function ActionButton({
   label,
   children,
+  onClick,
+  disabled,
 }: {
   label: string;
   children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="flex size-10 items-center justify-center rounded-full bg-primary-bg text-primary shadow-btn"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex size-10 items-center justify-center rounded-full bg-primary-bg text-primary shadow-btn disabled:opacity-50"
     >
       {children}
     </button>
   );
 }
 
-export default function ShareCardModal({ place, onClose }: ShareCardModalProps) {
-  const fill = DAY_FILL[place.day];
+export default function ShareCardModal({
+  placeId,
+  fallbackPlaceName,
+  element: listElement,
+  onClose,
+}: ShareCardModalProps) {
+  const shareCardQuery = usePlaceShareCard(placeId);
+  const card = shareCardQuery.data;
+  const error = shareCardQuery.error as unknown as ApiError | null | undefined;
+  const isImageMissingError = error?.code === SHARE_CARD_IMAGE_MISSING_CODE;
+
+  const placeName = card?.placeName ?? fallbackPlaceName ?? '오늘의 터';
+  /** 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게 */
+  const element: PlaceDay = listElement ?? card?.element ?? '수';
+  const fill = DAY_FILL[element];
+  const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;
+  const cardRef = useRef<HTMLElement>(null);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const remoteUrl = !isImageMissingError ? card?.imageUrl?.trim() || null : null;
+  const bgSrc = remoteUrl && failedUrl !== remoteUrl ? remoteUrl : defaultBg;
+  const canShowCard = Boolean(card) || isImageMissingError;
+
+  async function handleDownload() {
+    if (!cardRef.current || isDownloading) return;
+
+    setIsDownloading(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = `todays-ter-${placeName.replace(/[\\/:*?"<>|]/g, '_')}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // 외부 이미지 CORS 등으로 실패할 수 있음
+    } finally {
+      setIsDownloading(false);
+    }
+  }
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -165,49 +256,58 @@ export default function ShareCardModal({ place, onClose }: ShareCardModalProps) 
           오늘의 공유 카드
         </div>
 
-        <article className="relative h-[480px] w-full overflow-hidden rounded-[28px] shadow-xl">
-          {/* 전체 배경 이미지 */}
-          <img
-            src={place.imageUrl}
-            alt={place.name}
-            className="absolute inset-0 size-full object-cover"
-          />
+        {shareCardQuery.isPending ? (
+          <p className="py-20 text-sm text-white">불러오는 중…</p>
+        ) : !canShowCard ? (
+          <p className="py-20 text-sm text-white">공유 카드를 불러오지 못했습니다.</p>
+        ) : (
+          <article
+            ref={cardRef}
+            className="relative h-[400px] w-full overflow-hidden rounded-[28px] shadow-xl"
+          >
+            <img
+              src={bgSrc}
+              alt={placeName}
+              crossOrigin="anonymous"
+              className="absolute inset-0 size-full object-cover"
+              onError={() => {
+                if (remoteUrl) setFailedUrl(remoteUrl);
+              }}
+            />
 
-          {/* 이미지 위 단색 물방울 */}
-          {SOLID_DROPLETS.map((droplet) => (
-            <div
-              key={`${droplet.left}-${droplet.bottom}`}
-              className="pointer-events-none absolute z-20"
-              style={{ left: droplet.left, bottom: droplet.bottom }}
-            >
-              <SolidDroplet fill={fill} />
-            </div>
-          ))}
+            {SOLID_SHAPES.map((shape) => (
+              <div
+                key={`${shape.left}-${shape.bottom}`}
+                className="pointer-events-none absolute z-20"
+                style={{ left: shape.left, bottom: shape.bottom }}
+              >
+                <SolidShape fill={fill} element={element} />
+              </div>
+            ))}
 
-          {/* 하단 파란 패널 + 물방울 구멍으로 배경 이미지 노출 */}
-          <BluePanelWithHoles fill={fill} message={place.shareMessage} />
-        </article>
+            <PanelWithHoles fill={fill} message={shareMessage} element={element} />
+          </article>
+        )}
 
         <div className="mt-5 flex items-center gap-4">
-          <ActionButton label="링크 복사">
-            <Paperclip size={20} aria-hidden />
-          </ActionButton>
-          <ActionButton label="공유하기">
-            <Send size={20} aria-hidden />
-          </ActionButton>
-          <ActionButton label="다운로드">
+          <ActionButton
+            label="다운로드"
+            onClick={() => {
+              void handleDownload();
+            }}
+            disabled={!canShowCard || isDownloading}
+          >
             <Download size={20} aria-hidden />
           </ActionButton>
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={onClose}
+            className="flex size-11 items-center justify-center rounded-full bg-gray-4 text-gray-1"
+          >
+            <X size={24} strokeWidth={2} aria-hidden />
+          </button>
         </div>
-
-        <button
-          type="button"
-          aria-label="닫기"
-          onClick={onClose}
-          className="mt-6 flex size-11 items-center justify-center rounded-full bg-gray-4 text-gray-1"
-        >
-          <X size={24} strokeWidth={2} aria-hidden />
-        </button>
       </div>
     </div>
   );

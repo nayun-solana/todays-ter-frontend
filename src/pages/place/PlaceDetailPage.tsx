@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
-import iconBookmark from '../../assets/icon-bookmark.svg';
 import iconStar from '../../assets/icon-star.svg';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { usePlaceDetail, usePlaceReviews, placeKeys } from '../../hooks/place/usePlace';
+import {
+  usePlaceBookmarkToggle,
+  usePlaceDetail,
+  usePlaceReviews,
+  placeKeys,
+} from '../../hooks/place/usePlace';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
 import { loadNaverMaps } from '../../lib/naverMaps';
@@ -262,6 +267,7 @@ export default function PlaceDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const placeQuery = usePlaceDetail(id);
   const reviewsQuery = usePlaceReviews(id);
+  const bookmark = usePlaceBookmarkToggle(id);
   const deleteReviewMutation = useDeleteRecord();
   const place = placeQuery.data;
 
@@ -308,10 +314,21 @@ export default function PlaceDetailPage() {
         trailing={
           <button
             type="button"
-            aria-label="저장하기"
-            className="flex size-6 items-center justify-center"
+            aria-label={place.isSaved ? '저장 해제' : '저장'}
+            aria-pressed={place.isSaved}
+            disabled={bookmark.isPending}
+            onClick={() =>
+              isMember
+                ? bookmark.mutate(!place.isSaved)
+                : navigate('/login', { state: { from: `/place/${id}` } })
+            }
+            className="flex size-6 items-center justify-center text-gray-4 disabled:opacity-40"
           >
-            <img src={iconBookmark} alt="" className="h-[17px] w-[14px]" />
+            <Bookmark
+              className={place.isSaved ? 'size-6 text-primary' : 'size-6 text-gray-4'}
+              fill={place.isSaved ? 'currentColor' : 'none'}
+              strokeWidth={2}
+            />
           </button>
         }
       />
@@ -396,8 +413,8 @@ export default function PlaceDetailPage() {
                 <div aria-hidden="true" className="mt-4 h-2 bg-gray-2" />
               </>
             ) : otherReviews.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-gray-4">
-                아직 작성된 후기가 없어요.
+              <p className="typo-body-2 px-5 py-[34px] text-center text-gray-5">
+                아직 등록된 후기가 없어요
               </p>
             ) : null}
 
@@ -419,7 +436,13 @@ export default function PlaceDetailPage() {
         <Button disabled={!isMember} onClick={() => navigate(`/place/${id}/review`)}>
           다녀왔어요
         </Button>
-        <Button variant="secondary">길찾기</Button>
+        <Button
+          variant="secondary"
+          disabled={!place.mapUrl}
+          onClick={() => place.mapUrl && window.open(place.mapUrl, '_blank', 'noopener,noreferrer')}
+        >
+          길찾기
+        </Button>
       </div>
 
       {deleteTarget ? (

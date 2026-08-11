@@ -2,20 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   getMyPage,
-  getNotificationSettings,
   getMemberSaju,
   getPermissionSettings,
   getPolicies,
   getSocialConnections,
   updateMemberSaju,
-  updateNotificationSettings,
   updatePermissionSettings,
   withdrawMember,
 } from '../../api/my';
 import type {
   MemberSajuUpdateRequest,
   MemberWithdrawRequest,
-  NotificationSettingsRequest,
   PermissionSettingsRequest,
 } from '../../types/my/my';
 
@@ -24,7 +21,6 @@ export const myKeys = {
   profile: () => [...myKeys.all, 'profile'] as const,
   socialConnections: () => [...myKeys.all, 'social-connections'] as const,
   saju: () => [...myKeys.all, 'saju'] as const,
-  notificationSettings: () => [...myKeys.all, 'notification-settings'] as const,
   permissions: () => [...myKeys.all, 'permissions'] as const,
   policies: () => [...myKeys.all, 'policies'] as const,
 };
@@ -64,31 +60,6 @@ export function useUpdateMemberSaju() {
 export function useWithdrawMember() {
   return useMutation({
     mutationFn: (body: MemberWithdrawRequest) => withdrawMember(body),
-  });
-}
-
-export function useNotificationSettings() {
-  return useQuery({
-    queryKey: myKeys.notificationSettings(),
-    queryFn: getNotificationSettings,
-  });
-}
-
-export function useUpdateNotificationSettings() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (body: NotificationSettingsRequest) => updateNotificationSettings(body),
-    onMutate: async (body) => {
-      await queryClient.cancelQueries({ queryKey: myKeys.notificationSettings() });
-      const previous = queryClient.getQueryData(myKeys.notificationSettings());
-      queryClient.setQueryData(myKeys.notificationSettings(), body);
-      return { previous };
-    },
-    onError: (_error, _body, context) => {
-      queryClient.setQueryData(myKeys.notificationSettings(), context?.previous);
-    },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: myKeys.notificationSettings() }),
   });
 }
 

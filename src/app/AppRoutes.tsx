@@ -169,14 +169,6 @@ export default function AppRoutes() {
               shareUrl이 정확히 이 경로다 — 라우트가 없던 동안에는 catch-all에 걸려
               전부 홈으로 튕겼다(#151). */}
           <Route path="/report/shared/:token" element={<ReportDetailPage variant="shared" />} />
-          {/* BE가 예전에 내려주던 shareUrl 경로. 지금은 위 경로로 고쳐서 보내지만(실측),
-              그 사이에 뿌려진 링크도 열리도록 당분간 같이 받아준다.
-              ⚠️ dev에서는 확인 불가 — vite.config의 `/recommendations` 프록시가 이 주소를 가로채
-              API JSON을 돌려준다. 실제 동작은 배포본(Vercel rewrite)에서만 확인된다. */}
-          <Route
-            path="/recommendations/places/shared/:token"
-            element={<MatchedTerPage variant="shared" />}
-          />
         </Route>
 
         {/* 없는 주소는 임시로 홈으로 */}

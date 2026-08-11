@@ -18,6 +18,8 @@ function retryUnlessOnboardingRequired(failureCount: number, error: unknown) {
 }
 
 export const homeKeys = {
+  /** 홈 4개를 한 번에 무효화할 때 쓰는 프리픽스. 리포트를 만들면 홈이 통째로 달라진다. */
+  all: ['home'] as const,
   todayEnergy: ['home', 'today-energy'] as const,
   header: ['home', 'header'] as const,
   routines: ['home', 'energy-routines'] as const,

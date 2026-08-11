@@ -1,13 +1,15 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createFortuneReport,
   createSajuReportShare,
   getCategorySajuReport,
+  getSharedSajuReportDetail,
   getReportStatus,
   getSajuReportSummary,
   retryFortuneReport,
 } from '../../api/report';
+import { homeKeys } from '../home/useHome';
 import type { SajuReportCategory } from '../../types/onboarding/report';
 
 export const reportKeys = {
@@ -36,8 +38,26 @@ export function useGetCategorySajuReport(reportId: number, category: SajuReportC
 }
 
 /** 리포트 생성 시작 (202) */
+/**
+ * 리포트 생성.
+ *
+ * 성공하면 홈 캐시를 통째로 무효화한다. 홈의 기운·루틴·추천은 전부 리포트에서 파생되므로
+ * 리포트가 생기거나 바뀌면 네 화면이 같이 달라진다.
+ *
+ * 첫 온보딩은 무효화가 없어도 대체로 맞았다 — 리포트 이전에는 홈 쿼리들이 404로 **실패**해
+ * 있었고, 실패한 쿼리는 staleTime과 무관하게 마운트 때 다시 부르기 때문이다.
+ * 문제는 성공 캐시가 있는 경우다(`staleTime: 30_000`). 특히 마이 → 사주 수정 → 재생성은
+ * 새 reportId가 발급되는데도 홈이 옛 리포트 기준으로 최대 30초 남았다.
+ */
 export function useCreateFortuneReport() {
-  return useMutation({ mutationFn: createFortuneReport });
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createFortuneReport,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: homeKeys.all });
+    },
+  });
 }
 
 /**
@@ -70,9 +90,34 @@ export function useReportStatus(reportId: number | undefined, options?: { enable
  */
 export const STATUS_POLL_MAX_FAILURES = 4;
 
-/** 실패한 리포트 재시도 */
+/**
+ * 실패한 리포트 재시도.
+ * 성공하면 홈을 무효화한다 — 이유는 `useCreateFortuneReport` 주석 참고.
+ */
 export function useRetryFortuneReport() {
-  return useMutation({ mutationFn: (reportId: number) => retryFortuneReport(reportId) });
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (reportId: number) => retryFortuneReport(reportId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: homeKeys.all });
+    },
+  });
+}
+
+/**
+ * 공유 링크로 여는 상세.
+ * 인증이 없어도 열려야 하므로 회원 판정과 무관하게 토큰만 있으면 조회한다.
+ */
+export function useSharedSajuReportDetail(
+  shareToken: string | undefined,
+  category: SajuReportCategory,
+) {
+  return useQuery({
+    queryKey: ['shared-saju-report', shareToken ?? '', category],
+    queryFn: () => getSharedSajuReportDetail({ shareToken: shareToken!, category }),
+    enabled: !!shareToken,
+  });
 }
 
 /** 리포트 공유 링크 생성 */

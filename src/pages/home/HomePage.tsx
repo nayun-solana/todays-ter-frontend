@@ -50,7 +50,12 @@ export default function HomePage() {
   // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
   const { isMember, isPending: isAuthPending } = useAuthStatus();
   // 홈은 알림 목록을 받지 않는다 — 배지에 필요한 건 미읽음 개수뿐이다.
-  const unreadCountQuery = useUnreadNotificationCount({ enabled: isMember, poll: true });
+  //
+  // ⚠️ 지금은 꺼둔다. BE에 알림 도메인이 아직 없어서 `/notifications/unread-count`가
+  // **유효한 회원 토큰으로도 401**이다(실측 2026-08-12, BE 레포에 컨트롤러 없음).
+  // 켜두면 회원이 홈에 머무는 동안 60초마다 401만 반복된다 — 배지는 어차피 안 뜬다.
+  // BE가 붙으면 `{ enabled: isMember, poll: true }`로 되돌리면 된다(#153).
+  const unreadCountQuery = useUnreadNotificationCount({ enabled: false, poll: false });
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();

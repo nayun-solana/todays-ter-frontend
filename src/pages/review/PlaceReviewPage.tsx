@@ -14,6 +14,16 @@ import Button from './components/Button';
 import ReviewHeader from './components/ReviewHeader';
 import StarRating from './components/StarRating';
 
+/**
+ * "이미 이 장소에 후기가 있다"는 서버 응답인지.
+ * BE는 한 장소당 REVIEW 하나만 허용한다(`RecordService`의 existsByMemberIdAndPlaceIdAndType).
+ * 재시도해도 영영 409이므로 "잠시 후 다시 시도"로 안내하면 안 된다.
+ */
+function isDuplicateReviewError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  return (error as { code?: unknown }).code === 'RECORD409_1';
+}
+
 interface PlaceReviewPageProps {
   /** edit: 기존 후기를 불러와 수정. 변경이 있을 때만 저장 가능 */
   mode?: 'create' | 'edit';
@@ -25,7 +35,9 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
   const placeId = Number(placeIdParam);
   const isEdit = mode === 'edit';
   const placeQuery = usePlaceDetail(placeId);
-  const reviewsQuery = usePlaceReviews(isEdit ? placeId : undefined);
+  // 작성 모드에서도 불러온다. BE는 한 장소당 후기 1개만 허용하므로(RECORD409_1),
+  // 이미 쓴 후기가 있는지 **누르기 전에** 알아야 한다.
+  const reviewsQuery = usePlaceReviews(placeId);
   const createRecordMutation = useCreateRecord();
   const updateRecordMutation = useUpdateRecord();
   const uploadImagesMutation = useUploadRecordImages();
@@ -45,6 +57,9 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
   const canSubmit = isEdit
     ? rating > 0 && memo.trim().length > 0 && (rating !== initialRating || memo !== initialMemo)
     : rating > 0 && memo.trim().length > 0;
+
+  // 작성 모드인데 이미 후기가 있는 경우. 서버가 409로 막기 때문에 저장을 시도할 이유가 없다.
+  const hasExistingReview = !isEdit && !!myReview;
 
   const isPending =
     createRecordMutation.isPending ||
@@ -95,6 +110,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
 
         <Button
           disabled={
+            hasExistingReview ||
             !canSubmit ||
             isPending ||
             placeQuery.isPending ||
@@ -117,7 +133,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
                     recordId: myReview.reviewId,
                     body: { rating, content: memo.trim(), imageIds },
                   },
-                  { onSuccess: () => navigate(`/place/${placeId}`) },
+                  { onSuccess: () => navigate(`/place/${placeId}`, { replace: true }) },
                 );
                 return;
               }
@@ -130,7 +146,12 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
                   content: memo.trim(),
                   imageIds,
                 },
-                { onSuccess: () => navigate(`/place/${placeId}/review/complete`) },
+                {
+                  // replace로 넘어간다. push하면 완료 화면이 장소 상세로 replace된 뒤에도
+                  // **작성 폼이 히스토리에 남아**, 상세에서 뒤로가기를 누르면 방금 저장한
+                  // 폼으로 되돌아간다(거기서 다시 저장하면 409다).
+                  onSuccess: () => navigate(`/place/${placeId}/review/complete`, { replace: true }),
+                },
               );
             } catch {
               // mutation state renders the error message below
@@ -139,11 +160,17 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
         >
           {isEdit ? '수정 완료' : '후기 저장하기'}
         </Button>
-        {createRecordMutation.isError ||
-        updateRecordMutation.isError ||
-        uploadImagesMutation.isError ? (
+        {hasExistingReview ? (
+          <p className="mb-5 px-5 text-center text-xs text-gray-5">
+            이 장소에는 이미 후기를 작성했어요. 내용을 바꾸려면 후기 수정에서 고칠 수 있어요.
+          </p>
+        ) : createRecordMutation.isError ||
+          updateRecordMutation.isError ||
+          uploadImagesMutation.isError ? (
           <p className="mb-5 px-5 text-center text-xs text-danger">
-            후기 저장에 실패했습니다. 잠시 후 다시 시도해주세요.
+            {isDuplicateReviewError(createRecordMutation.error)
+              ? '이미 이 장소에 후기를 작성했어요. 새로고침 후 후기 수정에서 고쳐주세요.'
+              : '후기 저장에 실패했습니다. 잠시 후 다시 시도해주세요.'}
           </p>
         ) : null}
       </div>

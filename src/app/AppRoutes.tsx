@@ -165,6 +165,10 @@ export default function AppRoutes() {
           {/* 공유 링크 진입 — 인증·가드 없이 열려야 한다. 받는 사람은 우리 사용자가 아닐 수
               있어서 세션 게이트까지 걸면 공유 기능 자체가 죽는다. */}
           <Route path="/matched-ter/shared/:token" element={<MatchedTerPage variant="shared" />} />
+          {/* 공유받은 사주 리포트. BE가 `POST /fortune-reports/{id}/share`로 내려주는
+              shareUrl이 정확히 이 경로다 — 라우트가 없던 동안에는 catch-all에 걸려
+              전부 홈으로 튕겼다(#151). */}
+          <Route path="/report/shared/:token" element={<ReportDetailPage variant="shared" />} />
           {/* BE가 예전에 내려주던 shareUrl 경로. 지금은 위 경로로 고쳐서 보내지만(실측),
               그 사이에 뿌려진 링크도 열리도록 당분간 같이 받아준다.
               ⚠️ dev에서는 확인 불가 — vite.config의 `/recommendations` 프록시가 이 주소를 가로채

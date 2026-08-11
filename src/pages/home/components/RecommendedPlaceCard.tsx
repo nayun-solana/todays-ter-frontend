@@ -1,3 +1,6 @@
+import { useState } from 'react';
+
+import placeSample from '../../../assets/home/place-sample.jpg';
 import star from '../../../assets/home/star.svg';
 
 interface RecommendedPlaceCardProps {
@@ -24,13 +27,20 @@ export default function RecommendedPlaceCard({
   rating,
   onClick,
 }: RecommendedPlaceCardProps) {
+  // 썸네일 URL이 **있는데 안 열리는** 경우가 실제로 있다. BE는 목록에
+  // `/places/{id}/thumbnail`을 늘 채워 내려주는데 그 경로가 지금 500이다(Google Places 연동 실패).
+  // 값의 유무로만 폴백하면(`?? placeSample`) 여기는 안 걸려서 깨진 이미지 아이콘이 그대로 남는다.
+  // 개별 장소에 사진이 없는 경우도 있으니 BE가 고쳐진 뒤에도 필요한 처리다.
+  const [hasImageFailed, setHasImageFailed] = useState(false);
+
   return (
     <a onClick={onClick} className="block w-full cursor-pointer">
       {/* 이미지 + 그라데이션 오버레이 */}
       <div className="relative flex h-[120px] flex-col justify-between rounded-t-[20px] px-[18px] py-4">
         <img
-          src={image}
+          src={hasImageFailed ? placeSample : image}
           alt={name}
+          onError={() => setHasImageFailed(true)}
           className="absolute inset-0 size-full rounded-t-[20px] object-cover"
         />
         <div className="absolute inset-x-0 bottom-0 h-[85px] rounded-t-[20px] bg-gradient-to-b from-transparent to-black/80" />

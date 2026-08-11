@@ -15,6 +15,7 @@ import themeOther from '../../assets/search/theme-other.svg';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
 import { useExploreFilters, useInfinitePlaces } from '../../hooks/search/useSearch';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { cn } from '../../lib/cn';
 import { ohaengByKey, type OhaengKey } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
@@ -90,11 +91,16 @@ export default function SearchPage() {
   const elementType = selected ? (selected.key.toUpperCase() as ElementCode) : undefined;
   const deferredKeyword = useDeferredValue(keyword);
   const filtersQuery = useExploreFilters();
+  // 좌표를 함께 보내야 서버가 distanceKm을 채운다(안 보내면 항상 null, 실측).
+  // 권한을 거부하거나 측위에 실패하면 undefined로 남고 거리만 빠진다 — 목록은 그대로 뜬다.
+  const coords = useGeolocation();
   const placesQuery = useInfinitePlaces({
     keyword: deferredKeyword.trim() || undefined,
     regionCode: region ?? undefined,
     themeType: selectedTheme ?? undefined,
     elementType,
+    latitude: coords?.latitude,
+    longitude: coords?.longitude,
   });
   const regions = [
     REGIONS[0],

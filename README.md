@@ -2,7 +2,7 @@
 
 ## 프로젝트 소개
 
-오늘의 터 웹 서비스의 프론트엔드 레포지토리입니다. 오행 기반 홈, 장소 탐색·상세, 온보딩·리포트, 방문 기록, 마이페이지를 제공합니다.
+오늘의 터 웹 서비스의 프론트엔드 레포지토리입니다. 오행 기반 홈, 장소 탐색·상세, 온보딩·사주 리포트, 방문 기록과 후기, 알림, 마이페이지를 제공합니다. 모바일 화면을 기준으로 만든 PWA입니다.
 
 ## 배포 주소
 
@@ -10,11 +10,15 @@ https://todays-ter-frontend.vercel.app
 
 ## 주요 기능
 
-- 홈: 오늘의 기운, 에너지 루틴, 추천 장소
-- 탐색: 지역·오행 필터, 에디터 픽, 장소 상세 이동
-- 온보딩: 비회원 사주 입력, 고민 선택, 분석 리포트
-- 기록·후기: 방문 기록과 장소·추천 터 후기 작성 UI
-- 마이: 프로필, 계정 연결, 알림·권한·사주·탈퇴 화면
+- 홈: 오늘의 기운, 에너지 루틴, 추천 장소, 알림 배지
+- 탐색: 키워드 검색, 지역·고민·오행 필터, 무한 스크롤, 에디터 픽
+- 온보딩: 사주 입력 → 리포트 생성(진행률 폴링) → 고민 유형 선택
+- 리포트: 요약과 카테고리별 상세, 공유 링크 생성
+- 장소: 상세 정보, 네이버 지도, 후기 목록·작성·수정·삭제, 저장, 길찾기
+- 기록: 방문 기록 목록과 작성·수정
+- 알림: 목록(10개 단위 cursor pagination), 미읽음 개수, 알림 설정
+- 마이: 프로필, 계정 연결, 사주·고민 수정, 권한, 약관, 탈퇴
+- PWA: 홈 화면 설치, 정적 자산 캐시, 새 버전 안내
 
 ## 기술 스택
 
@@ -22,35 +26,39 @@ https://todays-ter-frontend.vercel.app
 | ------------ | -------------------------------------------------------------- |
 | UI           | React 19, TypeScript, Tailwind CSS 4, `clsx`, `tailwind-merge` |
 | 라우팅       | React Router 8, 라우트 단위 lazy loading                       |
-| 상태·폼·통신 | TanStack Query, Zustand, React Hook Form, Axios, Zod           |
+| 상태·폼·통신 | TanStack Query 5, Zustand, React Hook Form, Axios, Zod         |
 | 시각화·모션  | Recharts, Motion, Lucide React                                 |
-| 개발 환경    | Vite, ESLint, Prettier                                         |
+| 테스트       | Vitest                                                         |
+| PWA          | `vite-plugin-pwa`, Workbox                                     |
+| 개발 환경    | Vite, pnpm, ESLint, oxlint, Prettier                           |
 
 ## 프로젝트 구조
 
 ```text
 src/
-├── app/          # 라우팅과 앱 레이아웃
-├── components/   # 버튼, 헤더, 입력, 네비게이션 등 공용 UI
+├── app/          # 라우팅, 라우트 가드, QueryClient 설정
 ├── pages/        # 화면 단위 기능
-├── api/          # Axios 기반 API 호출과 공통 응답 처리
+├── components/   # 버튼, 헤더, 입력, 네비게이션 등 공용 UI
+├── api/          # Axios 인스턴스, 도메인별 API 함수, 토큰 재발급
 ├── hooks/        # TanStack Query 도메인 훅
+├── stores/       # Zustand 전역 상태(인증)
+├── lib/          # 날짜·오행·지도 로더 등 순수 유틸
 ├── types/        # Zod 스키마와 API 타입
+└── assets/       # 아이콘과 이미지
 ```
-
-## API와 개발 모킹
-
-- 홈, 탐색, 마이페이지, 장소 상세, 온보딩, 추천 상세 API를 도메인별 API 함수와 Query 훅으로 연결합니다.
-- 응답은 `ApiResponse.result`를 꺼낸 뒤 Zod로 검증합니다.
-- 개발 환경에서는 MSW가 미배포 API를 모킹하고, 처리하지 않은 요청은 그대로 통과시킵니다.
-- 비회원 온보딩은 쿠키 기반 세션을 사용하며, 개발 서버에서 `/api`, `/auth` 요청을 운영 API로 프록시합니다.
 
 ## 실행 방법
 
 ```bash
 pnpm install
+cp .env.example .env.local
 pnpm dev
 ```
+
+환경 변수는 `.env.local`에 넣습니다.
+
+- `VITE_NAVER_MAP_CLIENT_ID`: 네이버 지도 Client ID. 없으면 장소 상세의 지도가 회색 박스로 대체됩니다.
+- **API 주소를 지정하는 환경 변수는 없습니다.** Axios는 항상 상대 경로로 호출하고, 아래 프록시·rewrite가 운영 API로 넘깁니다.
 
 ## 자주 사용하는 명령어
 
@@ -58,20 +66,39 @@ pnpm dev
 pnpm dev
 pnpm lint
 pnpm build
+pnpm test
 pnpm format
 ```
 
 - `pnpm dev`: 개발 서버 실행
 - `pnpm lint`: 코드 규칙 검사
-- `pnpm build`: 배포 가능한 상태로 빌드되는지 확인
+- `pnpm build`: 타입 검사와 프로덕션 빌드
+- `pnpm test`: Vitest 단위 테스트 실행
 - `pnpm format`: Prettier 기준으로 코드 포맷 정리
 
-배포 전에는 아래 명령으로 타입 검사와 프로덕션 빌드를 확인합니다.
+PR을 올리기 전에는 최소한 아래 두 가지를 확인합니다.
 
 ```bash
 pnpm lint
 pnpm build
 ```
+
+## API 연동
+
+- 도메인별 API 함수와 TanStack Query 훅으로 화면에 연결합니다.
+- 응답은 `ApiResponse.result`를 꺼낸 뒤 Zod로 검증합니다. 계약이 어긋나면 화면이 아니라 파싱에서 먼저 드러납니다.
+- Axios는 `baseURL` 없이 **상대 경로**로만 호출합니다. 게스트 세션 쿠키가 `SameSite` 제약을 받기 때문에, 브라우저 관점에서 같은 오리진이어야 쿠키가 실립니다.
+  - 개발: `vite.config.ts`의 `API_PATHS` 프록시
+  - 운영: `vercel.json`의 `rewrites`
+- ⚠️ **BE 경로를 추가할 때는 두 파일을 함께 수정해야 합니다.** 한쪽만 고치면 개발이나 운영 중 한 곳에서만 동작합니다.
+- BE가 `/api` 접두어 없이 도메인 루트에 경로를 열어둬서(`/home`, `/places` 등) 프록시 대상 경로를 하나씩 나열합니다. 앱 라우트와 겹치는 경로가 있어, 문서 요청(`Accept: text/html`)은 프록시를 타지 않고 SPA로 처리합니다.
+
+## 인증 구조
+
+- **회원**: 카카오 로그인으로 `accessToken`을 받습니다. 단일 소스는 Zustand 스토어이고 `localStorage`에는 새로고침 복원용으로만 미러링합니다. refresh 토큰은 BE가 HttpOnly 쿠키로만 내려주므로 프론트가 보관하지 않습니다.
+- **게스트**: `guest_id` 쿠키로 비회원 온보딩을 진행합니다. 세션 없이 주소만으로 들어온 방문자는 `SessionGate`가 로그인 화면으로 보냅니다.
+- **토큰 재발급**: 401 응답을 받으면 `POST /auth/reissue`로 한 번 재발급한 뒤 원 요청을 재시도합니다. 재발급이 401·403이면 세션을 종료하고, 라우트 가드가 로그인 화면으로 보냅니다.
+- **라우트 가드**: `SessionGate`(세션 유무), `RequireMember`(회원 전용 화면), `RequireMemberTab`(탭은 잠금 화면 표시), `RequireRecommendationAccess`(추천 상세 접근)를 씁니다.
 
 ## 협업 흐름
 

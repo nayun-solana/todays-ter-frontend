@@ -34,7 +34,7 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-5">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="text-2xl font-extrabold text-primary">내 터</h1>
       </header>
 
@@ -52,25 +52,25 @@ export default function RecordPage() {
               const recordId = place.recordId ?? place.visitId;
 
               return (
-              <li key={recordId ?? place.placeId}>
-                <RecordPlaceCard
-                  name={place.placeName}
-                  categories={place.categories}
-                  dateLabel={dateLabel(place.savedDate)}
-                  day={place.element}
-                  imageUrl={place.thumbnailUrl || undefined}
-                  onClick={
-                    activeTab === 'saved'
-                      ? () => navigate(`/place/${place.placeId}`)
-                      : recordId != null
-                        ? () =>
-                            navigate(`/review/${recordId}`, {
-                              state: { element: place.element },
-                            })
-                        : undefined
-                  }
-                />
-              </li>
+                <li key={recordId ?? place.placeId}>
+                  <RecordPlaceCard
+                    name={place.placeName}
+                    categories={place.categories}
+                    dateLabel={dateLabel(place.savedDate)}
+                    day={place.element}
+                    imageUrl={place.thumbnailUrl || undefined}
+                    onClick={
+                      activeTab === 'saved'
+                        ? () => navigate(`/place/${place.placeId}`)
+                        : recordId != null
+                          ? () =>
+                              navigate(`/review/${recordId}`, {
+                                state: { element: place.element },
+                              })
+                          : undefined
+                    }
+                  />
+                </li>
               );
             })}
           </ul>

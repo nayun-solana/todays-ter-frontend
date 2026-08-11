@@ -4,11 +4,31 @@ import { useNavigate } from 'react-router';
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
-import { useMyPage } from '../../hooks/my/useMy';
+import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import {
+  useCreateFortuneReport,
+  useCurrentFortuneReport,
+  useReportStatus,
+} from '../../hooks/onboarding/useGetReport';
 
 type DateField = 'year' | 'month' | 'day';
+type DateValue = { year: number; month: number; day: number };
+type TimeValue = { hour: number; minute: number };
+type SajuForm = {
+  date: DateValue;
+  calendarType: 'SOLAR' | 'LUNAR';
+  time: TimeValue;
+  hasTime: boolean;
+};
 
 const INITIAL_DATE = { year: 1995, month: 6, day: 15 };
+const INITIAL_TIME = { hour: 10, minute: 1 };
+const DEFAULT_SAJU_FORM: SajuForm = {
+  date: INITIAL_DATE,
+  calendarType: 'SOLAR',
+  time: INITIAL_TIME,
+  hasTime: false,
+};
 const YEARS = Array.from(
   { length: new Date().getFullYear() - 1900 + 1 },
   (_, index) => new Date().getFullYear() - index,
@@ -24,6 +44,29 @@ function daysInMonth(year: number, month: number) {
 
 function formatHour(hour: number) {
   return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
+}
+
+function formatDate(date: { year: number; month: number; day: number }) {
+  return `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+}
+
+function toSajuForm(saju: {
+  calendarType: 'SOLAR' | 'LUNAR';
+  birthDate: string;
+  birthTime: string;
+  birthTimeUnknown: boolean;
+}): SajuForm {
+  const [year, month, day] = saju.birthDate.split('-').map(Number);
+  const [hour = INITIAL_TIME.hour, minute = INITIAL_TIME.minute] = saju.birthTime
+    .split(':')
+    .map(Number);
+
+  return {
+    date: { year, month, day },
+    calendarType: saju.calendarType,
+    time: { hour, minute },
+    hasTime: !saju.birthTimeUnknown,
+  };
 }
 
 function DateSelect({
@@ -223,20 +266,59 @@ export function CheckIcon() {
 
 export default function SajuEditPage() {
   const navigate = useNavigate();
-  const [date, setDate] = useState(INITIAL_DATE);
+  const sajuQuery = useMemberSaju();
+  const updateSajuMutation = useUpdateMemberSaju();
+  const createReportMutation = useCreateFortuneReport();
+  const [regeneratingReportId, setRegeneratingReportId] = useState<number | null>(null);
+  const reportStatusQuery = useReportStatus(regeneratingReportId ?? undefined);
+  const [draft, setDraft] = useState<SajuForm | null>(null);
   const [openField, setOpenField] = useState<DateField | null>(null);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const [pickerTime, setPickerTime] = useState({ hour: 10, minute: 1 });
-  const [hasSelectedTime, setHasSelectedTime] = useState(false);
   const hourWheelRef = useRef<HTMLDivElement>(null);
   const minuteWheelRef = useRef<HTMLDivElement>(null);
   const ignoreInitialTimeScroll = useRef(false);
+  const serverForm = sajuQuery.data ? toSajuForm(sajuQuery.data) : null;
+  const form = draft ?? serverForm ?? DEFAULT_SAJU_FORM;
+  const { date, calendarType, time: pickerTime, hasTime: hasSelectedTime } = form;
   const days = Array.from({ length: daysInMonth(date.year, date.month) }, (_, index) => index + 1);
   const changed =
-    date.year !== INITIAL_DATE.year ||
-    date.month !== INITIAL_DATE.month ||
-    date.day !== INITIAL_DATE.day ||
-    hasSelectedTime;
+    Boolean(serverForm) &&
+    (formatDate(date) !== formatDate(serverForm!.date) ||
+      hasSelectedTime !== serverForm!.hasTime ||
+      pickerTime.hour !== serverForm!.time.hour ||
+      pickerTime.minute !== serverForm!.time.minute);
+  const regenerationFailed =
+    createReportMutation.isError ||
+    reportStatusQuery.isError ||
+    reportStatusQuery.data?.status === 'failed';
+  const isRegenerating =
+    updateSajuMutation.isPending ||
+    createReportMutation.isPending ||
+    (!!regeneratingReportId &&
+      !regenerationFailed &&
+      reportStatusQuery.data?.status !== 'completed');
+
+  useEffect(() => {
+    if (regeneratingReportId && reportStatusQuery.data?.status === 'completed') {
+      navigate('/my/saju/complete', { replace: true });
+    }
+  }, [navigate, regeneratingReportId, reportStatusQuery.data?.status]);
+
+  const setDate = (update: (current: DateValue) => DateValue) => {
+    setDraft((current) => {
+      const base = current ?? serverForm ?? DEFAULT_SAJU_FORM;
+      return { ...base, date: update(base.date) };
+    });
+  };
+  const setPickerTime = (update: (current: TimeValue) => TimeValue) => {
+    setDraft((current) => {
+      const base = current ?? serverForm ?? DEFAULT_SAJU_FORM;
+      return { ...base, time: update(base.time) };
+    });
+  };
+  const setHasSelectedTime = (hasTime: boolean) => {
+    setDraft((current) => ({ ...(current ?? serverForm ?? DEFAULT_SAJU_FORM), hasTime }));
+  };
 
   useEffect(() => {
     if (!timePickerOpen) return;
@@ -261,21 +343,59 @@ export default function SajuEditPage() {
     });
   };
 
+  const submit = async () => {
+    if ((!changed && !regenerationFailed) || isRegenerating) return;
+
+    setRegeneratingReportId(null);
+
+    try {
+      await updateSajuMutation.mutateAsync({
+        calendarType,
+        birthDate: formatDate(date),
+        birthTime: hasSelectedTime
+          ? `${String(pickerTime.hour).padStart(2, '0')}:${String(pickerTime.minute).padStart(2, '0')}`
+          : '',
+        birthTimeUnknown: !hasSelectedTime,
+      });
+
+      // 사주 저장이 끝난 뒤 새 리포트 생성을 시작하고, 완료될 때까지 상태를 폴링한다.
+      const report = await createReportMutation.mutateAsync();
+      setRegeneratingReportId(report.reportId);
+    } catch {
+      // mutation의 isError를 화면의 재시도 안내에 사용한다.
+    }
+  };
+
   return (
     <div className="min-h-dvh w-full bg-gray-1 pb-28">
       <PageHeader title="사주 정보 수정" backTo="/my" />
 
       <main className="px-5 pt-5">
+        {sajuQuery.isPending ? (
+          <p className="typo-sub-2 text-gray-4">현재 사주 정보를 불러오는 중입니다.</p>
+        ) : null}
+        {sajuQuery.isError ? (
+          <p className="typo-sub-2 text-gray-4">
+            사주 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        ) : null}
         <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-card-soft">
           <p className="typo-body-3 text-primary">현재 사주 정보</p>
           <dl className="typo-sub-2 mt-3 space-y-2 text-gray-5">
             <div className="flex gap-1.5">
               <dt className="w-20 font-bold">생년월일</dt>
-              <dd>양력 1995.06.15</dd>
+              <dd>
+                {calendarType === 'SOLAR' ? '양력' : '음력'} {date.year}.
+                {String(date.month).padStart(2, '0')}.{String(date.day).padStart(2, '0')}
+              </dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="w-20 font-bold">태어난 시간</dt>
-              <dd>출생시간 모름</dd>
+              <dd>
+                {hasSelectedTime
+                  ? `${formatHour(pickerTime.hour)} ${pickerTime.minute}분`
+                  : '출생시간 모름'}
+              </dd>
             </div>
           </dl>
         </section>
@@ -369,23 +489,29 @@ export default function SajuEditPage() {
       </main>
 
       <Button
-        disabled={!changed}
-        onClick={() => navigate('/my/saju/complete')}
-        className="fixed bottom-8 left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        disabled={(!changed && !regenerationFailed) || isRegenerating}
+        onClick={() => void submit()}
+        className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
       >
-        저장하고 리포트 재생성
+        {isRegenerating ? '리포트 재생성 중...' : '저장하고 리포트 재생성'}
       </Button>
+      {updateSajuMutation.isError ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          사주 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.
+        </p>
+      ) : regenerationFailed ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          리포트 재생성에 실패했습니다. 다시 시도해주세요.
+        </p>
+      ) : null}
     </div>
   );
 }
 
 export function SajuReportCompletePage() {
   const navigate = useNavigate();
-  // 리포트 id를 하드코딩(`/report/1`)하고 있었다. ReportPage가 목이던 시절엔 무해했지만
-  // 실 API를 붙인 뒤로는 남의 리포트를 열거나 "불러오지 못했어요"로 떨어진다.
-  // MyPage와 같은 출처(프로필의 reportId)를 쓴다.
-  const myPageQuery = useMyPage();
-  const reportId = myPageQuery.data?.reportId;
+  const currentReportQuery = useCurrentFortuneReport();
+  const reportId = currentReportQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -400,12 +526,21 @@ export function SajuReportCompletePage() {
           </p>
         </div>
       </main>
-      <div className="px-5 pb-8">
+      <div className="flex flex-col gap-2 px-5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <Button
           disabled={!reportId}
-          onClick={() => reportId && navigate(`/report/${reportId}?from=my`, { replace: true })}
+          onClick={() => {
+            if (reportId) navigate(`/report/${reportId}?from=my`, { replace: true });
+          }}
         >
-          생성된 리포트 보러가기
+          {reportId ? '재생성된 리포트 보러가기' : '리포트 불러오는 중'}
+        </Button>
+        <Button
+          variant="secondary"
+          className="border-primary-light bg-primary-bg"
+          onClick={() => navigate('/my', { replace: true })}
+        >
+          마이페이지로 돌아가기
         </Button>
       </div>
     </div>

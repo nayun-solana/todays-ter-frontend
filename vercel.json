@@ -6,6 +6,7 @@
     { "source": "/api/:path(.+)", "destination": "https://today-ter.kr/api/:path" },
     { "source": "/auth/:path(.+)", "destination": "https://today-ter.kr/auth/:path" },
     { "source": "/home/:path(.+)", "destination": "https://today-ter.kr/home/:path" },
+    { "source": "/places", "destination": "https://today-ter.kr/places" },
     { "source": "/places/:path(.+)", "destination": "https://today-ter.kr/places/:path" },
     {
       "source": "/recommendations/:path(.+)",
@@ -20,6 +21,8 @@
 
     { "source": "/fortune-reports", "destination": "https://today-ter.kr/fortune-reports" },
     { "source": "/records", "destination": "https://today-ter.kr/records" },
+    { "source": "/notifications/:path(.+)", "destination": "https://today-ter.kr/notifications/:path" },
+    { "source": "/notifications", "destination": "https://today-ter.kr/notifications" },
 
     { "source": "/(.*)", "destination": "/index.html" }
   ]

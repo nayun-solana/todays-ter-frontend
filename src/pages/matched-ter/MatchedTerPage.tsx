@@ -154,7 +154,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       {shareResult && <ShareToast result={shareResult} />}
 
       {/* 하단 고정 액션바. 공유 화면에서는 후기 작성이 남의 추천에 붙으므로 감춘다. */}
-      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] bg-white px-5 py-4">
+      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         {isShared ? (
           <Button variant="primary" onClick={() => navigate('/home')}>
             나도 추천 받기

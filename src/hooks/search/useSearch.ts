@@ -1,12 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { getEditorPicks, getExploreFilters, getPlaces } from '../../api/search';
-import type { PlaceListParams } from '../../types/search/search';
+import type { PlaceListParams, PlaceListResponse } from '../../types/search/search';
+
+type InfinitePlaceListParams = Omit<PlaceListParams, 'page' | 'size'>;
 
 export const searchKeys = {
   all: ['search'] as const,
   filters: () => [...searchKeys.all, 'filters'] as const,
-  places: (params: PlaceListParams) => [...searchKeys.all, 'places', params] as const,
+  places: (params: InfinitePlaceListParams) => [...searchKeys.all, 'places', params] as const,
   editorPicks: (limit: number) => [...searchKeys.all, 'editor-picks', limit] as const,
 };
 
@@ -17,10 +19,16 @@ export function useExploreFilters() {
   });
 }
 
-export function usePlaces(params: PlaceListParams) {
-  return useQuery({
+export function getNextPlacePage(lastPage: PlaceListResponse) {
+  return lastPage.page.hasNext ? lastPage.page.number + 1 : undefined;
+}
+
+export function useInfinitePlaces(params: InfinitePlaceListParams) {
+  return useInfiniteQuery({
     queryKey: searchKeys.places(params),
-    queryFn: () => getPlaces(params),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => getPlaces({ ...params, page: pageParam, size: 10 }),
+    getNextPageParam: getNextPlacePage,
   });
 }
 

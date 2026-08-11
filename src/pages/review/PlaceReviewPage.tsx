@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import type { ApiError } from '../../api/types';
 import FileAttachButton from '../../components/FileAttachButton';
 import PageHeader from '../../components/PageHeader';
 import TextInput from '../../components/TextInput';
-import { useSubmitRecord } from '../../hooks/record/useRecord';
+import { usePlaceDetail, usePlaceReviews } from '../../hooks/place/usePlace';
+import {
+  useCreateRecord,
+  useUpdateRecord,
+  useUploadRecordImages,
+} from '../../hooks/record/useRecord';
 import Button from './components/Button';
 import ReviewHeader from './components/ReviewHeader';
 import StarRating from './components/StarRating';
-
-/** 페이지 더미 — 장소 메타 API 연동 전 */
-const PLACE = {
-  name: '청계천 모전교',
-  verifiedAt: '2025.06.28',
-};
-
-/** 수정 모드에서 불러오는 기존 후기 더미 — API 연동 시 교체 */
-const MY_REVIEW = {
-  rating: 5,
-  memo: '생각이 많았던 날이었는데, 물길을 따라 걷다 보니\n마음이 조금 가라앉았다. 조용히 혼자 있기 좋은 터였다.',
-};
 
 interface PlaceReviewPageProps {
   /** edit: 기존 후기를 불러와 수정. 변경이 있을 때만 저장 가능 */
@@ -32,42 +24,32 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
   const { id: placeIdParam } = useParams();
   const placeId = Number(placeIdParam);
   const isEdit = mode === 'edit';
-  const submitRecord = useSubmitRecord();
-  const [rating, setRating] = useState(isEdit ? MY_REVIEW.rating : 0);
-  const [memo, setMemo] = useState(isEdit ? MY_REVIEW.memo : '');
+  const placeQuery = usePlaceDetail(placeId);
+  const reviewsQuery = usePlaceReviews(isEdit ? placeId : undefined);
+  const createRecordMutation = useCreateRecord();
+  const updateRecordMutation = useUpdateRecord();
+  const uploadImagesMutation = useUploadRecordImages();
+  const [draft, setDraft] = useState<{ rating: number; memo: string } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const myReview = reviewsQuery.data?.myReview;
+  const form = draft ?? { rating: myReview?.rating ?? 0, memo: myReview?.content ?? '' };
+  const { rating, memo } = form;
+  const initialRating = myReview?.rating ?? 0;
+  const initialMemo = myReview?.content ?? '';
+  const setRating = (nextRating: number) =>
+    setDraft((current) => ({ ...(current ?? form), rating: nextRating }));
+  const setMemo = (nextMemo: string) =>
+    setDraft((current) => ({ ...(current ?? form), memo: nextMemo }));
 
   // Figma: 작성은 별점만 있으면 저장, 수정은 값이 바뀌어야 저장 활성
-  const canSubmitBase = isEdit
-    ? rating > 0 && (rating !== MY_REVIEW.rating || memo !== MY_REVIEW.memo)
-    : rating > 0;
-  const canSubmit =
-    canSubmitBase && Number.isFinite(placeId) && placeId > 0 && !submitRecord.isPending;
+  const canSubmit = isEdit
+    ? rating > 0 && memo.trim().length > 0 && (rating !== initialRating || memo !== initialMemo)
+    : rating > 0 && memo.trim().length > 0;
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-
-    // TODO: 수정 API 연동 시 edit 분기
-    if (isEdit) {
-      navigate(`/place/${placeId}`);
-      return;
-    }
-
-    submitRecord.mutate(
-      {
-        placeId,
-        type: 'REVIEW',
-        rating,
-        content: memo,
-        files,
-      },
-      {
-        onSuccess: () => {
-          navigate(`/place/${placeId}/review/complete`);
-        },
-      },
-    );
-  };
+  const isPending =
+    createRecordMutation.isPending ||
+    updateRecordMutation.isPending ||
+    uploadImagesMutation.isPending;
 
   return (
     <div className="flex min-h-dvh flex-col bg-gray-1" data-place-id={placeIdParam}>
@@ -86,8 +68,12 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
         <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
           <div className="size-25 shrink-0 rounded-xl bg-gray-3" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-gray-4">방문 인증 완료 · {PLACE.verifiedAt}</p>
-            <h2 className="mt-2 truncate text-base font-bold text-gray-6">{PLACE.name}</h2>
+            <p className="text-xs text-gray-4">
+              {placeQuery.data?.isVisited ? '방문 인증 완료' : '방문 장소'}
+            </p>
+            <h2 className="mt-2 truncate text-base font-bold text-gray-6">
+              {placeQuery.data?.placeName ?? '장소 정보를 불러오는 중입니다.'}
+            </h2>
           </div>
         </section>
 
@@ -104,28 +90,62 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
           />
         </section>
 
-        {!isEdit ? (
-          <FileAttachButton
-            className="mx-6"
-            maxCount={5}
-            onFilesChange={setFiles}
-          />
-        ) : null}
+        <FileAttachButton className="mx-6" maxCount={5} onFilesChange={setFiles} />
         <div className="flex-1" />
 
-        {submitRecord.isError ? (
-          <p className="px-5 text-sm text-ohaeng-fire">
-            {(submitRecord.error as unknown as ApiError)?.message ?? '저장에 실패했습니다.'}
+        <Button
+          disabled={
+            !canSubmit ||
+            isPending ||
+            placeQuery.isPending ||
+            placeQuery.isError ||
+            (isEdit && (reviewsQuery.isPending || reviewsQuery.isError))
+          }
+          className="mx-5 mb-5 w-auto"
+          onClick={async () => {
+            if (!placeId || !canSubmit || !placeQuery.data) return;
+
+            try {
+              const uploadedImages = files.length
+                ? await uploadImagesMutation.mutateAsync(files)
+                : null;
+              const imageIds = uploadedImages?.images.map((image) => image.imageId) ?? [];
+
+              if (isEdit && myReview) {
+                updateRecordMutation.mutate(
+                  {
+                    recordId: myReview.reviewId,
+                    body: { rating, content: memo.trim(), imageIds },
+                  },
+                  { onSuccess: () => navigate(`/place/${placeId}`) },
+                );
+                return;
+              }
+
+              createRecordMutation.mutate(
+                {
+                  placeId: Number(placeId),
+                  type: 'REVIEW',
+                  rating,
+                  content: memo.trim(),
+                  imageIds,
+                },
+                { onSuccess: () => navigate(`/place/${placeId}/review/complete`) },
+              );
+            } catch {
+              // mutation state renders the error message below
+            }
+          }}
+        >
+          {isEdit ? '수정 완료' : '후기 저장하기'}
+        </Button>
+        {createRecordMutation.isError ||
+        updateRecordMutation.isError ||
+        uploadImagesMutation.isError ? (
+          <p className="mb-5 px-5 text-center text-xs text-danger">
+            후기 저장에 실패했습니다. 잠시 후 다시 시도해주세요.
           </p>
         ) : null}
-
-        <Button disabled={!canSubmit} className="mx-5 mb-5 w-auto" onClick={handleSubmit}>
-          {submitRecord.isPending
-            ? '저장 중…'
-            : isEdit
-              ? '수정 완료'
-              : '후기 저장하기'}
-        </Button>
       </div>
     </div>
   );

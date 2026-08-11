@@ -5,14 +5,17 @@ import type { ApiError } from '../../api/types';
 import FileAttachButton from '../../components/FileAttachButton';
 import OhaengBadge from '../../components/OhaengBadge';
 import TextInput from '../../components/TextInput';
-import { useSubmitRecord, useUpdateRecord } from '../../hooks/record/useRecord';
+import { useSubmitRecord, useSubmitRecordUpdate } from '../../hooks/record/useRecord';
 import { useRecommendationDetail } from '../../hooks/recommendation/useRecommendation';
 import { useRecordDetail } from '../../hooks/review/useReview';
 import { ohaengByKey } from '../../lib/ohaeng';
 import { viewStateOf } from '../../lib/queryState';
 import { toOhaengKey } from '../../types/home/homeEnergy';
-import type { RecordDetail, RecordDetailImage } from '../../types/review/visitedReview';
-import { recordDetailImagesOf } from '../../types/review/visitedReview';
+import {
+  recordDetailImagesOf,
+  type RecordDetailImage,
+  type RecordDetailResponse,
+} from '../../types/record/record';
 import Button from './components/Button';
 import ReviewHeader from './components/ReviewHeader';
 import StarRating from './components/StarRating';
@@ -138,10 +141,10 @@ function EditReviewForm({
   initial,
 }: {
   recordId: string;
-  initial: RecordDetail;
+  initial: RecordDetailResponse;
 }) {
   const navigate = useNavigate();
-  const updateRecord = useUpdateRecord();
+  const updateRecord = useSubmitRecordUpdate();
   const initialImages = recordDetailImagesOf(initial);
   const [rating, setRating] = useState(initial.rating);
   const [memo, setMemo] = useState(initial.content);

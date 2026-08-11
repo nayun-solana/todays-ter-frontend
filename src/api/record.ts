@@ -1,13 +1,14 @@
 import {
-  CreateRecordRequest,
-  CreateRecordResponse,
-  RecordImagesUploadResponse,
-  UpdateRecordRequest,
-  type CreateRecordRequest as CreateRecordRequestType,
-  type UpdateRecordRequest as UpdateRecordRequestType,
-} from '../types/record/createRecord';
+  ImageUploadResponse,
+  RecordCreateRequest,
+  RecordDetailResponse,
+  RecordResponse,
+  RecordUpdateRequest,
+  RecordUpdateResponse,
+  type RecordCreateRequest as RecordCreateRequestType,
+  type RecordUpdateRequest as RecordUpdateRequestType,
+} from '../types/record/record';
 import { MyPlaceListResponse, type MyPlaceListType } from '../types/record/myPlace';
-import { RecordDetail } from '../types/review/visitedReview';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
@@ -29,16 +30,13 @@ export async function getRecordDetail(id: number | string) {
   const response = await axiosInstance.get<ApiResponse & { data?: unknown }>(`/records/${id}`);
   const body = response.data;
   const payload = body.result ?? body.data;
-  return RecordDetail.parse(payload);
+  return RecordDetailResponse.parse(payload);
 }
 
 /** @deprecated getRecordDetail 사용 */
 export const getVisitedReviewDetail = getRecordDetail;
 
-/**
- * 다녀온 터 기록/후기 이미지 업로드 — POST /records/images
- * multipart field: images (최대 5장, 장당 10MB, jpg/jpeg/png)
- */
+/** 다녀온 터 기록/후기 이미지 업로드 — POST /records/images */
 export async function uploadRecordImages(files: File[]) {
   const formData = new FormData();
   files.forEach((file) => formData.append('images', file));
@@ -46,7 +44,6 @@ export async function uploadRecordImages(files: File[]) {
   const response = await axiosInstance.post<ApiResponse>('/records/images', formData, {
     transformRequest: [
       (data, headers) => {
-        // FormData는 브라우저가 boundary 포함 Content-Type을 붙이도록 둔다.
         if (data instanceof FormData && headers && typeof headers === 'object') {
           delete (headers as Record<string, unknown>)['Content-Type'];
         }
@@ -55,36 +52,34 @@ export async function uploadRecordImages(files: File[]) {
     ],
   });
 
-  return RecordImagesUploadResponse.parse(getResult(response));
+  return ImageUploadResponse.parse(getResult(response));
 }
 
 /** 다녀온 터 기록/후기 작성 — POST /records */
-export async function createRecord(body: CreateRecordRequestType) {
-  const payload = CreateRecordRequest.parse(body);
+export async function createRecord(body: RecordCreateRequestType) {
+  const payload = RecordCreateRequest.parse(body);
   const response = await axiosInstance.post<ApiResponse>('/records', payload);
-  return CreateRecordResponse.parse(getResult(response));
+  return RecordResponse.parse(getResult(response));
 }
 
 /** 다녀온 터 기록/후기 수정 — PATCH /records/{id} */
-export async function updateRecord(id: number | string, body: UpdateRecordRequestType) {
-  const payload = UpdateRecordRequest.parse(body);
+export async function updateRecord(id: number | string, body: RecordUpdateRequestType) {
+  const payload = RecordUpdateRequest.parse(body);
   const response = await axiosInstance.patch<ApiResponse>(`/records/${id}`, payload);
-  return getResult(response);
+  return RecordUpdateResponse.parse(getResult(response));
 }
 
 /** 다녀온 터 기록/후기 삭제 — DELETE /records/{id} */
 export async function deleteRecord(id: number | string) {
-  const response = await axiosInstance.delete<ApiResponse>(`/records/${id}`);
-  return getResult(response);
+  await axiosInstance.delete<ApiResponse>(`/records/${id}`);
 }
 
 /**
  * 이미지 업로드(있을 때) → 기록/후기 생성.
- * Swagger: 이미지를 먼저 올리고 imageId를 받아 POST /records에 넘긴다.
  */
 export async function submitRecord(input: {
   placeId: number;
-  type: CreateRecordRequestType['type'];
+  type: RecordCreateRequestType['type'];
   rating: number;
   content: string;
   files?: File[];
@@ -115,12 +110,11 @@ export async function submitRecordUpdate(input: {
   rating: number;
   content: string;
   files?: File[];
-  /** 이미지 목록을 교체할지. true면 keepImageIds + 신규 업로드로 imageIds 전송 */
   replaceImages?: boolean;
   keepImageIds?: number[];
 }) {
   const files = input.files ?? [];
-  const body: UpdateRecordRequestType = {
+  const body: RecordUpdateRequestType = {
     rating: input.rating,
     content: input.content,
   };

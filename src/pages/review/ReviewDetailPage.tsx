@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { useRecordDetail } from '../../hooks/review/useReview';
-import { recordDetailImagesOf } from '../../types/review/visitedReview';
+import { recordDetailImagesOf } from '../../types/record/record';
 import type { PlaceDay } from '../record/components/RecordPlaceCard';
 import ShareCardModal from '../record/components/ShareCardModal';
 import Button from './components/Button';
@@ -97,9 +97,7 @@ export default function ReviewDetailPage() {
               <p className="text-xs text-gray-4">
                 방문 인증 완료 · {formatDate(review.createdAt)}
               </p>
-              <h2 className="mt-2 truncate text-base font-bold text-gray-6">
-                {review.placeName}
-              </h2>
+              <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
             </div>
           </section>
 
@@ -156,6 +154,12 @@ export default function ReviewDetailPage() {
           element={listElement}
           onClose={() => setIsShareOpen(false)}
         />
+      ) : null}
+
+      {deleteRecord.isError ? (
+        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+          후기 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.
+        </p>
       ) : null}
     </div>
   );

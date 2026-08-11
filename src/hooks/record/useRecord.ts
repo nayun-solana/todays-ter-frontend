@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { getMyPlaces, deleteRecord, submitRecord, submitRecordUpdate } from '../../api/record';
-import type { CreateRecordRequest } from '../../types/record/createRecord';
+import {
+  createRecord,
+  deleteRecord,
+  getMyPlaces,
+  submitRecord,
+  submitRecordUpdate,
+  updateRecord,
+  uploadRecordImages,
+} from '../../api/record';
+import type { RecordCreateRequest, RecordUpdateRequest } from '../../types/record/record';
 import type { MyPlaceListType } from '../../types/record/myPlace';
 import { reviewKeys } from '../review/useReview';
 
@@ -19,13 +27,13 @@ export function useMyPlaces(type: MyPlaceListType) {
 
 type SubmitRecordInput = {
   placeId: number;
-  type: CreateRecordRequest['type'];
+  type: RecordCreateRequest['type'];
   rating: number;
   content: string;
   files?: File[];
 };
 
-/** 이미지 업로드 → 기록/후기 생성 */
+/** 이미지 업로드 → 기록/후기 생성 (matched-ter ReviewPage) */
 export function useSubmitRecord() {
   const queryClient = useQueryClient();
 
@@ -37,7 +45,19 @@ export function useSubmitRecord() {
   });
 }
 
-type UpdateRecordInput = {
+/** 기록/후기 생성 — PlaceReviewPage */
+export function useCreateRecord() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: RecordCreateRequest) => createRecord(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: recordKeys.all });
+    },
+  });
+}
+
+type SubmitRecordUpdateInput = {
   recordId: number | string;
   rating: number;
   content: string;
@@ -46,12 +66,28 @@ type UpdateRecordInput = {
   keepImageIds?: number[];
 };
 
-/** 기록/후기 수정 — PATCH /records/{id} */
+/** 기록/후기 수정 + 이미지 업로드 (matched-ter ReviewPage edit) */
+export function useSubmitRecordUpdate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: SubmitRecordUpdateInput) => submitRecordUpdate(input),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: recordKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: reviewKeys.detail(String(variables.recordId)),
+      });
+    },
+  });
+}
+
+/** 기록/후기 수정 — PlaceReviewPage */
 export function useUpdateRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: UpdateRecordInput) => submitRecordUpdate(input),
+    mutationFn: ({ recordId, body }: { recordId: number | string; body: RecordUpdateRequest }) =>
+      updateRecord(recordId, body),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: recordKeys.all });
       void queryClient.invalidateQueries({
@@ -74,4 +110,8 @@ export function useDeleteRecord() {
       });
     },
   });
+}
+
+export function useUploadRecordImages() {
+  return useMutation({ mutationFn: uploadRecordImages });
 }

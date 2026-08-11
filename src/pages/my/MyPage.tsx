@@ -2,18 +2,18 @@ import { useNavigate } from 'react-router';
 
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
 import Button from '../../components/Button';
-import OhaengOrb from '../../components/OhaengOrb';
 import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
+import { useCurrentFortuneReport } from '../../hooks/onboarding/useGetReport';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
   { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
-  { label: '개인정보 및 약관', path: '/my/policies' },
+  { label: '개인정보 및 약관', path: '/private' },
   { label: '로그아웃', action: 'logout' },
   { label: '회원 탈퇴', path: '/my/withdrawal' },
 ] as const;
@@ -56,7 +56,7 @@ function GuestMyPage() {
 
   return (
     <div className="relative w-full flex-1 bg-gray-1">
-      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>
 
@@ -71,7 +71,7 @@ function GuestMyPage() {
 
       {/* 헤더 아래 전체를 덮는 흐림 + 흰색 그라데이션 */}
       {/* 그라데이션 끝은 Figma상 #FFF지만, 하단바 여백(레이아웃 pb)과 이어지도록 페이지 톤으로 맞춘다 */}
-      <div className="absolute inset-x-0 top-[111px] bottom-0 flex flex-col items-center justify-center bg-linear-to-b from-white/20 via-white/80 to-gray-1 px-10 pb-4 backdrop-blur-xs">
+      <div className="absolute inset-x-0 top-[calc(4.25rem+env(safe-area-inset-top))] bottom-0 flex flex-col items-center justify-center bg-linear-to-b from-white/20 via-white/80 to-gray-1 px-10 pb-4 backdrop-blur-xs">
         <LockIcon />
         <p className="typo-body-2 mt-3 text-center whitespace-pre-line text-gray-6">
           {'로그인하고 나에게 꼭 맞는\n‘오늘의 터’를 찾아보세요'}
@@ -88,8 +88,10 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { isMember, isPending: isAuthPending } = useAuthStatus();
   const myPageQuery = useMyPage(isMember);
+  const currentReportQuery = useCurrentFortuneReport(isMember);
   const logoutMutation = useLogout();
   const profile = myPageQuery.data;
+  const currentReportId = currentReportQuery.data?.reportId;
 
   // 부팅 복원 전의 isMember=false는 "게스트"가 아니라 "아직 모름"이다.
   if (isAuthPending) {
@@ -100,46 +102,44 @@ export default function MyPage() {
 
   return (
     <div className="w-full flex-1 bg-gray-1">
-      <header className="flex h-[111px] items-end bg-white px-5 pb-3">
+      <header className="bg-white px-5 pb-4 pt-safe-5">
         <h1 className="typo-head-1 text-primary">마이페이지</h1>
       </header>
 
       <main className="px-5 pt-3">
         <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
           <div className="flex flex-col items-center gap-2">
-            {profile?.profileImageUrl ? (
-              <img
-                src={profile.profileImageUrl}
-                alt={`${profile.nickname} 프로필`}
-                className="size-25 rounded-full object-cover"
-              />
-            ) : (
-              <DefaultAvatar />
-            )}
+            <DefaultAvatar />
             <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
-          </div>
-          <div className="flex gap-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-water px-3 py-2 typo-body-4 text-white">
-              주 오행 : 수 <OhaengOrb element="water" size={16} />
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-ohaeng-fire px-3 py-2 typo-body-4 text-white">
-              보완 오행 : 화 <OhaengOrb element="fire" size={16} />
-            </span>
           </div>
         </section>
 
         <button
           type="button"
-          disabled={!profile}
-          onClick={() => profile && navigate(`/report/${profile.reportId}?from=my`)}
+          disabled={!profile || currentReportQuery.isPending}
+          onClick={() => {
+            if (!profile) return;
+            navigate(currentReportId ? `/report/${currentReportId}?from=my` : '/my/saju');
+          }}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {profile ? `${profile.nickname}님의 사주리포트 다시보기` : '사주리포트 불러오는 중'}
+          {!profile
+            ? '회원 정보 불러오는 중'
+            : currentReportQuery.isPending
+              ? '리포트 정보 불러오는 중'
+              : currentReportId
+                ? '사주 리포트 다시보기'
+                : '사주 정보 수정하기'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (
           <p className="typo-sub-2 mt-2 text-gray-4">
             마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        ) : null}
+        {currentReportQuery.isError ? (
+          <p className="typo-sub-2 mt-2 text-gray-4">
+            리포트 정보를 불러오지 못했습니다. 사주 정보를 수정할 수 있어요.
           </p>
         ) : null}
 

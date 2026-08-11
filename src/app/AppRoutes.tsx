@@ -14,6 +14,7 @@ const NotificationPage = lazy(() => import('../pages/my/NotificationPage'));
 const NotificationSettingsPage = lazy(() => import('../pages/my/NotificationSettingsPage'));
 const PermissionsPage = lazy(() => import('../pages/my/PermissionsPage'));
 const PoliciesPage = lazy(() => import('../pages/my/PoliciesPage'));
+const PrivatePage = lazy(() => import('../pages/policy/PrivatePage'));
 const WithdrawalPage = lazy(() => import('../pages/my/WithdrawalPage'));
 const SajuEditPage = lazy(() => import('../pages/my/SajuEditPage'));
 // SajuReportCompletePage는 SajuEditPage 모듈의 named export → default로 매핑
@@ -154,6 +155,10 @@ export default function AppRoutes() {
         <Route element={<NoFooterLayout />}>
           {/* 세션을 만들러 오는 화면이라 게이트를 태우면 들어올 수가 없다. */}
           <Route path="/login" element={<LoginPage />} />
+          {/* 이용약관·개인정보처리방침 전문. 앱 안에서도 열리지만, 심사·외부 공유용으로
+              로그인 없이 주소만으로도 열려야 하므로 가드 없이 공개한다.
+              (vercel.json의 catch-all rewrite가 이 경로를 index.html로 보낸다) */}
+          <Route path="/private" element={<PrivatePage />} />
           {/* 카카오 인가 콜백. 경로는 카카오 콘솔 등록값과 일치해야 한다(src/lib/kakao.ts). */}
           <Route path="/oauth/kakao/callback" element={<KakaoCallbackPage />} />
 

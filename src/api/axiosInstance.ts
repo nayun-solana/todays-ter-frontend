@@ -7,14 +7,6 @@ import { ErrorCode, type ApiError, type ApiResponse } from './types';
 /** 재발급을 시도하면 안 되는 경로 — 재발급 자체이거나, 토큰을 처음 받는 요청. */
 const NO_REISSUE_PATHS = ['/auth/reissue', '/auth/kakao/login', '/auth/dev/token'];
 
-/**
- * 토큰을 처음 받는(=로그인) 경로. 여기서 나는 401은 "로그인 시도가 실패했다"는 뜻이지
- * "가지고 있던 세션이 만료됐다"는 뜻이 아니다 — 기존 토큰을 지우면 안 된다.
- *
- * 실제로 카카오 로그인을 디버깅하다 로그인 실패 한 번에 멀쩡하던 세션이 날아갔다.
- */
-const LOGIN_PATHS = ['/auth/kakao/login', '/auth/dev/token'];
-
 /** 재시도 1회 제한 플래그를 실어 나르는 요청 설정. */
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -81,13 +73,16 @@ axiosInstance.interceptors.response.use(
       !NO_REISSUE_PATHS.some((path) => url.includes(path));
 
     if (!canReissue) {
-      // 재시도까지 했는데 또 401이면 세션이 끝난 것. 게스트(토큰 없음)는 그대로 둔다.
-      // 단 로그인 요청의 401은 세션 만료가 아니라 로그인 실패다 — 기존 세션을 건드리지 않는다.
-      const isLoginAttempt = LOGIN_PATHS.some((path) => url.includes(path));
-
-      if (!isLoginAttempt && getAccessToken() !== null) {
-        clearAccessToken();
-      }
+      // 여기서는 토큰을 지우지 않는다.
+      //
+      // 401이 두 가지 뜻으로 온다 — "내 세션이 끝났다"와 "이 엔드포인트가 이 자격을 안 받는다".
+      // 후자가 실제로 더 많다: 게스트 전용 API는 회원 토큰만으로는 GUEST401_1을 주고,
+      // 리포트 API도 FORTUNE401_1(비회원 쿠키 필요)로 401을 준다. 이걸 만료로 처리하는 바람에
+      // 로그인 직후 화면을 한 번 여는 것만으로 강제 로그아웃됐다(#145).
+      //
+      // 무엇보다 여기 오는 대부분은 **재발급이 200으로 성공한 뒤의 재시도**다. 재발급 성공은
+      // 세션이 살아 있다는 증거이므로 그 뒤의 401을 만료로 볼 근거가 없다.
+      // 세션 종료 판정은 아래 재발급 실패(401/403) 한 곳에서만 한다.
       return Promise.reject(apiError);
     }
 

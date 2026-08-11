@@ -119,22 +119,16 @@ export default function MyPage() {
           </div>
         </section>
 
-        {/* reportId는 BE가 아직 안 내려준다(api/my.ts 참고). 없으면 `/report/undefined`로
-            보내는 대신 사주 수정으로 유도한다 — 거기서 재생성하면 새 id를 받아 리포트로 갈 수 있다. */}
         <button
           type="button"
           disabled={!profile}
           onClick={() => {
             if (!profile) return;
-            navigate(profile.reportId ? `/report/${profile.reportId}?from=my` : '/my/saju');
+            navigate(`/report/${profile.reportId}?from=my`);
           }}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {!profile
-            ? '회원 정보 불러오는 중'
-            : profile.reportId
-              ? '사주 리포트 다시보기'
-              : '사주 정보 수정하기'}
+          {profile ? '사주 리포트 다시보기' : '회원 정보 불러오는 중'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (

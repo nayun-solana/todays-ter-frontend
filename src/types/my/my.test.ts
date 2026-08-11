@@ -16,4 +16,13 @@ describe('MyPageResponse', () => {
       profileImageUrl: 'https://example.com/profile.png',
     });
   });
+
+  it('rejects a profile without the current report id', () => {
+    expect(() =>
+      MyPageResponse.parse({
+        nickname: '사용자닉네임',
+        profileImageUrl: null,
+      }),
+    ).toThrow();
+  });
 });

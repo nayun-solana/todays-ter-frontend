@@ -10,15 +10,8 @@ import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiResponse } from './types';
 
-/**
- * 회원 프로필. `/mypage`가 아니라 `/members/me`를 쓴다 — BE에 mypage 도메인이 아직 없다
- * (유효한 회원 토큰으로도 401, 실측 2026-08-12). `/members/me`는 200이다.
- *
- * 대신 이 응답에는 `reportId`가 없다. BE가 리포트 조회 경로를 열어주면
- * (`GET /fortune-reports/me` 또는 `/members/me`에 필드 추가) 그때 필수로 바꾼다.
- */
 export async function getMyPage(): Promise<MyPageResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/members/me');
+  const response = await axiosInstance.get<ApiResponse>('/mypage');
   return MyPageResponse.parse(getResult(response));
 }
 

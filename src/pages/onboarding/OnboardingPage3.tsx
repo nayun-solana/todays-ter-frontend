@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 // hooks
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useSaveGuestConcerns } from '../../hooks/onboarding/useGuestOnboarding';
 // types
 import type { ConcernType } from '../../types/onboarding/guestOnboarding';
@@ -44,6 +45,7 @@ const CONCERNS: Concern[] = [
 export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboarding' | 'edit' }) {
   const navigate = useNavigate();
   const isEdit = mode === 'edit';
+  const { isMember } = useAuthStatus();
 
   const [selectedIds, setSelectedIds] = useState<ConcernType[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -71,6 +73,13 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
 
     if (isEdit) {
       navigate('/my/concerns/complete', { state: { selectedConcerns: selectedIds } });
+      return;
+    }
+
+    // 회원도 같은 이유로 호출할 수 없다(위 1번). 로그인 직후 온보딩으로 들어오는 경로가 있어서
+    // `edit`만 막아두면 여기서 401 → 강제 로그아웃으로 이어졌다(#145).
+    if (isMember) {
+      navigate('/home', { state: { selectedConcerns: selectedIds } });
       return;
     }
 

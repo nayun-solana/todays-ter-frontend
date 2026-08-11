@@ -1,4 +1,9 @@
-import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import {
+  AxiosError,
+  type AxiosAdapter,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./reissue', () => ({ reissueOnce: vi.fn() }));
@@ -99,17 +104,21 @@ describe('401 응답 처리', () => {
     expect(getAccessToken()).toBeNull();
   });
 
-  it('재발급 후 재시도했는데 또 401이면 세션을 끝낸다', async () => {
+  // #145: 재발급이 200이면 세션은 살아 있다. 그 뒤 401은 "이 엔드포인트가 이 자격을 안 받는다"는
+  // 뜻이고(게스트 전용 API·리포트 API가 실제로 그렇다), 만료로 처리해 로그아웃시키면 안 된다.
+  it('재발급 후 재시도했는데 또 401이어도 세션을 유지한다', async () => {
     setAccessToken('old-token');
     mockedReissueOnce.mockResolvedValue('new-token');
     const adapter = adapterReturning(401, 401);
 
-    await expect(axiosInstance.get('/home/header')).rejects.toMatchObject({ status: 401 });
+    await expect(axiosInstance.get('/api/guest-onboarding/concerns')).rejects.toMatchObject({
+      status: 401,
+    });
 
     // 재발급은 한 번만 — 401이 반복돼도 무한루프에 빠지지 않는다
     expect(mockedReissueOnce).toHaveBeenCalledTimes(1);
     expect(adapter).toHaveBeenCalledTimes(2);
-    expect(getAccessToken()).toBeNull();
+    expect(getAccessToken()).toBe('old-token');
   });
 
   it('재시도가 다른 이유로 실패하면 그 실패를 그대로 전한다 (401로 뭉뚱그리지 않는다)', async () => {

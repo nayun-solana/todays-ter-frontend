@@ -8,7 +8,11 @@ const ACCESS_TOKEN_KEY = 'accessToken';
  * 평가하므로 식별자 자체가 선언돼 있지 않으면 ReferenceError가 난다. `typeof`를 식별자에 직접 써야 한다.
  */
 function getStorage(): Storage | null {
-  return typeof localStorage !== 'undefined' ? localStorage : null;
+  // 존재만 봐서는 부족하다 — Node 25는 `--localstorage-file` 없이도 전역 localStorage를
+  // 노출하는데 메서드가 없어서, 있는 줄 알고 부르면 테스트가 통째로 죽는다(실측).
+  return typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function'
+    ? localStorage
+    : null;
 }
 
 function getStoredAccessToken() {

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
 import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
@@ -123,14 +124,11 @@ export default function OnboardingPage1() {
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // 게스트 세션 보장(진입 경로 무관 안전망). 서버 idempotent — 쿠키 있으면 재사용.
+  // 게스트 세션 보장. 서버 idempotent — 쿠키 있으면 재사용.
+  // 마운트 시에도 부르던 것을 걷어냈다: SessionGate가 세션 없는 방문자를 여기 오기 전에 막으므로
+  // 그 호출은 닿지 않는 안전망이면서 진입마다 요청만 두 번 나갔다(배포본에서 실제 2회 확인).
+  const { isMember } = useAuthStatus();
   const initSession = useInitGuestSession();
-  useEffect(() => {
-    initSession.mutate();
-    // 마운트 시 1회. mutate는 안정 참조.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const saveSaju = useSaveGuestSaju();
 
   const canSubmit =
@@ -163,6 +161,15 @@ export default function OnboardingPage1() {
     if (saveSaju.isPending) return; // 중복 제출 방지
     // 성별·생년월일은 앞 단계라 여기 도달 시 항상 채워져 있다. 타입 좁히기용 가드.
     if (gender === null || date === null) return;
+
+    // 회원은 게스트 저장 API를 부를 수 없다. 게스트 쿠키가 없으면 GUEST401_1,
+    // 로그인으로 세션이 CONVERTED됐으면 GUEST401_2가 온다(배포 서버 실측).
+    // 예전에는 그 401이 강제 로그아웃으로 이어졌다(#145).
+    // 회원용 사주 저장 경로는 BE에 없다 — `PUT /members/me/saju`는 수정 전용이라 신규 회원에겐 404다.
+    if (isMember) {
+      navigate('/onboarding/step-2');
+      return;
+    }
 
     setSubmitError(null);
     try {

@@ -1,26 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
-import { useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 
 import { useRecordDetail } from '../../hooks/review/useReview';
+import type { PlaceDay } from '../record/components/RecordPlaceCard';
+import ShareCardModal from '../record/components/ShareCardModal';
 import Button from './components/Button';
 import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
 import ReviewMoreMenu from './components/ReviewMoreMenu';
 import StarRating from './components/StarRating';
 
+type ReviewDetailLocationState = {
+  element?: PlaceDay;
+};
+
 /** ISO/날짜 문자열 → "2025.06.28" */
-function formatVerifiedAt(date: string) {
+function formatDate(date: string) {
   return date.slice(0, 10).replaceAll('-', '.');
 }
 
 export default function ReviewDetailPage() {
   const { recordId } = useParams();
+  const { state } = useLocation();
+  const listElement = (state as ReviewDetailLocationState | null)?.element;
   const reviewQuery = useRecordDetail(recordId);
   const review = reviewQuery.data;
   const photos = review?.imageUrls ?? [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,9 +91,7 @@ export default function ReviewDetailPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-4">
-                {review.visitVerifiedAt
-                  ? `방문 인증 완료 · ${formatVerifiedAt(review.visitVerifiedAt)}`
-                  : '방문 인증 정보 없음'}
+                방문 인증 완료 · {formatDate(review.createdAt)}
               </p>
               <h2 className="mt-2 truncate text-base font-bold text-gray-6">
                 {review.placeName}
@@ -115,7 +122,9 @@ export default function ReviewDetailPage() {
 
           <div className="flex-1" />
 
-          <Button className="mx-5 mb-5 w-auto">스토리 공유하기</Button>
+          <Button className="mx-5 mb-5 w-auto" onClick={() => setIsShareOpen(true)}>
+            스토리 공유하기
+          </Button>
         </div>
       ) : null}
 
@@ -126,6 +135,15 @@ export default function ReviewDetailPage() {
             // TODO: 후기 삭제 API 연동
             setIsDeleteModalOpen(false);
           }}
+        />
+      ) : null}
+
+      {isShareOpen && review ? (
+        <ShareCardModal
+          placeId={review.placeId}
+          fallbackPlaceName={review.placeName}
+          element={listElement}
+          onClose={() => setIsShareOpen(false)}
         />
       ) : null}
     </div>

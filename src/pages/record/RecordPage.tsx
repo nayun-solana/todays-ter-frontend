@@ -63,7 +63,10 @@ export default function RecordPage() {
                     activeTab === 'saved'
                       ? () => navigate(`/place/${place.placeId}`)
                       : recordId != null
-                        ? () => navigate(`/review/${recordId}`)
+                        ? () =>
+                            navigate(`/review/${recordId}`, {
+                              state: { element: place.element },
+                            })
                         : undefined
                   }
                 />

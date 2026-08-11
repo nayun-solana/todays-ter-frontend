@@ -123,6 +123,8 @@ export const handlers = [
   http.get('*/places/me', () => passthrough()),
   // 목록 thumbnailUrl: "/places/{id}/thumbnail" — 장소 상세 목보다 먼저 통과
   http.get('/places/:placeId/thumbnail', () => passthrough()),
+  // 스토리 공유 카드 — GET /places/{placeId}/share-cards
+  http.get('/places/:placeId/share-cards', () => passthrough()),
   http.get('*/places', () => passthrough()),
 
   // GET /places/:placeId — 장소 상세 기본 정보

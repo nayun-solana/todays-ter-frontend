@@ -1,4 +1,8 @@
-import { PlaceDetailResponse, PlaceReviewsResponse } from '../types/place/place';
+import {
+  PlaceBookmarkResponse,
+  PlaceDetailResponse,
+  PlaceReviewsResponse,
+} from '../types/place/place';
 import { PlaceShareCard } from '../types/place/shareCard';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
@@ -18,4 +22,15 @@ export async function getPlaceReviews(placeId: string): Promise<PlaceReviewsResp
 export async function getPlaceShareCard(placeId: number | string) {
   const response = await axiosInstance.get<ApiResponse>(`/places/${placeId}/share-cards`);
   return PlaceShareCard.parse(getResult(response));
+}
+
+/** PATCH /places/{placeId}/bookmark — 장소 저장/해제 */
+export async function updatePlaceBookmark(
+  placeId: string,
+  isSaved: boolean,
+): Promise<PlaceBookmarkResponse> {
+  const response = await axiosInstance.patch<ApiResponse>(`/places/${placeId}/bookmark`, {
+    isSaved,
+  });
+  return PlaceBookmarkResponse.parse(getResult(response));
 }

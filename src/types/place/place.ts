@@ -13,11 +13,19 @@ export const PlaceDetailResponse = z.object({
   address: z.string(),
   latitude: z.number(),
   longitude: z.number(),
+  mapUrl: z.string().nullish(),
   reviewCount: z.number().int().nonnegative(),
   isSaved: z.boolean(),
   isVisited: z.boolean(),
 });
 export type PlaceDetailResponse = z.infer<typeof PlaceDetailResponse>;
+
+/** PATCH /places/{placeId}/bookmark 응답 */
+export const PlaceBookmarkResponse = z.object({
+  placeId: z.number().int().positive(),
+  isSaved: z.boolean(),
+});
+export type PlaceBookmarkResponse = z.infer<typeof PlaceBookmarkResponse>;
 
 const ImageInfo = z.object({
   imageId: z.number().int().positive(),

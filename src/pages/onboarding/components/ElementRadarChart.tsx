@@ -6,8 +6,7 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from 'recharts';
-
-type ElementCode = 'WOOD' | 'FIRE' | 'EARTH' | 'METAL' | 'WATER';
+import type { ElementCode } from '../../../types/onboarding/report';
 
 type DistributionItem = {
   element: ElementCode;

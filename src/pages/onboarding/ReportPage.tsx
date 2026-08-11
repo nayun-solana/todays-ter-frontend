@@ -1,4 +1,5 @@
 // libraries
+import { useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 // hooks
 import { useGetSajuReport } from '../../hooks/onboarding/useGetReport';
@@ -13,6 +14,7 @@ import ElementRadarChart from './components/ElementRadarChart';
 //types
 import type { ElementCode } from '../../types/onboarding/report';
 
+const STATUS_BAR_COLOR = '#5a81fa';
 /**
  * 로딩·실패 자리. 예전에는 목 데이터라 이 상태 자체가 없었고, 실연동 후에는
  * 값이 없을 때 빈 껍데기(제목 없음·0%)가 그려지는 걸 막아야 한다.
@@ -46,7 +48,44 @@ export default function ReportPage() {
   // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
   const reportId = Number(id);
   const isValidId = Number.isFinite(reportId) && reportId > 0;
-  const { data: report, isPending, isError, refetch } = useGetSajuReport(reportId);
+  const { data: sajuReportData, isPending, isError, refetch } = useGetSajuReport(reportId);
+  const report = sajuReportData?.basic;
+
+  // status bar 색상 변경 (iOS Safari, Android Chrome)
+  useEffect(() => {
+    const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+    const themeColor = existingThemeColor ?? document.createElement('meta');
+
+    const wasThemeColorCreated = !existingThemeColor;
+    const previousThemeColor = themeColor.getAttribute('content');
+
+    const previousHtmlBackground = document.documentElement.style.backgroundColor;
+    const previousBodyBackground = document.body.style.backgroundColor;
+
+    if (wasThemeColorCreated) {
+      themeColor.name = 'theme-color';
+      document.head.appendChild(themeColor);
+    }
+
+    themeColor.setAttribute('content', STATUS_BAR_COLOR);
+    document.documentElement.style.backgroundColor = STATUS_BAR_COLOR;
+    document.body.style.backgroundColor = STATUS_BAR_COLOR;
+
+    return () => {
+      if (wasThemeColorCreated) {
+        themeColor.remove();
+      } else if (previousThemeColor !== null) {
+        themeColor.setAttribute('content', previousThemeColor);
+      } else {
+        themeColor.removeAttribute('content');
+      }
+
+      document.documentElement.style.backgroundColor = previousHtmlBackground;
+
+      document.body.style.backgroundColor = previousBodyBackground;
+    };
+  }, []);
 
   // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
   // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
@@ -68,7 +107,7 @@ export default function ReportPage() {
     return <ReportNotice title="리포트를 불러오는 중이에요" />;
   }
 
-  if (isError || !report) {
+  if (isError || !sajuReportData) {
     return (
       <ReportNotice
         title="리포트를 불러오지 못했어요"
@@ -81,8 +120,6 @@ export default function ReportPage() {
       />
     );
   }
-
-  const basic = report.basic;
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {
@@ -117,46 +154,45 @@ export default function ReportPage() {
           </button>
         ) : null}
         <div className="flex flex-col gap-3">
-          {/* 부가설명폰트 */}
-          <p className="text-[10px]font-bold text-primary-light ">기본 리포트</p>
+          <p className="typo-caption text-primary-light ">기본 리포트</p>
           <div className="flex flex-col gap-1">
-            {/* Body 2 */}
-            <p className="text-base font-bold text-white">{basic.typeTitle}</p>
-            {/* Head 1 */}
-            <p className="text-2xl font-extrabold text-white">{basic.typeName}</p>
+            <p className="typo-body-2 text-white">{report!.typeTitle}</p>
+
+            <p className="typo-head-1 text-white">{report!.typeName}</p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
-          <ContentBox>
-            {/* 부가설명폰트 */}
-            <p className="text-[10px] font-bold text-gray-5">{basic.elementSummary}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {basic.primaryElements.map((element: ElementCode) => (
-                <OhaengIcon key={element} element={element} type="primary" />
-              ))}
-              {/* 보완 오행은 BE가 하나만 준다(예전 스키마는 배열이었다). */}
-              {basic.complementElement ? (
-                <OhaengIcon element={basic.complementElement} type="complementary" />
-              ) : null}
+          <ContentBox type="TOP">
+            <p className="typo-caption text-gray-5">{report!.elementSummary}</p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-2">
+                {report!.primaryElements.map((element: ElementCode) => (
+                  <OhaengIcon key={element} element={element} type="primary" />
+                ))}
+              </div>
+              <OhaengIcon
+                key={report!.complementElement}
+                element={report!.complementElement!}
+                type="complementary"
+              />
             </div>
           </ContentBox>
-          <ContentBox title="오행 분포">
+          <ContentBox type="TEXT" title="오행 분포">
             <div className="flex items-center gap-4">
               {/* 왼쪽 차트 */}
               <div className="min-w-0 flex-1">
                 <ElementRadarChart
-                  distribution={basic.elementDistribution}
-                  primaryElements={basic.primaryElements}
+                  distribution={report!.elementDistribution}
+                  primaryElements={report!.primaryElements}
                 />
               </div>
 
               {/* 오른쪽 오행 분포 */}
-              <div className="flex w-[160px] shrink-0 flex-col gap-3">
-                {basic.elementDistribution.map((item) => {
+              <div className="flex w-40 shrink-0 flex-col gap-3">
+                {report!.elementDistribution.map((item) => {
                   const { color } = parseElementCodeandColor(item.element);
                   // 라벨은 BE가 준 값을 그대로 쓴다.
                   const label = item.label;
-
                   // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.
                   const percentage = Math.round(Math.min(Math.max(item.percentage, 0), 100));
 
@@ -193,15 +229,12 @@ export default function ReportPage() {
               </div>
             </div>
           </ContentBox>
-          <ContentBox title="전반적인 성향">
+          <ContentBox type="TEXT" title="전반적인 성향">
             <div className="flex flex-col gap-3">
-              {/* BE에 정렬 키가 없다 — 배열 순서를 그대로 쓴다. */}
-              {basic.overallTendencies.map((item) => (
+              {report!.overallTendencies.map((item) => (
                 <div key={item.label} className="flex flex-col gap-1">
-                  {/* 부가설명폰트 */}
-                  <p className="text-[10px] font-bold text-primary">{item.label}</p>
-                  {/* Sub 3 */}
-                  <p className="text-[10px] font-normal text-gray-5">{item.text}</p>
+                  <p className="typo-caption text-primary">{item.label}</p>
+                  <p className="typo-sub-3 text-gray-5">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -210,7 +243,9 @@ export default function ReportPage() {
         <div className="flex flex-col gap-2">
           <Button
             variant="primary"
-            onClick={() => navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`)}
+            onClick={() => {
+              navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`);
+            }}
             className="flex items-center justify-center gap-3"
           >
             <p>상세 분석 보기</p>

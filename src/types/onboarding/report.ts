@@ -36,6 +36,15 @@ export const SajuReportCategory = z.enum([
 ]);
 export type SajuReportCategory = z.infer<typeof SajuReportCategory>;
 
+export const DetailSajuReportCategory = z.enum([
+  'LOVE',
+  'CAREER',
+  'WEALTH',
+  'RELATIONSHIP',
+  'HEALTH',
+]);
+export type DetailSajuReportCategory = z.infer<typeof DetailSajuReportCategory>;
+
 // ── 기본 리포트 (GET /fortune-reports/{reportId}) ──
 
 export const ElementDistribution = z.object({
@@ -46,7 +55,18 @@ export const ElementDistribution = z.object({
 });
 export type ElementDistribution = z.infer<typeof ElementDistribution>;
 
-/** 종합 성향 한 줄. BE에 정렬 키가 없으므로 **배열 순서를 그대로 쓴다**. */
+export const ElementAnalysis = z.object({
+  summary: z.string(),
+  primaryElements: z.array(ElementCode),
+  complementaryElement: ElementCode,
+  distribution: z.array(ElementDistribution),
+});
+export type ElementAnalysis = z.infer<typeof ElementAnalysis>;
+
+// ─────────────────────────────────────
+// 기본 리포트 - 종합 성향
+// ─────────────────────────────────────
+
 export const OverallTendency = z.object({
   label: z.string(),
   text: z.string(),
@@ -57,10 +77,17 @@ export const BasicReport = z.object({
   typeTitle: z.string(),
   typeName: z.string(),
   elementSummary: z.string(),
+
   primaryElements: z.array(ElementCode).default([]),
-  /** 보완 오행은 **하나**다(예전 스키마의 `complementaryElements` 배열이 아니다). */
+
+  /**
+   * 보완 오행은 하나.
+   * 기존 complementaryElements 배열 구조가 아님.
+   */
   complementElement: ElementCode.nullish(),
+
   elementDistribution: z.array(ElementDistribution).default([]),
+
   overallTendencies: z.array(OverallTendency).default([]),
 });
 export type BasicReport = z.infer<typeof BasicReport>;
@@ -71,6 +98,10 @@ export const SajuReportResponse = z.object({
 });
 export type SajuReportResponse = z.infer<typeof SajuReportResponse>;
 
+// ─────────────────────────────────────
+// 카테고리별 사주 리포트
+// ─────────────────────────────────────
+
 /** GET /fortune-reports/me — 현재 회원이 조회할 리포트 id. */
 export const CurrentReportResponse = z.object({
   reportId: z.number().int().positive(),
@@ -79,30 +110,112 @@ export type CurrentReportResponse = z.infer<typeof CurrentReportResponse>;
 
 // ── 상세 리포트 (GET /fortune-reports/{reportId}/details?category=) ──
 
-export const ContentBlock = z.object({
+// GENERAL
+
+export const SajuCoreType = z.enum(['DAY_STEM', 'DAY_BRANCH', 'DAY_PILLAR']);
+export type SajuCoreType = z.infer<typeof SajuCoreType>;
+
+export const FlowAnalysisType = z.enum([
+  'EMOTIONAL_FLOW',
+  'RELATIONSHIP_PATTERN',
+  'ACTION_STYLE',
+  'RECOVERY_POINT',
+]);
+export type FlowAnalysisType = z.infer<typeof FlowAnalysisType>;
+
+export const SajuReportSummary = z.object({
+  description: z.string(),
+  primaryElement: ElementCode,
+});
+export type SajuReportSummary = z.infer<typeof SajuReportSummary>;
+
+export const SajuCoreItem = z.object({
+  type: SajuCoreType,
+  title: z.string(),
+  value: z.string(),
+  description: z.string(),
+  displayOrder: z.number().int(),
+});
+export type SajuCoreItem = z.infer<typeof SajuCoreItem>;
+
+export const FlowAnalysisItem = z.object({
+  type: FlowAnalysisType,
+  title: z.string(),
+  description: z.string(),
+  displayOrder: z.number().int(),
+});
+export type FlowAnalysisItem = z.infer<typeof FlowAnalysisItem>;
+
+export const RecommendationItem = z.object({
+  description: z.string(),
+  displayOrder: z.number().int(),
+});
+export type RecommendationItem = z.infer<typeof RecommendationItem>;
+
+/**
+ * GENERAL 카테고리 응답
+ */
+export const GeneralSajuReportResponse = z.object({
+  reportId: z.number().int(),
+  category: z.literal('GENERAL'),
+
+  summary: SajuReportSummary,
+  sajuCore: z.array(SajuCoreItem),
+  flowAnalysis: z.array(FlowAnalysisItem),
+
+  complementaryElement: ElementCode,
+
+  recommendations: z.array(RecommendationItem),
+});
+export type GeneralSajuReportResponse = z.infer<typeof GeneralSajuReportResponse>;
+
+// LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
+
+export const SajuReportContentBlock = z.object({
   title: z.string(),
   content: z.string(),
 });
-export type ContentBlock = z.infer<typeof ContentBlock>;
+export type SajuReportContentBlock = z.infer<typeof SajuReportContentBlock>;
 
-export const KeyPoint = z.object({
+export const SajuReportKeyPoint = z.object({
   label: z.string(),
   text: z.string(),
 });
-export type KeyPoint = z.infer<typeof KeyPoint>;
+export type SajuReportKeyPoint = z.infer<typeof SajuReportKeyPoint>;
 
-export const ReportDetail = z.object({
+export const SajuReportDetail = z.object({
+  code: DetailSajuReportCategory,
+  title: z.string(),
   coreSummary: z.string(),
-  contentBlocks: z.array(ContentBlock).default([]),
-  keyPoints: z.array(KeyPoint).default([]),
-});
-export type ReportDetail = z.infer<typeof ReportDetail>;
 
-export const CategorySajuReportResponse = z.object({
-  reportId: z.number().int(),
-  category: SajuReportCategory,
-  detail: ReportDetail,
+  contentBlocks: z.array(SajuReportContentBlock).default([]),
+  keyPoints: z.array(SajuReportKeyPoint).default([]),
 });
+export type SajuReportDetail = z.infer<typeof SajuReportDetail>;
+
+/**
+ * GENERAL을 제외한 카테고리 응답
+ */
+export const DetailSajuReportResponse = z.object({
+  reportId: z.number().int(),
+  category: DetailSajuReportCategory,
+  detail: SajuReportDetail,
+});
+export type DetailSajuReportResponse = z.infer<typeof DetailSajuReportResponse>;
+
+/**
+ * 카테고리별 사주 리포트 응답
+ *
+ * GENERAL
+ * → GeneralSajuReportResponse
+ *
+ * LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
+ * → DetailSajuReportResponse
+ */
+export const CategorySajuReportResponse = z.discriminatedUnion('category', [
+  GeneralSajuReportResponse,
+  DetailSajuReportResponse,
+]);
 export type CategorySajuReportResponse = z.infer<typeof CategorySajuReportResponse>;
 
 // ── 생성·진행 상태 ──

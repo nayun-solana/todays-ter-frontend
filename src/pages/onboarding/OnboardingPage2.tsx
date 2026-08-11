@@ -1,9 +1,15 @@
 // libraries
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 // hooks
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
+import {
+  reportKeys,
+  useCreateFortuneReport,
+  useReportStatus,
+  useRetryFortuneReport,
+} from '../../hooks/onboarding/useGetReport';
 // components
 import AnalysisProgress from './components/CircularProgress';
 import StatusBox from './components/StatusBox';
@@ -111,6 +117,36 @@ export default function OnboardingStep2Page() {
   // 이펙트+setState가 아니라 파생값이다 — 상태에서 바로 계산되므로 굳이 동기화할 이유가 없다.
   const isModalOpen = (status === 'completed' || failed) && !isModalDismissed;
 
+  /**
+   * 재시도는 **서버가 failed라고 답한 경우에만** 의미가 있다.
+   *
+   * - 생성 요청 자체가 거절되면 reportId가 없다. `POST /fortune-reports/{reportId}/retry`는
+   *   재시도할 리포트를 지목해야 하므로 부를 대상이 아예 없다.
+   * - 상태 조회가 실패한 것(`statusQuery.isError`)은 리포트가 실패했다는 뜻이 아니라
+   *   조회 경로가 죽었다는 뜻이다. 이때 캐시에 남은 canRetry는 실패 이전 값이라 믿을 수 없고,
+   *   폴링이 이미 STATUS_POLL_MAX_FAILURES만큼 눌러본 뒤라 재시도해도 같은 벽에 부딪힌다.
+   *
+   * 그래서 이 두 경우는 기존대로 홈/온보딩1로 내보내고, 서버가 canRetry를 true로 준
+   * 실제 리포트 실패에서만 재시도를 연다(retryCount 상한 판단은 서버 몫이다).
+   */
+  const queryClient = useQueryClient();
+  const retryReport = useRetryFortuneReport();
+  const canRetry = reportId !== null && status === 'failed' && statusQuery.data?.canRetry === true;
+
+  const handleRetry = () => {
+    // 실패 모달의 버튼은 그대로 떠 있으므로 응답이 오기 전에 여러 번 눌릴 수 있다.
+    if (reportId === null || retryReport.isPending) return;
+
+    retryReport.mutate(reportId, {
+      // 재시도는 같은 reportId를 재사용하고 최신 상태를 그대로 돌려준다. 이 응답을 상태 캐시에
+      // 바로 덮어써야 status가 failed에서 벗어나 모달이 닫히고, refetchInterval이 다시
+      // 1초 폴링으로 돌아온다. refetch로 받아오면 그 왕복 동안 실패 모달이 남는다.
+      onSuccess: (nextStatus) => {
+        queryClient.setQueryData(reportKeys.status(reportId), nextStatus);
+      },
+    });
+  };
+
   return (
     <main
       className="
@@ -145,6 +181,13 @@ export default function OnboardingStep2Page() {
         <Modal
           isOpen={isModalOpen}
           onClick={() => {
+            // 재시도는 이 화면에 머무르며 진행률을 다시 보여주는 흐름이다 —
+            // 여기서 dismiss하면 재시도가 또 실패해도 모달이 못 뜬다.
+            if (canRetry) {
+              handleRetry();
+              return;
+            }
+
             setIsModalDismissed(true);
             if (!failed) {
               navigate(`/report/${reportId}`);

@@ -1,3 +1,6 @@
+import { useState } from 'react';
+
+import waterOrb from '../../../assets/ohaeng/water-orb.png';
 import OhaengBadge from '../../../components/OhaengBadge';
 import { cn } from '../../../lib/cn';
 
@@ -11,6 +14,9 @@ const DAY_TEXT_CLASS: Record<PlaceDay, string> = {
   금: 'text-ohaeng-metal',
   토: 'text-ohaeng-earth',
 };
+
+/** thumbnailUrl이 없을 때 쓰는 폴백 이미지 */
+const LOGO_FALLBACK = waterOrb;
 
 export type RecordPlaceCardProps = {
   name: string;
@@ -32,6 +38,9 @@ export default function RecordPlaceCard({
   onClick,
 }: RecordPlaceCardProps) {
   const dayTextClass = DAY_TEXT_CLASS[day];
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showLogo = !imageUrl || failedUrl === imageUrl;
+  const src = showLogo ? LOGO_FALLBACK : imageUrl;
 
   return (
     <article
@@ -55,14 +64,24 @@ export default function RecordPlaceCard({
       )}
     >
       <div className="flex gap-2.5">
-        <div className="size-16 shrink-0 overflow-hidden rounded-xl bg-gray-3">
-          {imageUrl ? (
-            <img src={imageUrl} alt="" className="size-full object-cover" />
-          ) : null}
+        <div
+          className={cn(
+            'flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl',
+            showLogo ? 'bg-primary-bg p-2.5' : 'bg-gray-3',
+          )}
+        >
+          <img
+            src={src}
+            alt=""
+            className={cn('size-full', showLogo ? 'object-contain' : 'object-cover')}
+            onError={() => {
+              if (imageUrl) setFailedUrl(imageUrl);
+            }}
+          />
         </div>
 
         <div className="min-w-0 flex-1 py-2.5">
-          <h2 className="truncate text-sm font-bold text-gray-6 mb-2.5">{name}</h2>
+          <h2 className="mb-2.5 truncate text-sm font-bold text-gray-6">{name}</h2>
           <p className={cn('truncate text-[10px] font-bold', dayTextClass)}>
             {categories.join('/')} • {dateLabel}
           </p>

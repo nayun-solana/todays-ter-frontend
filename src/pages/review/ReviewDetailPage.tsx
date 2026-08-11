@@ -1,29 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
-import { useVisitedReviewDetail } from '../../hooks/review/useReview';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
+import { useRecordDetail } from '../../hooks/review/useReview';
+import { recordDetailImagesOf } from '../../types/record/record';
+import type { PlaceDay } from '../record/components/RecordPlaceCard';
+import ShareCardModal from '../record/components/ShareCardModal';
 import Button from './components/Button';
 import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
 import ReviewMoreMenu from './components/ReviewMoreMenu';
 import StarRating from './components/StarRating';
 
-/** "2025-06-28" → "2025.06.28" */
-function formatVerifiedAt(date: string) {
-  return date.replaceAll('-', '.');
+type ReviewDetailLocationState = {
+  element?: PlaceDay;
+};
+
+/** ISO/날짜 문자열 → "2025.06.28" */
+function formatDate(date: string) {
+  return date.slice(0, 10).replaceAll('-', '.');
 }
 
 export default function ReviewDetailPage() {
   const navigate = useNavigate();
-  const { visitId } = useParams();
-  const reviewQuery = useVisitedReviewDetail(visitId);
-  const deleteRecordMutation = useDeleteRecord();
+  const { recordId } = useParams();
+  const { state } = useLocation();
+  const listElement = (state as ReviewDetailLocationState | null)?.element;
+  const reviewQuery = useRecordDetail(recordId);
+  const deleteRecord = useDeleteRecord();
   const review = reviewQuery.data;
-  const photos = review?.imageUrls ?? [];
+  const photos = review ? recordDetailImagesOf(review).map((image) => image.imageUrl) : [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +50,7 @@ export default function ReviewDetailPage() {
   }, [isMenuOpen]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1" data-visit-id={visitId}>
+    <div className="flex min-h-screen flex-col bg-gray-1" data-record-id={recordId}>
       <ReviewHeader
         title="후기 상세"
         rightSlot={
@@ -59,7 +69,7 @@ export default function ReviewDetailPage() {
               <ReviewMoreMenu
                 onEdit={() => {
                   setIsMenuOpen(false);
-                  if (review) navigate(`/place/${review.placeId}/review/edit`);
+                  if (recordId) navigate(`/review/${recordId}/edit`);
                 }}
                 onDelete={() => {
                   setIsMenuOpen(false);
@@ -78,10 +88,14 @@ export default function ReviewDetailPage() {
       ) : review ? (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
-            <div className="size-25 shrink-0 overflow-hidden rounded-xl bg-gray-3" />
+            <div className="size-25 shrink-0 overflow-hidden rounded-xl bg-gray-3">
+              {photos[0] ? (
+                <img src={photos[0]} alt="" className="size-full object-cover" />
+              ) : null}
+            </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-4">
-                방문 인증 완료 · {formatVerifiedAt(review.visitVerifiedAt)}
+                방문 인증 완료 · {formatDate(review.createdAt)}
               </p>
               <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
             </div>
@@ -96,12 +110,12 @@ export default function ReviewDetailPage() {
 
             {photos.length > 0 ? (
               <ul className="flex gap-3 overflow-x-auto pl-1">
-                {photos.map((photoUrl) => (
+                {photos.map((url) => (
                   <li
-                    key={photoUrl}
+                    key={url}
                     className="size-20 shrink-0 overflow-hidden rounded-2xl border border-primary-light bg-white"
                   >
-                    <img src={photoUrl} alt="" className="size-full object-cover" />
+                    <img src={url} alt="" className="size-full object-cover" />
                   </li>
                 ))}
               </ul>
@@ -110,22 +124,39 @@ export default function ReviewDetailPage() {
 
           <div className="flex-1" />
 
-          <Button className="mx-5 mb-5 w-auto">스토리 공유하기</Button>
+          <Button className="mx-5 mb-5 w-auto" onClick={() => setIsShareOpen(true)}>
+            스토리 공유하기
+          </Button>
         </div>
       ) : null}
 
       {isDeleteModalOpen ? (
         <DeleteReviewModal
-          onCancel={() => setIsDeleteModalOpen(false)}
+          onCancel={() => {
+            if (!deleteRecord.isPending) setIsDeleteModalOpen(false);
+          }}
           onConfirm={() => {
-            if (!visitId) return;
-            deleteRecordMutation.mutate(visitId, {
-              onSuccess: () => navigate('/record', { replace: true }),
+            if (!recordId || deleteRecord.isPending) return;
+            deleteRecord.mutate(recordId, {
+              onSuccess: () => {
+                setIsDeleteModalOpen(false);
+                navigate('/record', { replace: true });
+              },
             });
           }}
         />
       ) : null}
-      {deleteRecordMutation.isError ? (
+
+      {isShareOpen && review ? (
+        <ShareCardModal
+          placeId={review.placeId}
+          fallbackPlaceName={review.placeName}
+          element={listElement}
+          onClose={() => setIsShareOpen(false)}
+        />
+      ) : null}
+
+      {deleteRecord.isError ? (
         <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
           후기 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.
         </p>

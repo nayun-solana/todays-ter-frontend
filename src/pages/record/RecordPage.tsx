@@ -47,22 +47,32 @@ export default function RecordPage() {
           <p className="mt-4 text-sm text-gray-4">목록을 불러오지 못했습니다.</p>
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
-            {places.map((place) => (
-              <li key={place.placeId}>
-                <RecordPlaceCard
-                  name={place.placeName}
-                  categories={place.categories}
-                  dateLabel={dateLabel(place.savedDate)}
-                  day={place.element}
-                  imageUrl={place.thumbnailUrl ?? undefined}
-                  onClick={
-                    activeTab === 'visited'
-                      ? () => navigate(`/place/${place.placeId}?tab=reviews`)
-                      : undefined
-                  }
-                />
-              </li>
-            ))}
+            {places.map((place) => {
+              /** 다녀온 터 상세: GET /records/{recordId} */
+              const recordId = place.recordId;
+
+              return (
+                <li key={recordId ?? place.placeId}>
+                  <RecordPlaceCard
+                    name={place.placeName}
+                    categories={place.categories}
+                    dateLabel={dateLabel(place.savedDate)}
+                    day={place.element}
+                    imageUrl={place.thumbnailUrl || undefined}
+                    onClick={
+                      activeTab === 'saved'
+                        ? () => navigate(`/place/${place.placeId}`)
+                        : recordId != null && recordId > 0
+                          ? () =>
+                              navigate(`/review/${recordId}`, {
+                                state: { element: place.element },
+                              })
+                          : undefined
+                    }
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
 

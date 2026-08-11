@@ -1,6 +1,5 @@
 import {
   MyPageResponse,
-  NotificationSettingsResponse,
   PermissionSettingsResponse,
   PoliciesResponse,
   SocialConnectionsResponse,
@@ -8,7 +7,6 @@ import {
   MemberSajuResponse,
   MemberWithdrawRequest,
   MemberSajuUpdateRequest,
-  type NotificationSettingsRequest,
   type PermissionSettingsRequest,
 } from '../types/my/my';
 import axiosInstance from './axiosInstance';
@@ -37,18 +35,6 @@ export async function updateMemberSaju(body: MemberSajuUpdateRequest): Promise<M
 
 export async function withdrawMember(body: MemberWithdrawRequest): Promise<void> {
   await axiosInstance.delete<ApiResponse>('/members/me', { data: body });
-}
-
-export async function getNotificationSettings(): Promise<NotificationSettingsResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/mypage/notification-settings');
-  return NotificationSettingsResponse.parse(getResult(response));
-}
-
-export async function updateNotificationSettings(
-  body: NotificationSettingsRequest,
-): Promise<UpdatedAtResponse> {
-  const response = await axiosInstance.patch<ApiResponse>('/mypage/notification-settings', body);
-  return UpdatedAtResponse.parse(getResult(response));
 }
 
 export async function getPermissionSettings(): Promise<PermissionSettingsResponse> {

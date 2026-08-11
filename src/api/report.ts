@@ -1,5 +1,6 @@
 import {
   CategorySajuReportResponse,
+  CurrentReportResponse,
   ReportCreateResponse,
   ReportStatusResponse,
   SajuReportResponse,
@@ -25,6 +26,12 @@ import type { ApiResponse } from './types';
 export async function createFortuneReport(): Promise<ReportCreateResponse> {
   const res = await axiosInstance.post<ApiResponse>('/fortune-reports');
   return ReportCreateResponse.parse(getResult(res));
+}
+
+/** GET /fortune-reports/me — 현재 회원의 리포트 id. */
+export async function getCurrentFortuneReport(): Promise<CurrentReportResponse> {
+  const res = await axiosInstance.get<ApiResponse>('/fortune-reports/me');
+  return CurrentReportResponse.parse(getResult(res));
 }
 
 /** GET /fortune-reports/{reportId}/status — 상태 + 0~100 진행률. */

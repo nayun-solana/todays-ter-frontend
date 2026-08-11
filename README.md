@@ -30,7 +30,7 @@ https://todays-ter-frontend.vercel.app
 | 시각화·모션  | Recharts, Motion, Lucide React                                 |
 | 테스트       | Vitest                                                         |
 | PWA          | `vite-plugin-pwa`, Workbox                                     |
-| 개발 환경    | Vite, pnpm, ESLint, oxlint, Prettier                           |
+| 개발 환경    | Vite, pnpm, ESLint, Prettier                                   |
 
 ## 프로젝트 구조
 
@@ -65,21 +65,22 @@ pnpm dev
 ```bash
 pnpm dev
 pnpm lint
-pnpm build
 pnpm test
+pnpm build
 pnpm format
 ```
 
 - `pnpm dev`: 개발 서버 실행
 - `pnpm lint`: 코드 규칙 검사
-- `pnpm build`: 타입 검사와 프로덕션 빌드
 - `pnpm test`: Vitest 단위 테스트 실행
+- `pnpm build`: 타입 검사와 프로덕션 빌드
 - `pnpm format`: Prettier 기준으로 코드 포맷 정리
 
-PR을 올리기 전에는 최소한 아래 두 가지를 확인합니다.
+CI가 `pnpm lint` → `pnpm test` → `pnpm build` 순으로 실행하므로, PR을 올리기 전에 셋 다 확인합니다.
 
 ```bash
 pnpm lint
+pnpm test
 pnpm build
 ```
 
@@ -91,7 +92,8 @@ pnpm build
   - 개발: `vite.config.ts`의 `API_PATHS` 프록시
   - 운영: `vercel.json`의 `rewrites`
 - ⚠️ **BE 경로를 추가할 때는 두 파일을 함께 수정해야 합니다.** 한쪽만 고치면 개발이나 운영 중 한 곳에서만 동작합니다.
-- BE가 `/api` 접두어 없이 도메인 루트에 경로를 열어둬서(`/home`, `/places` 등) 프록시 대상 경로를 하나씩 나열합니다. 앱 라우트와 겹치는 경로가 있어, 문서 요청(`Accept: text/html`)은 프록시를 타지 않고 SPA로 처리합니다.
+- BE가 `/api` 접두어 없이 도메인 루트에 경로를 열어둬서(`/home`, `/places` 등) 프록시 대상 경로를 하나씩 나열합니다.
+- 그 결과 앱 라우트와 API 접두어가 겹칩니다(`/home`, `/records` 등). 개발 서버는 문서 요청(`Accept: text/html`)을 프록시에서 제외해, 주소창으로 연 화면이 API JSON으로 뜨는 것을 막습니다.
 
 ## 인증 구조
 

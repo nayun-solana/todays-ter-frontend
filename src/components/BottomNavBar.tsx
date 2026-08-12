@@ -11,11 +11,46 @@ import searchIcon from '../assets/navigation/search.svg';
 
 export type NavTabKey = 'home' | 'search' | 'record' | 'my';
 
-const TABS: { key: NavTabKey; label: string; icon: string; activeIcon: string; position: string; iconClass: string }[] = [
-  { key: 'home', label: '홈', icon: homeIcon, activeIcon: homeActiveIcon, position: 'left-7', iconClass: 'h-[19.5px] w-[21.5px]' },
-  { key: 'search', label: '탐색', icon: searchIcon, activeIcon: searchActiveIcon, position: 'left-[107px]', iconClass: 'size-6' },
-  { key: 'record', label: '기록', icon: recordIcon, activeIcon: recordActiveIcon, position: 'left-[186px]', iconClass: 'h-[18px] w-[23px]' },
-  { key: 'my', label: '마이', icon: myIcon, activeIcon: myActiveIcon, position: 'left-[280px]', iconClass: 'h-[21.875px] w-5' },
+const TABS: {
+  key: NavTabKey;
+  label: string;
+  icon: string;
+  activeIcon: string;
+  position: string;
+  iconClass: string;
+}[] = [
+  {
+    key: 'home',
+    label: '홈',
+    icon: homeIcon,
+    activeIcon: homeActiveIcon,
+    position: 'left-7',
+    iconClass: 'h-[19.5px] w-[21.5px]',
+  },
+  {
+    key: 'search',
+    label: '탐색',
+    icon: searchIcon,
+    activeIcon: searchActiveIcon,
+    position: 'left-[107px]',
+    iconClass: 'size-6',
+  },
+  {
+    key: 'record',
+    label: '기록',
+    icon: recordIcon,
+    activeIcon: recordActiveIcon,
+    position: 'left-[186px]',
+    iconClass: 'h-[18px] w-[23px]',
+  },
+  {
+    key: 'my',
+    label: '마이',
+    icon: myIcon,
+    activeIcon: myActiveIcon,
+    position: 'left-[280px]',
+    iconClass: 'h-[21.875px] w-5',
+  },
 ];
 
 /**
@@ -63,7 +98,11 @@ export default function BottomNavBar({ active, onChange }: BottomNavBarProps) {
           )}
         >
           <span className="flex size-6 items-center justify-center">
-            <img src={active === tab.key ? tab.activeIcon : tab.icon} alt="" className={tab.iconClass} />
+            <img
+              src={active === tab.key ? tab.activeIcon : tab.icon}
+              alt=""
+              className={tab.iconClass}
+            />
           </span>
           {tab.key === 'my' ? null : (
             <span className={cn('text-[10px] font-bold', active === tab.key && 'font-extrabold')}>

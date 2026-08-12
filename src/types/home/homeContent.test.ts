@@ -5,7 +5,8 @@ import {
   HomeHeaderResponse,
   RecommendedPlacesResponse,
 } from './homeContent';
-import { TodayEnergyResponse, toOhaengKey } from './homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
+import { TodayEnergyResponse } from './homeEnergy';
 
 /**
  * 홈 API 계약 회귀 테스트.

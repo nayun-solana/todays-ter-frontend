@@ -84,9 +84,7 @@ async function snapshotNotificationCaches(queryClient: QueryClient) {
   ]);
 
   return {
-    list: queryClient.getQueryData<InfiniteData<NotificationListResponse>>(
-      notificationKeys.list(),
-    ),
+    list: queryClient.getQueryData<InfiniteData<NotificationListResponse>>(notificationKeys.list()),
     unreadCount: queryClient.getQueryData<UnreadNotificationCountResponse>(
       notificationKeys.unreadCount(),
     ),

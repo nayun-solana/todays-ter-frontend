@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import { CloseIcon } from '../../components/icons';
 import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
+import { ohaengByCode } from '../../lib/ohaeng';
 import ElementRadarChart from './components/ElementRadarChart';
 //types
 import type { ElementCode } from '../../types/onboarding/report';
@@ -128,23 +129,6 @@ export default function ReportPage() {
     );
   }
 
-  const parseElementCodeandColor = (code: ElementCode) => {
-    switch (code) {
-      case 'WOOD':
-        return { label: '목', color: 'bg-ohaeng-wood' };
-      case 'FIRE':
-        return { label: '화', color: 'bg-ohaeng-fire' };
-      case 'EARTH':
-        return { label: '토', color: 'bg-ohaeng-earth' };
-      case 'METAL':
-        return { label: '금', color: 'bg-ohaeng-metal' };
-      case 'WATER':
-        return { label: '수', color: 'bg-ohaeng-water' };
-      default:
-        return { label: '', color: '' };
-    }
-  };
-
   return (
     <div className="relative mx-auto min-h-dvh bg-primary-bg">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
@@ -197,7 +181,7 @@ export default function ReportPage() {
               {/* 오른쪽 오행 분포 */}
               <div className="flex w-40 shrink-0 flex-col gap-3">
                 {report!.elementDistribution.map((item) => {
-                  const { color } = parseElementCodeandColor(item.element);
+                  const color = ohaengByCode(item.element)?.bg ?? '';
                   // 라벨은 BE가 준 값을 그대로 쓴다.
                   const label = item.label;
                   // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.

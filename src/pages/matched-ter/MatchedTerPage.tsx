@@ -11,7 +11,7 @@ import {
 } from '../../hooks/recommendation/useRecommendation';
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
 import type { RecommendationDetail } from '../../types/recommendation/recommendationDetail';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
 import ImageCarousel from './components/ImageCarousel';

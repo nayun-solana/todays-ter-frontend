@@ -33,9 +33,6 @@ export async function getRecordDetail(id: number | string) {
   return RecordDetailResponse.parse(payload);
 }
 
-/** @deprecated getRecordDetail 사용 */
-export const getVisitedReviewDetail = getRecordDetail;
-
 /** 다녀온 터 기록/후기 이미지 업로드 — POST /records/images */
 export async function uploadRecordImages(files: File[]) {
   const formData = new FormData();

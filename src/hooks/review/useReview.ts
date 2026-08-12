@@ -15,6 +15,3 @@ export function useRecordDetail(recordId?: string) {
     enabled: Boolean(recordId),
   });
 }
-
-/** @deprecated useRecordDetail 사용 */
-export const useVisitedReviewDetail = useRecordDetail;

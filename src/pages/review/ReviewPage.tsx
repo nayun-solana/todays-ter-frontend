@@ -10,7 +10,7 @@ import { useRecommendationDetail } from '../../hooks/recommendation/useRecommend
 import { useRecordDetail } from '../../hooks/review/useReview';
 import { ohaengByKey } from '../../lib/ohaeng';
 import { viewStateOf } from '../../lib/queryState';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
 import {
   recordDetailImagesOf,
   type RecordDetailImage,
@@ -19,6 +19,7 @@ import {
 import Button from './components/Button';
 import ReviewHeader from './components/ReviewHeader';
 import StarRating from './components/StarRating';
+import { loadFailureMessageBrief } from '../../lib/messages';
 
 type ReviewPageProps = {
   mode?: 'create' | 'edit';
@@ -80,7 +81,7 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
       {viewState === 'loading' ? (
         <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
       ) : viewState === 'failed' || !place ? (
-        <p className="px-5 py-8 text-sm text-gray-4">장소 정보를 불러오지 못했습니다.</p>
+        <p className="px-5 py-8 text-sm text-gray-4">{loadFailureMessageBrief('장소 정보')}</p>
       ) : (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-4 border-b border-gray-2 bg-white px-5 py-4">
@@ -202,12 +203,8 @@ function EditReviewForm({
             ) : null}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-gray-4">
-              방문 인증 완료 · {formatDate(initial.createdAt)}
-            </p>
-            <h2 className="mt-2 truncate text-base font-bold text-gray-6">
-              {initial.placeName}
-            </h2>
+            <p className="text-xs text-gray-4">방문 인증 완료 · {formatDate(initial.createdAt)}</p>
+            <h2 className="mt-2 truncate text-base font-bold text-gray-6">{initial.placeName}</h2>
           </div>
         </section>
 
@@ -271,7 +268,7 @@ export default function ReviewPage({ mode = 'create' }: ReviewPageProps) {
       return (
         <div className="flex min-h-dvh flex-col bg-gray-1">
           <ReviewHeader title="후기 수정하기" />
-          <p className="px-5 py-8 text-sm text-gray-4">후기를 불러오지 못했습니다.</p>
+          <p className="px-5 py-8 text-sm text-gray-4">{loadFailureMessageBrief('후기')}</p>
         </div>
       );
     }

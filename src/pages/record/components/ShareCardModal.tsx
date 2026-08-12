@@ -10,6 +10,7 @@ import metalIcon from '../../../assets/review/metal.png';
 import treeIcon from '../../../assets/review/tree.png';
 import waterIcon from '../../../assets/review/water.png';
 import { usePlaceShareCard } from '../../../hooks/place/usePlace';
+import { ohaengByLabel, ohaengCssVar } from '../../../lib/ohaeng';
 import type { PlaceDay } from './RecordPlaceCard';
 
 /** Google Places 대표 이미지 없음 등 — 배경만 로컬 폴백 */
@@ -22,14 +23,6 @@ type ShareCardModalProps = {
   /** 다녀온 터 목록에서 넘긴 오행(기운) — 공유 카드 색·도형에 사용 */
   element?: PlaceDay;
   onClose: () => void;
-};
-
-const DAY_FILL: Record<PlaceDay, string> = {
-  화: 'var(--color-ohaeng-fire)',
-  수: 'var(--color-ohaeng-water)',
-  목: 'var(--color-ohaeng-wood)',
-  금: 'var(--color-ohaeng-metal)',
-  토: 'var(--color-ohaeng-earth)',
 };
 
 /** 오행별 장식·구멍 실루엣 */
@@ -94,18 +87,11 @@ function panelHoleMaskStyle(shapeSrc: string, fill: string, size: number): CSSPr
       'linear-gradient(#fff, #fff)',
       ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
     ].join(', '),
-    maskImage: [
-      'linear-gradient(#fff, #fff)',
-      ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
-    ].join(', '),
-    WebkitMaskPosition: [
-      '0 0',
-      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
-    ].join(', '),
-    maskPosition: [
-      '0 0',
-      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
-    ].join(', '),
+    maskImage: ['linear-gradient(#fff, #fff)', ...HOLE_SHAPES.map(() => `url(${shapeSrc})`)].join(
+      ', ',
+    ),
+    WebkitMaskPosition: ['0 0', ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`)].join(', '),
+    maskPosition: ['0 0', ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`)].join(', '),
     // mask-size는 "가로 세로" 한 쌍. 정사각이면 값 하나만 써도 됨(가로=세로).
     WebkitMaskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
     maskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
@@ -131,7 +117,7 @@ function PanelWithHoles({
   message: string;
   element: PlaceDay;
 }) {
-  const size = ELEMENT_SHAPE_SIZE[element]-4;
+  const size = ELEMENT_SHAPE_SIZE[element] - 4;
 
   return (
     <div className="absolute inset-x-0 bottom-0">
@@ -195,7 +181,8 @@ export default function ShareCardModal({
   const placeName = card?.placeName ?? fallbackPlaceName ?? '오늘의 터';
   /** 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게 */
   const element: PlaceDay = listElement ?? card?.element ?? '수';
-  const fill = DAY_FILL[element];
+  // html-to-image가 캡처하는 인라인 스타일이라 Tailwind 클래스 대신 CSS 변수를 직접 넣는다.
+  const fill = ohaengCssVar(ohaengByLabel(element)!.key);
   const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;
   const cardRef = useRef<HTMLElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);

@@ -17,10 +17,11 @@ import PlaceListItem from '../../components/PlaceListItem';
 import { useExploreFilters, useInfinitePlaces } from '../../hooks/search/useSearch';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { cn } from '../../lib/cn';
-import { ohaengByKey, type OhaengKey } from '../../lib/ohaeng';
+import { OHAENG_LIST, ohaengByKey, toOhaengKey, type OhaengKey } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
-import { toOhaengKey, type ElementCode } from '../../types/home/homeEnergy';
+import { type ElementCode } from '../../types/home/homeEnergy';
 import { type RegionCode, type ThemeType } from '../../types/search/search';
+import { loadFailureMessage, loadingMessage, loadingMoreMessage } from '../../lib/messages';
 
 const REGIONS = [
   { code: 'ALL', name: '전체' },
@@ -49,13 +50,11 @@ const THEME_ICONS: Record<string, string> = {
   ETC: themeOther,
 };
 
-const ELEMENTS: { label: string; key: OhaengKey }[] = [
-  { label: '화', key: 'fire' },
-  { label: '토', key: 'earth' },
-  { label: '목', key: 'wood' },
-  { label: '수', key: 'water' },
-  { label: '금', key: 'metal' },
-];
+/** 서버가 필터 목록을 못 줄 때 쓰는 폴백. 오행 정의는 lib/ohaeng이 단일 소스다. */
+const ELEMENTS: { label: string; key: OhaengKey }[] = OHAENG_LIST.map(({ key, label }) => ({
+  key,
+  label,
+}));
 
 interface Place {
   id: string;
@@ -270,11 +269,9 @@ export default function SearchPage() {
         <section className="mt-3 px-5">
           <div className="flex flex-col gap-2">
             {placesQuery.isPending ? (
-              <p className="typo-sub-2 py-4 text-gray-4">장소를 불러오는 중입니다.</p>
+              <p className="typo-sub-2 py-4 text-gray-4">{loadingMessage('장소')}</p>
             ) : placesQuery.isError ? (
-              <p className="typo-sub-2 py-4 text-gray-4">
-                장소를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
-              </p>
+              <p className="typo-sub-2 py-4 text-gray-4">{loadFailureMessage('장소')}</p>
             ) : places.length === 0 ? (
               <p className="typo-sub-2 py-4 text-gray-4">조건에 맞는 장소가 없습니다.</p>
             ) : (
@@ -295,7 +292,7 @@ export default function SearchPage() {
           </div>
           <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
           {placesQuery.isFetchingNextPage ? (
-            <p className="typo-sub-2 py-4 text-center text-gray-4">장소를 더 불러오는 중입니다.</p>
+            <p className="typo-sub-2 py-4 text-center text-gray-4">{loadingMoreMessage('장소')}</p>
           ) : null}
         </section>
       </main>

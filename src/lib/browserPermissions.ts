@@ -14,7 +14,9 @@ export async function getBrowserPermissionState(
   if (!permissions?.query) return 'unavailable';
 
   try {
-    const status = await permissions.query({ name: permissionNameOf[kind] } as PermissionDescriptor);
+    const status = await permissions.query({
+      name: permissionNameOf[kind],
+    } as PermissionDescriptor);
     return status.state;
   } catch {
     // 브라우저별로 camera 권한 조회를 지원하지 않는 경우가 있다.

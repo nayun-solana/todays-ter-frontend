@@ -25,8 +25,3 @@ export const TodayEnergyResponse = z.object({
   description: z.string(),
 });
 export type TodayEnergyResponse = z.infer<typeof TodayEnergyResponse>;
-
-/** BE 오행 코드 → FE OhaengKey (소문자). */
-export function toOhaengKey(element: ElementCode): 'water' | 'wood' | 'fire' | 'earth' | 'metal' {
-  return element.toLowerCase() as 'water' | 'wood' | 'fire' | 'earth' | 'metal';
-}

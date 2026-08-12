@@ -10,7 +10,6 @@ import {
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
 import type {
   ComplementActionGuide,
-  ElementCode,
   SajuReportCategory,
   SajuReportDetail,
 } from '../../types/onboarding/report';
@@ -25,6 +24,7 @@ import Health from '../../assets/onboarding/3-5.svg';
 import ContentBox from './components/ContentBox';
 import NavBtn from './components/NavBtn';
 import OhaengIcon from './components/OhaengIcon';
+import { ohaengByCode } from '../../lib/ohaeng';
 
 const STATUS_BAR_COLOR = '#5a81fa';
 
@@ -41,52 +41,6 @@ const CATEGORY_BUTTONS: ReadonlyArray<{
   { label: '인간관계', value: 'RELATIONSHIP', icon: Relationship, bg: 'bg-category-relationship' },
   { label: '건강', value: 'HEALTH', icon: Health, bg: 'bg-category-health' },
 ];
-
-const ELEMENT_META: Record<
-  ElementCode,
-  { label: string; hanja: string; text: string; bg: string; bgGrad: string; border: string }
-> = {
-  WOOD: {
-    label: '목',
-    hanja: '木',
-    text: 'text-ohaeng-wood',
-    bg: 'bg-ohaeng-wood',
-    bgGrad: 'bg-ohaeng-wood/20',
-    border: 'border-ohaeng-wood',
-  },
-  FIRE: {
-    label: '화',
-    hanja: '火',
-    text: 'text-ohaeng-fire',
-    bg: 'bg-ohaeng-fire',
-    bgGrad: 'bg-ohaeng-fire/20',
-    border: 'border-ohaeng-fire',
-  },
-  EARTH: {
-    label: '토',
-    hanja: '土',
-    text: 'text-ohaeng-earth',
-    bg: 'bg-ohaeng-earth',
-    bgGrad: 'bg-ohaeng-earth/20',
-    border: 'border-ohaeng-earth',
-  },
-  METAL: {
-    label: '금',
-    hanja: '金',
-    text: 'text-ohaeng-metal',
-    bg: 'bg-ohaeng-metal',
-    bgGrad: 'bg-ohaeng-metal/20',
-    border: 'border-ohaeng-metal',
-  },
-  WATER: {
-    label: '수',
-    hanja: '水',
-    text: 'text-ohaeng-water',
-    bg: 'bg-ohaeng-water',
-    bgGrad: 'bg-ohaeng-water/20',
-    border: 'border-ohaeng-water',
-  },
-};
 
 function getContextQuery(searchParams: URLSearchParams) {
   const context = new URLSearchParams();
@@ -344,7 +298,7 @@ function GeneralDetail({
   const dayPillarCards = detail.dayPillars
     ? [detail.dayPillars.dayStem, detail.dayPillars.dayBranch, detail.dayPillars.dayPillar]
     : [];
-  const guideMeta = guide ? ELEMENT_META[guide.element] : null;
+  const guideMeta = guide ? ohaengByCode(guide.element) : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -406,7 +360,7 @@ function GeneralDetail({
             {guide.actions.map((action) => (
               <div
                 key={action.order}
-                className={`flex items-center gap-3 rounded-2xl p-2.5 ${guideMeta.bgGrad}`}
+                className={`flex items-center gap-3 rounded-2xl p-2.5 ${guideMeta.bgSoft}`}
               >
                 <div
                   className={`flex size-6 shrink-0 items-center justify-center rounded-2xl text-white typo-head-4 ${guideMeta.bg}`}

@@ -6,6 +6,7 @@ import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
 import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
 import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
+import { loadFailureMessage, loadingMessage } from '../../lib/messages';
 
 type DateField = 'year' | 'month' | 'day';
 type DateValue = { year: number; month: number; day: number };
@@ -371,12 +372,10 @@ export default function SajuEditPage() {
 
       <main className="px-5 pt-5">
         {sajuQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">현재 사주 정보를 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-gray-4">{loadingMessage('현재 사주 정보')}</p>
         ) : null}
         {sajuQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">
-            사주 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
-          </p>
+          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('사주 정보')}</p>
         ) : null}
         <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-card-soft">
           <p className="typo-body-3 text-primary">현재 사주 정보</p>

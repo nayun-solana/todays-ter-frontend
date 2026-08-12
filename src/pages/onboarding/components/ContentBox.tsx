@@ -1,3 +1,5 @@
+import { ohaengByCode } from '../../../lib/ohaeng';
+
 type Type = 'TOP' | 'COLOR' | 'TEXT' | 'GENERAL' | 'CATEGORY' | 'ICON';
 
 type Props = {
@@ -44,14 +46,7 @@ export default function ContentBox({ title, children, type, ohang, category, ico
   ] as const;
   const categoryColor = categoryColorList.find((item) => item.value === category);
 
-  const oheangColorList = [
-    { eng: 'FIRE', text: 'text-ohaeng-fire', border: 'border-ohaeng-fire' },
-    { eng: 'EARTH', text: 'text-ohaeng-earth', border: 'border-ohaeng-earth' },
-    { eng: 'METAL', text: 'text-ohaeng-metal', border: 'border-ohaeng-metal' },
-    { eng: 'WATER', text: 'text-ohaeng-water', border: 'border-ohaeng-water' },
-    { eng: 'WOOD', text: 'text-ohaeng-wood', border: 'border-ohaeng-wood' },
-  ];
-  const ohangColor = oheangColorList.find((item) => item.eng === ohang);
+  const ohangColor = ohaengByCode(ohang);
 
   return (
     <div

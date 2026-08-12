@@ -19,11 +19,8 @@ export default function Button({
       className={cn(
         'w-full rounded-btn py-4 text-sm font-bold',
         variant === 'primary' &&
-          (disabled
-            ? 'cursor-not-allowed bg-gray-3 text-gray-4'
-            : 'bg-primary text-white'),
-        variant === 'secondary' &&
-          'border border-primary-light bg-primary-bg text-primary',
+          (disabled ? 'cursor-not-allowed bg-gray-3 text-gray-4' : 'bg-primary text-white'),
+        variant === 'secondary' && 'border border-primary-light bg-primary-bg text-primary',
         className,
       )}
       {...rest}

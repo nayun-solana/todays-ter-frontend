@@ -26,9 +26,7 @@ export async function getUnreadNotificationCount(): Promise<UnreadNotificationCo
 export async function markNotificationAsRead(
   notificationId: number,
 ): Promise<NotificationReadResponse> {
-  const response = await axiosInstance.patch<ApiResponse>(
-    `/notifications/${notificationId}/read`,
-  );
+  const response = await axiosInstance.patch<ApiResponse>(`/notifications/${notificationId}/read`);
   return NotificationReadResponse.parse(getResult(response));
 }
 

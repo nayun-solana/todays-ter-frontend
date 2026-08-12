@@ -25,10 +25,9 @@ export const RecordUpdateRequest = z
     content: z.string().optional(),
     imageIds: z.array(z.number().int().nonnegative()).optional(),
   })
-  .refine(
-    (body) => body.rating != null || body.content != null || body.imageIds != null,
-    { message: '수정할 필드가 없습니다.' },
-  );
+  .refine((body) => body.rating != null || body.content != null || body.imageIds != null, {
+    message: '수정할 필드가 없습니다.',
+  });
 export type RecordUpdateRequest = z.infer<typeof RecordUpdateRequest>;
 
 export const RecordResponse = z.object({

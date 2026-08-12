@@ -122,7 +122,9 @@ export default function PermissionsPage() {
           <p className="typo-sub-2 text-gray-4">권한 설정을 불러오는 중입니다.</p>
         ) : null}
         {permissionStatesQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">권한 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+          <p className="typo-sub-2 text-gray-4">
+            권한 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
         ) : null}
         {PERMISSIONS.map((permission) => {
           const enabled = permissions[permission.key];

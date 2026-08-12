@@ -9,6 +9,9 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    /* `@/`는 src 루트. baseUrl은 TS 7.0에서 제거되므로 쓰지 않는다 —
+       moduleResolution: bundler에서는 paths가 tsconfig 위치 기준으로 해석된다. */
+    "paths": { "@/*": ["./src/*"] },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",

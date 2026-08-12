@@ -8,10 +8,7 @@ import {
   updateMemberSaju,
   withdrawMember,
 } from '../../api/my';
-import type {
-  MemberSajuUpdateRequest,
-  MemberWithdrawRequest,
-} from '../../types/my/my';
+import type { MemberSajuUpdateRequest, MemberWithdrawRequest } from '../../types/my/my';
 
 export const myKeys = {
   all: ['my'] as const,

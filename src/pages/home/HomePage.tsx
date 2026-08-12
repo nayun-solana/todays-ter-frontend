@@ -5,10 +5,12 @@ import placeSample from '../../assets/home/place-sample.jpg';
 import notificationBell from '../../assets/notification-bell.svg';
 import notificationDot from '../../assets/notification-dot.svg';
 import GuestLoginPrompt from '../../components/GuestLoginPrompt';
+import SectionError from '../../components/SectionError';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useUnreadNotificationCount } from '../../hooks/notification/useNotification';
 import { formatKoreanDate } from '../../lib/date';
 import { hasUnreadNotificationCount } from '../../lib/notification';
+import { viewStateOf } from '../../lib/queryState';
 import {
   useEnergyRoutines,
   useHomeHeader,
@@ -16,7 +18,7 @@ import {
   useTodayEnergy,
 } from '../../hooks/home/useHome';
 import { useGeolocation } from '../../hooks/useGeolocation';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
 import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
@@ -26,23 +28,6 @@ import { OHAENG_HOME } from './ohaeng';
 // 홈 데이터는 서버에서 온다. 실패했을 때 하드코딩된 값으로 화면을 채우면
 // 데이터가 안 왔다는 사실이 감춰지므로(배포본에서 실제로 그랬다), 로딩·에러를 각 영역에서 드러낸다.
 // 오행 테마(배경 그라데이션)만 로드 전 water로 두는데, 이건 데이터가 아니라 색상 뼈대다.
-
-/**
- * 화면에 보여줄 상태 판정. 데이터가 실제로 손에 있는지를 기준으로 한다.
- *
- * `isError`만 보면 안 된다 — react-query는 브라우저가 오프라인이라고 판단하면 재시도를 멈추고
- * `fetchStatus: 'paused'` + `status: 'pending'`으로 붙잡아 둔다. 그러면 에러 UI가 영영 안 뜨고
- * 스켈레톤만 남는다(실측으로 확인). 멈춘 것도 실패로 보여줘야 사용자가 다시 시도할 수 있다.
- */
-function viewStateOf(query: {
-  data: unknown;
-  isError: boolean;
-  fetchStatus: 'fetching' | 'paused' | 'idle';
-}): 'loading' | 'failed' | 'ready' {
-  if (query.data !== undefined) return 'ready';
-  if (query.isError || query.fetchStatus === 'paused') return 'failed';
-  return 'loading';
-}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -167,11 +152,7 @@ export default function HomePage() {
                 className="absolute top-[2.5px] left-1 h-[21px] w-[18px]"
               />
               {hasUnreadNotificationCount(unreadCountQuery.data) ? (
-                <img
-                  src={notificationDot}
-                  alt=""
-                  className="absolute top-0 right-0 size-[3px]"
-                />
+                <img src={notificationDot} alt="" className="absolute top-0 right-0 size-[3px]" />
               ) : null}
             </button>
           )}
@@ -334,42 +315,6 @@ function HeaderSkeleton() {
         <div className="h-8 w-56 rounded bg-white/50" />
         <div className="h-[19px] w-44 rounded bg-white/50" />
       </div>
-    </div>
-  );
-}
-
-/**
- * 영역 단위 실패 안내. 홈은 4개 API가 독립적이라 한 곳이 실패해도 나머지는 보여준다.
- * tone='light'는 배경 그라데이션 위(인사말 영역)에서 쓰는 흰 글씨 버전.
- */
-function SectionError({
-  message,
-  onRetry,
-  tone = 'dark',
-}: {
-  message: string;
-  onRetry: () => void;
-  tone?: 'dark' | 'light';
-}) {
-  const isLight = tone === 'light';
-
-  return (
-    <div
-      role="alert"
-      className={`flex items-center justify-between gap-3 rounded-[20px] px-5 py-4 ${
-        isLight ? 'bg-white/20 text-white' : 'bg-white text-gray-5'
-      }`}
-    >
-      <p className="text-sm font-bold">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
-          isLight ? 'bg-white/30 text-white' : 'bg-gray-1 text-primary'
-        }`}
-      >
-        다시 시도
-      </button>
     </div>
   );
 }

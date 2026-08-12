@@ -20,6 +20,7 @@ import {
 } from '../../lib/notification';
 import { shouldMarkNotificationsRead } from '../../lib/notificationScroll';
 import type { NotificationItem } from '../../types/notification/notification';
+import { loadFailureMessage, loadingMessage, loadingMoreMessage } from '../../lib/messages';
 
 function NotificationTypeIcon({ type }: { type: string }) {
   const normalizedType = type.toUpperCase();
@@ -68,9 +69,7 @@ function NotificationCard({
       </span>
       {!item.isRead ? (
         <span className="flex shrink-0 items-center gap-2 pl-2">
-          <span className="typo-caption text-gray-4">
-            {formatNotificationTime(item.createdAt)}
-          </span>
+          <span className="typo-caption text-gray-4">{formatNotificationTime(item.createdAt)}</span>
           <span aria-label="새 알림" className="size-1.5 rounded-full bg-danger" />
         </span>
       ) : null}
@@ -154,12 +153,10 @@ export default function NotificationPage() {
 
       <main className="space-y-5 px-[18px] pt-5 pb-8" aria-busy={notificationsQuery.isPending}>
         {notificationsQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">알림을 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-gray-4">{loadingMessage('알림')}</p>
         ) : null}
         {notificationsQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">
-            알림을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
-          </p>
+          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('알림')}</p>
         ) : null}
         {!notificationsQuery.isPending && !notificationsQuery.isError && groups.length === 0 ? (
           <p className="rounded-btn bg-white px-5 py-8 text-center typo-sub-2 text-gray-4 shadow-card">
@@ -190,7 +187,7 @@ export default function NotificationPage() {
 
         <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
         {notificationsQuery.isFetchingNextPage ? (
-          <p className="typo-sub-2 text-center text-gray-4">알림을 더 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-center text-gray-4">{loadingMoreMessage('알림')}</p>
         ) : null}
       </main>
     </div>

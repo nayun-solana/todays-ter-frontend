@@ -32,9 +32,7 @@ export default function PageHeader({
   const navigate = useNavigate();
 
   return (
-    <header
-      className={cn('border-b border-gray-3 bg-white px-5 pb-[15px] pt-safe-5', className)}
-    >
+    <header className={cn('border-b border-gray-3 bg-white px-5 pb-[15px] pt-safe-5', className)}>
       <div className="flex h-6 items-center justify-between">
         <button
           type="button"

@@ -18,7 +18,7 @@ import { cn } from '../../lib/cn';
 import { loadNaverMaps } from '../../lib/naverMaps';
 import { ohaengByLabel } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
-import DeleteReviewModal from '../review/components/DeleteReviewModal';
+import DeleteReviewModal from '../../components/DeleteReviewModal';
 import { loadFailureMessage, loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
 
 const TABS = ['지도', '후기'] as const;

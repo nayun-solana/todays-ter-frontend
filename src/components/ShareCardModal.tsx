@@ -2,16 +2,15 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { toPng } from 'html-to-image';
 import { Download, X } from 'lucide-react';
 
-import type { ApiError } from '../../../api/types';
-import defaultBg from '../../../assets/review/default.png';
-import earthIcon from '../../../assets/review/earth.png';
-import fireIcon from '../../../assets/review/fire.png';
-import metalIcon from '../../../assets/review/metal.png';
-import treeIcon from '../../../assets/review/tree.png';
-import waterIcon from '../../../assets/review/water.png';
-import { usePlaceShareCard } from '../../../hooks/place/usePlace';
-import { DEFAULT_OHAENG, ohaengByLabel, ohaengCssVar } from '../../../lib/ohaeng';
-import type { PlaceDay } from './RecordPlaceCard';
+import type { ApiError } from '../api/types';
+import defaultBg from '../assets/review/default.png';
+import earthIcon from '../assets/review/earth.png';
+import fireIcon from '../assets/review/fire.png';
+import metalIcon from '../assets/review/metal.png';
+import treeIcon from '../assets/review/tree.png';
+import waterIcon from '../assets/review/water.png';
+import { usePlaceShareCard } from '../hooks/place/usePlace';
+import { DEFAULT_OHAENG, ohaengByLabel, ohaengCssVar, type OhaengLabel } from '../lib/ohaeng';
 
 /** Google Places 대표 이미지 없음 등 — 배경만 로컬 폴백 */
 const SHARE_CARD_IMAGE_MISSING_CODE = 'PLACE404_3';
@@ -21,12 +20,12 @@ type ShareCardModalProps = {
   /** API 실패(PLACE404_3) 시 카드에 표시할 장소명 */
   fallbackPlaceName?: string;
   /** 다녀온 터 목록에서 넘긴 오행(기운) — 공유 카드 색·도형에 사용 */
-  element?: PlaceDay;
+  element?: OhaengLabel;
   onClose: () => void;
 };
 
 /** 오행별 장식·구멍 실루엣 */
-const ELEMENT_SHAPE: Record<PlaceDay, string> = {
+const ELEMENT_SHAPE: Record<OhaengLabel, string> = {
   화: fireIcon,
   수: waterIcon,
   목: treeIcon,
@@ -36,7 +35,7 @@ const ELEMENT_SHAPE: Record<PlaceDay, string> = {
 
 const DEFAULT_SHAPE_SIZE = 20;
 /** 토 아이콘만 조금 크게 */
-const ELEMENT_SHAPE_SIZE: Record<PlaceDay, number> = {
+const ELEMENT_SHAPE_SIZE: Record<OhaengLabel, number> = {
   화: DEFAULT_SHAPE_SIZE,
   수: DEFAULT_SHAPE_SIZE,
   목: DEFAULT_SHAPE_SIZE,
@@ -103,7 +102,7 @@ function panelHoleMaskStyle(shapeSrc: string, fill: string, size: number): CSSPr
   };
 }
 
-function SolidShape({ fill, element }: { fill: string; element: PlaceDay }) {
+function SolidShape({ fill, element }: { fill: string; element: OhaengLabel }) {
   const size = ELEMENT_SHAPE_SIZE[element];
   return <div aria-hidden style={shapeMaskStyle(ELEMENT_SHAPE[element], fill, size)} />;
 }
@@ -115,7 +114,7 @@ function PanelWithHoles({
 }: {
   fill: string;
   message: string;
-  element: PlaceDay;
+  element: OhaengLabel;
 }) {
   const size = ELEMENT_SHAPE_SIZE[element] - 4;
 
@@ -188,7 +187,7 @@ export default function ShareCardModal({
    * 때문에 공유 모달이 통째로 빈 화면이 된다.
    */
   const ohaeng = ohaengByLabel(listElement ?? card?.element) ?? DEFAULT_OHAENG;
-  const element: PlaceDay = ohaeng.label;
+  const element: OhaengLabel = ohaeng.label;
   // html-to-image가 캡처하는 인라인 스타일이라 Tailwind 클래스 대신 CSS 변수를 직접 넣는다.
   const fill = ohaengCssVar(ohaeng.key);
   const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;

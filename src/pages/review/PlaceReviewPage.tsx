@@ -11,9 +11,9 @@ import {
   useUpdateRecord,
   useUploadRecordImages,
 } from '../../hooks/record/useRecord';
-import Button from './components/Button';
+import Button from '../../components/Button';
 import ReviewHeader from './components/ReviewHeader';
-import StarRating from './components/StarRating';
+import StarRating from '../../components/StarRating';
 
 /**
  * "이미 이 장소에 후기가 있다"는 서버 응답인지.
@@ -131,6 +131,7 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
         <div className="flex-1" />
 
         <Button
+          size="padded"
           disabled={
             hasExistingReview ||
             !canSubmit ||

@@ -16,9 +16,9 @@ import {
   type RecordDetailImage,
   type RecordDetailResponse,
 } from '../../types/record/record';
-import Button from './components/Button';
+import Button from '../../components/Button';
 import ReviewHeader from './components/ReviewHeader';
-import StarRating from './components/StarRating';
+import StarRating from '../../components/StarRating';
 import { loadFailureMessageBrief } from '../../lib/messages';
 
 type ReviewPageProps = {
@@ -128,7 +128,12 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
 
           <div className="flex-1" />
 
-          <Button disabled={!canSubmit} className="mx-5 mb-5 w-auto" onClick={handleSubmit}>
+          <Button
+            size="padded"
+            disabled={!canSubmit}
+            className="mx-5 mb-5 w-auto"
+            onClick={handleSubmit}
+          >
             {submitRecord.isPending ? '저장 중…' : '방문 기록 저장하기'}
           </Button>
         </div>
@@ -241,7 +246,12 @@ function EditReviewForm({
 
         <div className="flex-1" />
 
-        <Button disabled={!canSubmit} className="mx-5 mb-5 w-auto" onClick={handleSubmit}>
+        <Button
+          size="padded"
+          disabled={!canSubmit}
+          className="mx-5 mb-5 w-auto"
+          onClick={handleSubmit}
+        >
           {updateRecord.isPending ? '수정 중…' : '후기 수정하기'}
         </Button>
       </div>

@@ -22,6 +22,7 @@ const API_PATHS = [
   '/fortune-reports',
   '/members',
   '/records',
+  '/notifications',
 ];
 
 const proxy = Object.fromEntries(

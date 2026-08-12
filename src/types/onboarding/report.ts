@@ -102,7 +102,14 @@ export type SajuReportResponse = z.infer<typeof SajuReportResponse>;
 // 카테고리별 사주 리포트
 // ─────────────────────────────────────
 
-// ─────────────────────────────────────
+/** GET /fortune-reports/me — 현재 회원이 조회할 리포트 id. */
+export const CurrentReportResponse = z.object({
+  reportId: z.number().int().positive(),
+});
+export type CurrentReportResponse = z.infer<typeof CurrentReportResponse>;
+
+// ── 상세 리포트 (GET /fortune-reports/{reportId}/details?category=) ──
+
 // GENERAL
 // ─────────────────────────────────────
 

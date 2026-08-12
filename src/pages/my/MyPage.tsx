@@ -6,6 +6,7 @@ import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
+import { useCurrentFortuneReport } from '../../hooks/onboarding/useGetReport';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
@@ -87,8 +88,10 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { isMember, isPending: isAuthPending } = useAuthStatus();
   const myPageQuery = useMyPage(isMember);
+  const currentReportQuery = useCurrentFortuneReport(isMember);
   const logoutMutation = useLogout();
   const profile = myPageQuery.data;
+  const currentReportId = currentReportQuery.data?.reportId;
 
   // 부팅 복원 전의 isMember=false는 "게스트"가 아니라 "아직 모름"이다.
   if (isAuthPending) {
@@ -113,16 +116,30 @@ export default function MyPage() {
 
         <button
           type="button"
-          disabled={!profile}
-          onClick={() => profile && navigate('/my/saju')}
+          disabled={!profile || currentReportQuery.isPending}
+          onClick={() => {
+            if (!profile) return;
+            navigate(currentReportId ? `/report/${currentReportId}?from=my` : '/my/saju');
+          }}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {profile ? '사주 정보 수정하기' : '회원 정보 불러오는 중'}
+          {!profile
+            ? '회원 정보 불러오는 중'
+            : currentReportQuery.isPending
+              ? '리포트 정보 불러오는 중'
+              : currentReportId
+                ? '사주 리포트 다시보기'
+                : '사주 정보 수정하기'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (
           <p className="typo-sub-2 mt-2 text-gray-4">
             마이페이지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        ) : null}
+        {currentReportQuery.isError ? (
+          <p className="typo-sub-2 mt-2 text-gray-4">
+            리포트 정보를 불러오지 못했습니다. 사주 정보를 수정할 수 있어요.
           </p>
         ) : null}
 

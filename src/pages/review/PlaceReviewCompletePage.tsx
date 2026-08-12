@@ -27,8 +27,11 @@ export default function PlaceReviewCompletePage() {
       </div>
 
       <div className="flex flex-col gap-2 px-5 pb-8">
-        <Button onClick={() => navigate(`/place/${id}?tab=reviews`, { replace: true })}>
-          후기 보러가기
+        <Button variant='primary' onClick={() => navigate(`/place/${id}`, { replace: true })}>
+          장소 상세 화면으로 돌아가기
+        </Button>
+        <Button variant='secondary' onClick={() => navigate(`/place/${id}?tab=reviews`, { replace: true })}>
+          내가 쓴 후기 보러가기
         </Button>
       </div>
     </div>

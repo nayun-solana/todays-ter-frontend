@@ -1,9 +1,19 @@
+import type { ReactNode } from 'react';
+
+import iconChevronLeft from '../../assets/icon-chevron-left.svg';
 import PageHeader from '../../components/PageHeader';
 import Toggle from '../../components/Toggle';
 import {
   useNotificationSettings,
   useUpdateNotificationSettings,
-} from '../../hooks/my/useMy';
+} from '../../hooks/notification/useNotification';
+import type { NotificationSettingsResponse } from '../../types/notification/notification';
+
+const CYCLE_LABELS: Record<string, string> = {
+  EVERY_DAY: '매일',
+  EVERY_3_DAYS: '3일마다',
+  EVERY_7_DAYS: '7일마다',
+};
 
 function NotificationToggleCard({
   title,
@@ -19,8 +29,7 @@ function NotificationToggleCard({
   disabled: boolean;
 }) {
   return (
-    /* Figma 2615:1593 — 카드 p16/20, 제목 Body3, 설명 캡션(primary, 위 8px), 토글 우측 세로 중앙 */
-    <div className="flex min-h-[56px] items-center justify-between gap-4 rounded-btn bg-white px-5 py-4 shadow-card">
+    <div className="flex min-h-[68px] items-center justify-between gap-4 rounded-btn bg-white px-5 py-4 shadow-card">
       <div className="min-w-0">
         <p className="typo-body-3 text-gray-6">{title}</p>
         {description ? <p className="typo-caption mt-2 text-primary">{description}</p> : null}
@@ -30,23 +39,38 @@ function NotificationToggleCard({
   );
 }
 
+function SettingRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="flex h-11 items-center justify-between border-t border-gray-2 text-gray-5">
+      <span className="typo-body-3">{label}</span>
+      <span className="relative flex items-center gap-1">
+        {children}
+        <img src={iconChevronLeft} alt="" className="size-[9px] rotate-180" />
+      </span>
+    </label>
+  );
+}
+
 export default function NotificationSettingsPage() {
   const notificationSettingsQuery = useNotificationSettings();
   const updateNotificationSettings = useUpdateNotificationSettings();
   const notificationSettings = notificationSettingsQuery.data;
   const isDisabled = !notificationSettings || updateNotificationSettings.isPending;
 
-  const updateSettings = (next: Partial<typeof notificationSettings>) => {
-    const current = notificationSettings;
-    if (!current) return;
-
-    const body = { ...current, ...next };
-    updateNotificationSettings.mutate(body);
+  const updateSettings = (next: Partial<NotificationSettingsResponse>) => {
+    if (!notificationSettings) return;
+    updateNotificationSettings.mutate({ ...notificationSettings, ...next });
   };
 
   return (
     <div className="min-h-dvh w-full bg-gray-1">
-      <PageHeader title="알림 설정" backTo="/my" />
+      <PageHeader title="알림 설정" />
 
       <main className="space-y-5 px-5 pt-5 pb-8">
         {notificationSettingsQuery.isPending ? (
@@ -55,14 +79,79 @@ export default function NotificationSettingsPage() {
         {notificationSettingsQuery.isError ? (
           <p className="typo-sub-2 text-gray-4">알림 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
         ) : null}
+
         <section>
           <h2 className="typo-head-4 text-gray-6">추천 알림</h2>
           <div className="mt-3 space-y-2">
+            <div className="rounded-btn bg-white px-5 py-4 shadow-card">
+              <div className="flex min-h-[36px] items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="typo-body-3 text-gray-6">오늘의 터 리마인드</p>
+                  <p className="typo-caption mt-2 text-primary">설정한 간격과 시간에 맞춰 알려드려요.</p>
+                </div>
+                <Toggle
+                  checked={notificationSettings?.isTodayRemind ?? false}
+                  label="오늘의 터 리마인드"
+                  onChange={() =>
+                    updateSettings({ isTodayRemind: !notificationSettings?.isTodayRemind })
+                  }
+                  disabled={isDisabled}
+                  showState
+                />
+              </div>
+              <div className="mt-3">
+                <SettingRow label="알림 주기">
+                  <select
+                    aria-label="알림 주기"
+                    value={notificationSettings?.remindCycle ?? ''}
+                    onChange={(event) => updateSettings({ remindCycle: event.target.value })}
+                    disabled={isDisabled}
+                    className="typo-body-4 max-w-[100px] appearance-none bg-transparent pr-1 text-right text-gray-4 outline-none disabled:cursor-not-allowed"
+                  >
+                    {notificationSettings?.remindCycle &&
+                    !CYCLE_LABELS[notificationSettings.remindCycle] ? (
+                      <option value={notificationSettings.remindCycle}>
+                        {notificationSettings.remindCycle}
+                      </option>
+                    ) : null}
+                    <option value="EVERY_DAY">{CYCLE_LABELS.EVERY_DAY}</option>
+                    <option value="EVERY_3_DAYS">{CYCLE_LABELS.EVERY_3_DAYS}</option>
+                    <option value="EVERY_7_DAYS">{CYCLE_LABELS.EVERY_7_DAYS}</option>
+                  </select>
+                </SettingRow>
+                <SettingRow label="알림 시간">
+                  <input
+                    aria-label="알림 시간"
+                    type="time"
+                    value={notificationSettings?.remindTime ?? ''}
+                    onChange={(event) => updateSettings({ remindTime: event.target.value })}
+                    disabled={isDisabled}
+                    className="typo-body-4 w-[76px] appearance-none bg-transparent text-right text-gray-4 outline-none disabled:cursor-not-allowed"
+                  />
+                </SettingRow>
+              </div>
+            </div>
+
             <NotificationToggleCard
-              title="오늘의 터 리마인드"
-              description="설정한 간격과 시간에 맞춰 알려드려요."
-              checked={notificationSettings?.isPushEnabled ?? false}
-              onChange={() => updateSettings({ isPushEnabled: !notificationSettings?.isPushEnabled })}
+              title="저장한 터 알림"
+              description="저장한 장소가 오늘과 잘 맞을 때 알려드려요."
+              checked={notificationSettings?.isSavedPlace ?? false}
+              onChange={() => updateSettings({ isSavedPlace: !notificationSettings?.isSavedPlace })}
+              disabled={isDisabled}
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="typo-head-4 text-gray-6">서비스 알림</h2>
+          <div className="mt-3">
+            <NotificationToggleCard
+              title="서비스 중요 알림"
+              description="계정·약관·개인정보 관련 안내예요."
+              checked={notificationSettings?.isServiceNotice ?? false}
+              onChange={() =>
+                updateSettings({ isServiceNotice: !notificationSettings?.isServiceNotice })
+              }
               disabled={isDisabled}
             />
           </div>
@@ -70,24 +159,11 @@ export default function NotificationSettingsPage() {
 
         <section>
           <h2 className="typo-head-4 text-gray-6">혜택 및 소식</h2>
-          <div className="mt-3 space-y-2">
+          <div className="mt-3">
             <NotificationToggleCard
               title="마케팅 정보 수신"
-              checked={notificationSettings?.isMarketingEnabled ?? false}
-              onChange={() =>
-                updateSettings({ isMarketingEnabled: !notificationSettings?.isMarketingEnabled })
-              }
-              disabled={isDisabled}
-            />
-            <NotificationToggleCard
-              title="야간 마케팅 정보 수신"
-              description="야간 시간대에도 마케팅 정보를 받아볼 수 있어요."
-              checked={notificationSettings?.isNightMarketingEnabled ?? false}
-              onChange={() =>
-                updateSettings({
-                  isNightMarketingEnabled: !notificationSettings?.isNightMarketingEnabled,
-                })
-              }
+              checked={notificationSettings?.isMarketing ?? false}
+              onChange={() => updateSettings({ isMarketing: !notificationSettings?.isMarketing })}
               disabled={isDisabled}
             />
           </div>

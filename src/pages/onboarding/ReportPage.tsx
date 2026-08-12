@@ -87,6 +87,42 @@ export default function ReportPage() {
   const { data: sajuReportData, isPending, isError, refetch } = useGetSajuReport(reportId);
   const report = sajuReportData?.basic;
 
+  // status bar 색상 변경 (iOS Safari, Android Chrome)
+  useEffect(() => {
+    const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+    const themeColor = existingThemeColor ?? document.createElement('meta');
+
+    const wasThemeColorCreated = !existingThemeColor;
+    const previousThemeColor = themeColor.getAttribute('content');
+
+    const previousHtmlBackground = document.documentElement.style.backgroundColor;
+    const previousBodyBackground = document.body.style.backgroundColor;
+
+    if (wasThemeColorCreated) {
+      themeColor.name = 'theme-color';
+      document.head.appendChild(themeColor);
+    }
+
+    themeColor.setAttribute('content', STATUS_BAR_COLOR);
+    document.documentElement.style.backgroundColor = STATUS_BAR_COLOR;
+    document.body.style.backgroundColor = STATUS_BAR_COLOR;
+
+    return () => {
+      if (wasThemeColorCreated) {
+        themeColor.remove();
+      } else if (previousThemeColor !== null) {
+        themeColor.setAttribute('content', previousThemeColor);
+      } else {
+        themeColor.removeAttribute('content');
+      }
+
+      document.documentElement.style.backgroundColor = previousHtmlBackground;
+
+      document.body.style.backgroundColor = previousBodyBackground;
+    };
+  }, []);
+
   // 잘못된 id면 쿼리가 disabled라 isPending이 영원히 true다(v5에서 disabled = pending).
   // 먼저 걸러내지 않으면 /report/abc 같은 링크가 로딩 화면에 갇힌다.
   if (!isValidId) {

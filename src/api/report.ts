@@ -40,6 +40,19 @@ export async function retryFortuneReport(reportId: number): Promise<ReportStatus
   return ReportStatusResponse.parse(getResult(res));
 }
 
+/**
+ * GET /fortune-reports/me — 내 최신 **완료** 리포트 요약.
+ *
+ * `reportId`를 URL 밖에서 얻는 유일한 경로다. 이게 없던 동안 마이페이지는 `GET /mypage`를
+ * 불렀는데 그 경로는 서버에 존재한 적이 없어(배포 스펙 확인) 리포트로 들어갈 방법이 없었다.
+ *
+ * 응답 모양은 `GET /fortune-reports/{reportId}`와 같다(`{ reportId, basic }`).
+ */
+export async function getMyFortuneReport(): Promise<SajuReportResponse> {
+  const res = await axiosInstance.get<ApiResponse>('/fortune-reports/me');
+  return SajuReportResponse.parse(getResult(res));
+}
+
 /** GET /fortune-reports/{reportId} — 기본 리포트(요약 + 오행 분포). */
 export async function getSajuReportSummary(reportId: number): Promise<SajuReportResponse> {
   const res = await axiosInstance.get<ApiResponse>(`/fortune-reports/${reportId}`);

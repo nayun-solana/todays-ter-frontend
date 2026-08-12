@@ -1,28 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
-import { MyPageResponse } from './my';
+import { MemberInfoResponse } from './my';
 
-describe('MyPageResponse', () => {
-  it('parses the profile and current report id', () => {
+describe('MemberInfoResponse', () => {
+  it('parses the member profile', () => {
     expect(
-      MyPageResponse.parse({
-        reportId: 83721,
+      MemberInfoResponse.parse({
+        memberId: 7,
+        email: 'someone@example.com',
         nickname: '사용자닉네임',
-        profileImageUrl: 'https://example.com/profile.png',
+        status: 'ACTIVE',
       }),
     ).toEqual({
-      reportId: 83721,
+      memberId: 7,
+      email: 'someone@example.com',
       nickname: '사용자닉네임',
-      profileImageUrl: 'https://example.com/profile.png',
+      status: 'ACTIVE',
     });
   });
 
-  it('rejects a profile without the current report id', () => {
+  it('rejects a profile without a nickname', () => {
     expect(() =>
-      MyPageResponse.parse({
-        nickname: '사용자닉네임',
-        profileImageUrl: null,
-      }),
+      MemberInfoResponse.parse({ memberId: 7, email: 'someone@example.com', status: 'ACTIVE' }),
     ).toThrow();
   });
 });

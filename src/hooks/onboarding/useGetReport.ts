@@ -6,6 +6,7 @@ import {
   getCategorySajuReport,
   getSharedSajuReportDetail,
   getReportStatus,
+  getMyFortuneReport,
   getSajuReportSummary,
   retryFortuneReport,
 } from '../../api/report';
@@ -13,11 +14,26 @@ import { homeKeys } from '../home/useHome';
 import type { SajuReportCategory } from '../../types/onboarding/report';
 
 export const reportKeys = {
+  mine: ['fortune-report', 'me'] as const,
   summary: (reportId: number) => ['fortune-report', reportId] as const,
   status: (reportId: number) => ['fortune-report', reportId, 'status'] as const,
   detail: (reportId: number, category: SajuReportCategory) =>
     ['fortune-report', reportId, 'detail', category] as const,
 };
+
+/**
+ * 내 최신 완료 리포트.
+ *
+ * `reportId`를 모르는 자리(마이페이지·사주 수정 완료)에서 리포트로 들어가는 입구다.
+ * 게스트는 부를 수 없으므로 회원일 때만 켠다.
+ */
+export function useMyFortuneReport(enabled = true) {
+  return useQuery({
+    queryKey: reportKeys.mine,
+    queryFn: getMyFortuneReport,
+    enabled,
+  });
+}
 
 /** 기본 리포트 조회 */
 export function useGetSajuReport(reportId: number) {

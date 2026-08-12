@@ -2,12 +2,20 @@ import { z } from 'zod';
 
 import { ConcernType } from '../onboarding/guestOnboarding';
 
-export const MyPageResponse = z.object({
-  reportId: z.number().int().positive(),
+/**
+ * GET /members/me 응답.
+ *
+ * 예전에는 `GET /mypage`에서 닉네임·프로필사진·reportId를 한 번에 받는 계약이었는데
+ * **그 경로는 서버에 존재한 적이 없다**(배포 스펙 확인). 닉네임은 여기서, `reportId`는
+ * `GET /fortune-reports/me`에서 받는다. 프로필 사진은 아직 어느 응답에도 없다(#156).
+ */
+export const MemberInfoResponse = z.object({
+  memberId: z.number().int().positive(),
+  email: z.string(),
   nickname: z.string().min(1),
-  profileImageUrl: z.string().url().nullish(),
+  status: z.string(),
 });
-export type MyPageResponse = z.infer<typeof MyPageResponse>;
+export type MemberInfoResponse = z.infer<typeof MemberInfoResponse>;
 
 const SocialProvider = z.enum(['KAKAO', 'GOOGLE', 'APPLE']);
 

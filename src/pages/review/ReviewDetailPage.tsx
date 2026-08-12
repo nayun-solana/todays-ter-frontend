@@ -13,6 +13,7 @@ import ReviewHeader from './components/ReviewHeader';
 import ReviewMoreMenu from '../../components/ReviewMoreMenu';
 import StarRating from '../../components/StarRating';
 import { loadFailureMessageBrief } from '../../lib/messages';
+import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 
 type ReviewDetailLocationState = {
   element?: OhaengLabel;
@@ -89,9 +90,7 @@ export default function ReviewDetailPage() {
       ) : review ? (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
-            <div className="size-25 shrink-0 overflow-hidden rounded-xl bg-gray-3">
-              {photos[0] ? <img src={photos[0]} alt="" className="size-full object-cover" /> : null}
-            </div>
+            <PlaceThumbnail placeId={review.placeId} placeName={review.placeName} />
             <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-4">방문 인증 완료 · {formatDate(review.createdAt)}</p>
               <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
@@ -161,6 +160,27 @@ export default function ReviewDetailPage() {
           후기 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/** GET /places/{placeId}/thumbnail — 실패 시 회색 폴백 */
+function PlaceThumbnail({ placeId, placeName }: { placeId: number; placeName: string }) {
+  const thumbnailUrl = getPlaceThumbnailUrl(placeId);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="size-25 shrink-0 overflow-hidden rounded-xl">
+      {failed ? (
+        <div className="size-full bg-placeholder" />
+      ) : (
+        <img
+          src={thumbnailUrl}
+          alt={placeName}
+          className="size-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      )}
     </div>
   );
 }

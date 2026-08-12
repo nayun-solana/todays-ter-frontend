@@ -60,6 +60,7 @@ export async function getCategorySajuReport({
   const res = await axiosInstance.get<ApiResponse>(`/fortune-reports/${reportId}/details`, {
     params: { category },
   });
+
   return CategorySajuReportResponse.parse(getResult(res));
 }
 

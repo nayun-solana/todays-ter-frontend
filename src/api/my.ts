@@ -1,5 +1,5 @@
 import {
-  MyPageResponse,
+  MemberInfoResponse,
   PoliciesResponse,
   SocialConnectionsResponse,
   MemberConcernsResponse,
@@ -12,9 +12,10 @@ import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
 import type { ApiError, ApiResponse } from './types';
 
-export async function getMyPage(): Promise<MyPageResponse> {
-  const response = await axiosInstance.get<ApiResponse>('/mypage');
-  return MyPageResponse.parse(getResult(response));
+/** GET /members/me — 회원 기본 정보(닉네임 등). */
+export async function getMemberInfo(): Promise<MemberInfoResponse> {
+  const response = await axiosInstance.get<ApiResponse>('/members/me');
+  return MemberInfoResponse.parse(getResult(response));
 }
 
 export async function getSocialConnections(): Promise<SocialConnectionsResponse> {

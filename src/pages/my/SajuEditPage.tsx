@@ -7,8 +7,12 @@ import PageHeader from '../../components/PageHeader';
 import SelectField from '../../components/SelectField';
 import WheelPickerSheet, { type WheelColumnSpec } from '../../components/WheelPickerSheet';
 import { cn } from '../../lib/cn';
-import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
-import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
+import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import {
+  useCreateFortuneReport,
+  useMyFortuneReport,
+  useReportStatus,
+} from '../../hooks/onboarding/useGetReport';
 import {
   HOURS,
   MINUTES,
@@ -412,8 +416,9 @@ export function SajuReportCompletePage() {
     locationState.reportId > 0
       ? locationState.reportId
       : undefined;
-  const myPageQuery = useMyPage(!reportIdFromState);
-  const reportId = reportIdFromState ?? myPageQuery.data?.reportId;
+  // 라우터 state가 없을 때(새로고침 등)의 폴백. 내 최신 완료 리포트를 직접 묻는다.
+  const myReportQuery = useMyFortuneReport(!reportIdFromState);
+  const reportId = reportIdFromState ?? myReportQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">

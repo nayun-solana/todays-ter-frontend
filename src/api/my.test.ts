@@ -10,7 +10,7 @@ vi.mock('./axiosInstance', () => ({
 import axiosInstance from './axiosInstance';
 import {
   getMemberConcerns,
-  getMyPage,
+  getMemberInfo,
   isMemberOnboardingMissing,
   updateMemberConcerns,
 } from './my';
@@ -28,17 +28,18 @@ const responseWith = (result: unknown) => ({
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('my page API', () => {
-  it('gets the profile and current report id from /mypage', async () => {
+describe('member info API', () => {
+  it('reads the nickname from /members/me', async () => {
     const result = {
-      reportId: 83721,
+      memberId: 7,
+      email: 'someone@example.com',
       nickname: '사용자닉네임',
-      profileImageUrl: 'https://example.com/profile.png',
+      status: 'ACTIVE',
     };
     mockedAxios.get.mockResolvedValue(responseWith(result));
 
-    await expect(getMyPage()).resolves.toEqual(result);
-    expect(mockedAxios.get).toHaveBeenCalledWith('/mypage');
+    await expect(getMemberInfo()).resolves.toEqual(result);
+    expect(mockedAxios.get).toHaveBeenCalledWith('/members/me');
   });
 });
 

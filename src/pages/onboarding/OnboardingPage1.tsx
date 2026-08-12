@@ -15,7 +15,11 @@ import {
   pad,
 } from '../../lib/birthDate';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
+import {
+  useConvertGuestSession,
+  useInitGuestSession,
+  useSaveGuestSaju,
+} from '../../hooks/onboarding/useGuestOnboarding';
 import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
 import SelectField from '../../components/SelectField';
@@ -108,6 +112,7 @@ export default function OnboardingPage1() {
   const { isMember } = useAuthStatus();
   const initSession = useInitGuestSession();
   const saveSaju = useSaveGuestSaju();
+  const convertSession = useConvertGuestSession();
 
   const canSubmit =
     calendarType !== null && gender !== null && date !== null && (time !== null || unknownTime);
@@ -136,23 +141,33 @@ export default function OnboardingPage1() {
    * 서버가 idempotent하니 제출 시점에 한 번 더 보장하고 순서를 확정한다.
    */
   const submitSaju = async () => {
-    if (saveSaju.isPending) return; // 중복 제출 방지
+    if (saveSaju.isPending || convertSession.isPending) return; // 중복 제출 방지
     // 성별·생년월일은 앞 단계라 여기 도달 시 항상 채워져 있다. 타입 좁히기용 가드.
     if (gender === null || date === null) return;
-
-    // 회원은 게스트 저장 API를 부를 수 없다. 게스트 쿠키가 없으면 GUEST401_1,
-    // 로그인으로 세션이 CONVERTED됐으면 GUEST401_2가 온다(배포 서버 실측).
-    // 예전에는 그 401이 강제 로그아웃으로 이어졌다(#145).
-    // 회원용 사주 저장 경로는 BE에 없다 — `PUT /members/me/saju`는 수정 전용이라 신규 회원에겐 404다.
-    if (isMember) {
-      navigate('/onboarding/step-2');
-      return;
-    }
 
     setSubmitError(null);
     try {
       await initSession.mutateAsync();
       await saveSaju.mutateAsync(buildSajuRequest(gender, date));
+
+      /**
+       * 회원은 여기서 바로 회원 계정으로 옮긴다.
+       *
+       * 회원용 사주 저장 경로가 BE에 없어서(`PUT /members/me/saju`는 수정 전용) 회원도 게스트
+       * 세션으로 온보딩을 진행한 뒤 이전한다(`POST /api/guest-sessions/convert`).
+       *
+       * ⚠️ **이전 시점이 온보딩 끝이 아니라 여기다.** 다음 화면(온보딩2)이 곧바로
+       * `POST /fortune-reports`를 부르는데, BE는 회원 토큰이 있으면 `createForMember`로 가서
+       * `Onboarding` 행을 찾는다(`FortuneReportService`). 이전이 늦으면 그 행이 없어
+       * `ONBOARDING_NOT_FOUND`로 리포트 생성이 실패한다.
+       *
+       * 예전에는 회원이면 저장을 통째로 건너뛰고 step-2로 넘어갔다 — 사주가 어디에도 남지 않아
+       * 리포트 생성이 실패하고 고민 유형도 `MEMBER404_3`이 났다(#156 1번).
+       */
+      if (isMember) {
+        await convertSession.mutateAsync();
+      }
+
       navigate('/onboarding/step-2');
     } catch {
       setSubmitError('사주 정보를 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
@@ -313,7 +328,9 @@ export default function OnboardingPage1() {
         ) : null}
         <Button
           variant="primary"
-          disabled={!canSubmit || saveSaju.isPending || initSession.isPending}
+          disabled={
+            !canSubmit || saveSaju.isPending || initSession.isPending || convertSession.isPending
+          }
           onClick={() => void submitSaju()}
         >
           {saveSaju.isPending ? '저장 중…' : '내 기운 확인하기'}

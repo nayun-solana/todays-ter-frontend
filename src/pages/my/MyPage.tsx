@@ -5,7 +5,8 @@ import SectionError from '../../components/SectionError';
 import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { useMyPage } from '../../hooks/my/useMy';
+import { useMemberInfo } from '../../hooks/my/useMy';
+import { useMyFortuneReport } from '../../hooks/onboarding/useGetReport';
 import { loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
 import TabPageHeader from '../../components/TabPageHeader';
 
@@ -54,9 +55,17 @@ function ProfileSkeleton() {
 export default function MyPage() {
   const navigate = useNavigate();
   const { isMember, isPending: isAuthPending } = useAuthStatus();
-  const myPageQuery = useMyPage(isMember);
+  const memberQuery = useMemberInfo(isMember);
+  /**
+   * `reportId`는 리포트 도메인이 준다.
+   *
+   * 예전에는 `GET /mypage`가 닉네임·프로필사진·reportId를 한 번에 주는 계약이었는데 그 경로는
+   * 서버에 존재한 적이 없어서, 이 버튼이 영원히 "회원 정보 불러오는 중"에 잠겨 있었다.
+   */
+  const reportQuery = useMyFortuneReport(isMember);
   const logoutMutation = useLogout();
-  const profile = myPageQuery.data;
+  const nickname = memberQuery.data?.nickname;
+  const reportId = reportQuery.data?.reportId;
 
   // 부팅 복원 전의 isMember=false는 "게스트"가 아니라 "아직 모름"이다.
   // 게스트는 여기까지 오지 않는다 — 라우트가 RequireMemberTab 아래라 가드가 잠금 화면(GuestTabGate)을
@@ -82,42 +91,42 @@ export default function MyPage() {
       <TabPageHeader title="마이페이지" />
 
       <main className="px-5 pt-3">
-        {myPageQuery.isPending ? (
+        {memberQuery.isPending ? (
           <ProfileSkeleton />
         ) : (
           <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
             <div className="flex flex-col items-center gap-2">
-              {profile?.profileImageUrl ? (
-                <img
-                  src={profile.profileImageUrl}
-                  alt="프로필 이미지"
-                  className="size-25 rounded-full object-cover"
-                />
-              ) : (
-                <DefaultAvatar />
-              )}
-              <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
+              {/* 프로필 사진을 주는 응답이 아직 없다(#156) — 기본 아바타로 고정한다. */}
+              <DefaultAvatar />
+              <p className="typo-head-4 text-gray-5">{nickname ?? '닉네임'}</p>
             </div>
           </section>
         )}
 
         <button
           type="button"
-          disabled={!profile}
+          disabled={!reportId}
           onClick={() => {
-            if (!profile) return;
-            navigate(`/report/${profile.reportId}?from=my`);
+            if (!reportId) return;
+            navigate(`/report/${reportId}?from=my`);
           }}
           className="typo-head-4 mt-3 flex h-[50px] w-full items-center justify-between rounded-btn bg-primary px-5 text-white shadow-card-lg disabled:cursor-not-allowed disabled:bg-gray-3"
         >
-          {profile ? '사주 리포트 다시보기' : '회원 정보 불러오는 중'}
+          {reportId
+            ? '사주 리포트 다시보기'
+            : reportQuery.isError
+              ? '리포트를 불러오지 못했어요'
+              : '리포트 불러오는 중'}
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
-        {myPageQuery.isError ? (
+        {memberQuery.isError || reportQuery.isError ? (
           <SectionError
             className="mt-2"
             message={loadFailureMessageBrief('마이페이지 정보')}
-            onRetry={() => void myPageQuery.refetch()}
+            onRetry={() => {
+              if (memberQuery.isError) void memberQuery.refetch();
+              if (reportQuery.isError) void reportQuery.refetch();
+            }}
           />
         ) : null}
         <section className="mt-6">

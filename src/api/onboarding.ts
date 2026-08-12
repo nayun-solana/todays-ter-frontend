@@ -48,3 +48,16 @@ export async function getGuestOnboarding(): Promise<GuestOnboardingResponse> {
   const res = await axiosInstance.get<ApiResponse>('/api/guest-onboarding');
   return GuestOnboardingResponse.parse(getResult(res));
 }
+
+/**
+ * POST /api/guest-sessions/convert — 비회원 온보딩을 로그인한 회원 계정으로 이전.
+ *
+ * **회원 토큰과 게스트 쿠키가 둘 다 있어야 한다.** 쿠키가 없으면 `GUEST_COOKIE_REQUIRED`다.
+ * 성공하면 서버가 게스트 쿠키를 지운다 — 이후 게스트 온보딩 API는 더 못 부른다.
+ *
+ * BE `GuestSessionController.convertGuestSession`은 `guestOnboardingTransferService`만 부른다.
+ * 회원에게 이미 온보딩이 있으면 덮어쓰지 않고 세션만 전환한다.
+ */
+export async function convertGuestSession(): Promise<void> {
+  await axiosInstance.post<ApiResponse>('/api/guest-sessions/convert');
+}

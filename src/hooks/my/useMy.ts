@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  getMyPage,
+  getMemberInfo,
   getMemberConcerns,
   getMemberSaju,
   getPolicies,
@@ -21,7 +21,7 @@ import { recommendationKeys } from '../recommendation/useRecommendation';
 
 export const myKeys = {
   all: ['my'] as const,
-  profile: () => [...myKeys.all, 'profile'] as const,
+  memberInfo: () => [...myKeys.all, 'member-info'] as const,
   socialConnections: () => [...myKeys.all, 'social-connections'] as const,
   saju: () => [...myKeys.all, 'saju'] as const,
   concerns: () => [...myKeys.all, 'concerns'] as const,
@@ -29,10 +29,10 @@ export const myKeys = {
 };
 
 /** 게스트도 /my에 들어오므로(로그인 유도 화면) 회원일 때만 호출한다. */
-export function useMyPage(enabled = true) {
+export function useMemberInfo(enabled = true) {
   return useQuery({
-    queryKey: myKeys.profile(),
-    queryFn: getMyPage,
+    queryKey: myKeys.memberInfo(),
+    queryFn: getMemberInfo,
     enabled,
   });
 }

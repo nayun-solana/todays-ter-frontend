@@ -5,6 +5,7 @@ import FileAttachButton from '../../components/FileAttachButton';
 import PageHeader from '../../components/PageHeader';
 import TextInput from '../../components/TextInput';
 import { usePlaceDetail, usePlaceReviews } from '../../hooks/place/usePlace';
+import type { PlaceReviewItem } from '../../types/place/place';
 import {
   useCreateRecord,
   useUpdateRecord,
@@ -43,19 +44,28 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
   const uploadImagesMutation = useUploadRecordImages();
   const [draft, setDraft] = useState<{ rating: number; memo: string } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  /** 사용자가 기존 사진을 지우기 전까지는 null — 서버 값을 그대로 보여준다. */
+  const [keptImages, setKeptImages] = useState<PlaceReviewItem['images'] | null>(null);
   const myReview = reviewsQuery.data?.myReview;
   const form = draft ?? { rating: myReview?.rating ?? 0, memo: myReview?.content ?? '' };
   const { rating, memo } = form;
   const initialRating = myReview?.rating ?? 0;
   const initialMemo = myReview?.content ?? '';
+  // 수정 모드에서만 기존 사진을 다룬다. 작성 모드에는 애초에 붙어 있는 사진이 없다.
+  const serverImages = isEdit ? (myReview?.images ?? []) : [];
+  const existingImages = keptImages ?? serverImages;
+  const imagesChanged = files.length > 0 || existingImages.length !== serverImages.length;
   const setRating = (nextRating: number) =>
     setDraft((current) => ({ ...(current ?? form), rating: nextRating }));
   const setMemo = (nextMemo: string) =>
     setDraft((current) => ({ ...(current ?? form), memo: nextMemo }));
 
   // Figma: 작성은 별점만 있으면 저장, 수정은 값이 바뀌어야 저장 활성
+  // 사진만 바꿔도 저장할 수 있어야 한다 — 예전에는 별점·본문이 그대로면 버튼이 잠겼다.
   const canSubmit = isEdit
-    ? rating > 0 && memo.trim().length > 0 && (rating !== initialRating || memo !== initialMemo)
+    ? rating > 0 &&
+      memo.trim().length > 0 &&
+      (rating !== initialRating || memo !== initialMemo || imagesChanged)
     : rating > 0 && memo.trim().length > 0;
 
   // 작성 모드인데 이미 후기가 있는 경우. 서버가 409로 막기 때문에 저장을 시도할 이유가 없다.
@@ -105,7 +115,19 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
           />
         </section>
 
-        <FileAttachButton className="mx-6" maxCount={5} onFilesChange={setFiles} />
+        <FileAttachButton
+          className="mx-6"
+          maxCount={5}
+          existingImages={existingImages.map((image) => ({
+            key: String(image.imageId),
+            url: image.imageUrl,
+          }))}
+          onExistingImagesChange={(next) => {
+            const remaining = new Set(next.map((image) => image.key));
+            setKeptImages(existingImages.filter((image) => remaining.has(String(image.imageId))));
+          }}
+          onFilesChange={setFiles}
+        />
         <div className="flex-1" />
 
         <Button
@@ -131,7 +153,23 @@ export default function PlaceReviewPage({ mode = 'create' }: PlaceReviewPageProp
                 updateRecordMutation.mutate(
                   {
                     recordId: myReview.reviewId,
-                    body: { rating, content: memo.trim(), imageIds },
+                    placeId,
+                    body: {
+                      rating,
+                      content: memo.trim(),
+                      // ⚠️ 사진을 안 건드렸으면 `imageIds`를 **아예 보내지 않는다.**
+                      // BE는 이 필드가 오면 전체 교체로 처리하므로(`RecordService.resolveImagesForUpdate`)
+                      // 빈 배열은 곧 "사진 전부 삭제"다. 예전에는 항상 `[]`가 나가서
+                      // 후기를 고칠 때마다 붙어 있던 사진이 조용히 날아갔다(#174).
+                      ...(imagesChanged
+                        ? {
+                            imageIds: [
+                              ...existingImages.map((image) => image.imageId),
+                              ...imageIds,
+                            ],
+                          }
+                        : {}),
+                    },
                   },
                   { onSuccess: () => navigate(`/place/${placeId}`, { replace: true }) },
                 );

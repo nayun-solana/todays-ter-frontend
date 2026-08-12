@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
@@ -13,7 +12,6 @@ import {
   usePlaceBookmarkToggle,
   usePlaceDetail,
   usePlaceReviews,
-  placeKeys,
 } from '../../hooks/place/usePlace';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
@@ -257,7 +255,6 @@ function ReviewItem({ review }: { review: Review }) {
 
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { id } = useParams();
   // 장소 상세는 게스트에게 열려 있지만(#109) 후기 작성은 회원 전용이다.
   const { isMember } = useAuthStatus();
@@ -447,12 +444,11 @@ export default function PlaceDetailPage() {
         <DeleteReviewModal
           onCancel={() => setDeleteTarget(null)}
           onConfirm={() => {
-            deleteReviewMutation.mutate(deleteTarget, {
-              onSuccess: () => {
-                void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
-                setDeleteTarget(null);
-              },
-            });
+            // 후기 목록 무효화는 useDeleteRecord가 한다 — 작성·수정과 같은 규칙을 쓰도록.
+            deleteReviewMutation.mutate(
+              { recordId: deleteTarget, placeId: id },
+              { onSuccess: () => setDeleteTarget(null) },
+            );
           }}
         />
       ) : null}

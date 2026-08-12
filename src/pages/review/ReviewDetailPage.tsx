@@ -134,12 +134,15 @@ export default function ReviewDetailPage() {
           }}
           onConfirm={() => {
             if (!recordId || deleteRecord.isPending) return;
-            deleteRecord.mutate(recordId, {
-              onSuccess: () => {
-                setIsDeleteModalOpen(false);
-                navigate('/record', { replace: true });
+            deleteRecord.mutate(
+              { recordId, placeId: review?.placeId },
+              {
+                onSuccess: () => {
+                  setIsDeleteModalOpen(false);
+                  navigate('/record', { replace: true });
+                },
               },
-            });
+            );
           }}
         />
       ) : null}

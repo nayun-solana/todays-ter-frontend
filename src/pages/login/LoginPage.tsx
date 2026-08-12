@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { useDevLogin } from '../../hooks/auth/useAuth';
 import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { buildKakaoAuthorizeUrl } from '../../lib/kakao';
-import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
+import { KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
 
@@ -287,7 +287,8 @@ function LoginContent({
 
         <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />
 
-        {/* 카카오는 연동 완료. Apple·구글은 BE 미구현 → 비활성화(회색) 유지 */}
+        {/* Apple·구글은 BE 미구현이라 눌리지 않는 회색 버튼으로 두고 있었는데, 쓸 수 없는 걸
+            보여주는 것보다 안 보여주는 편이 낫다고 판단해 걷어냈다. 지원이 붙으면 되살린다. */}
         <button
           type="button"
           onClick={() => {
@@ -298,24 +299,6 @@ function LoginContent({
         >
           <KakaoIcon className="size-5" />
           <span className="text-sm font-bold text-[#191600]">카카오로 로그인</span>
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
-        >
-          <AppleIcon className="h-5 w-4 grayscale" />
-          <span className="text-sm font-bold text-white">Apple로 로그인</span>
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
-        >
-          <GoogleIcon className="size-5 grayscale" />
-          <span className="text-sm font-bold text-white">구글로 로그인</span>
         </button>
 
         {/* 개발용 로그인 — dev 빌드에만 렌더된다(카카오 키 대기 중 회원 상태 테스트용, #72) */}

@@ -172,7 +172,7 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
       <header className="mt-11 flex flex-col gap-4">
         <p className="text-base font-bold text-primary">고민 유형 선택</p>
         <div className="flex flex-col gap-2.5">
-          <h1 className="text-2xl font-extrabold leading-8 text-gray-6">
+          <h1 className="typo-head-1 text-gray-6">
             어떤 고민을
             <br />
             해결하고 싶나요?
@@ -200,7 +200,7 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
 
       <div className="mt-auto flex flex-col gap-2">
         {errorMessage ? (
-          <p role="alert" className="text-center text-xs font-bold text-danger">
+          <p role="alert" className="text-center typo-body-4 text-danger">
             {errorMessage}
           </p>
         ) : null}

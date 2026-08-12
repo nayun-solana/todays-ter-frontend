@@ -218,7 +218,7 @@ function BallIntro({ onDone }: { onDone: () => void }) {
 
   return (
     <div ref={containerRef} className="absolute inset-0 bg-white">
-      <p className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 text-2xl font-extrabold text-gray-6">
+      <p className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 typo-head-1 text-gray-6">
         {/* '오'만 분리 — 공이 닿는 순간 색을 공과 일치시키기 위함 */}
         <span ref={oCharRef} className="transition-colors duration-100">
           오
@@ -262,7 +262,7 @@ function LoginContent({
         className="absolute left-1/2 top-[200px] flex w-40 -translate-x-1/2 flex-col items-center gap-2.5 text-center"
         style={{ animation: 'login-rise-in 0.45s ease-out 0.35s both' }}
       >
-        <p className="text-2xl font-extrabold text-primary">오늘의 터</p>
+        <p className="typo-head-1 text-primary">오늘의 터</p>
         <p className="text-sm text-gray-4">사주 기반 장소 추천 서비스</p>
       </div>
 
@@ -272,7 +272,7 @@ function LoginContent({
         style={{ bottom: 72, animation: 'login-rise-in 0.5s ease-out 0.55s both' }}
       >
         {guestError ? (
-          <p role="alert" className="mb-2 text-center text-xs font-bold text-white">
+          <p role="alert" className="mb-2 text-center typo-body-4 text-white">
             {guestError}
           </p>
         ) : null}
@@ -354,7 +354,7 @@ function DevLoginButton() {
           { onSuccess: () => navigate(from, { replace: true }) },
         )
       }
-      className="mt-4 flex h-10 items-center justify-center rounded-full border border-dashed border-white/60 text-xs font-bold text-white/80"
+      className="mt-4 flex h-10 items-center justify-center rounded-full border border-dashed border-white/60 typo-body-4 text-white/80"
     >
       {devLogin.isPending ? '발급 중…' : '개발용 로그인 (dev 전용)'}
     </button>

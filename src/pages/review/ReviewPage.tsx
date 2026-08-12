@@ -98,7 +98,7 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
                   <OhaengBadge element={elementLabel} className="px-3 py-2 text-xs" />
                 ) : null}
                 {hashtag ? (
-                  <span className="rounded-full border border-gray-3 bg-white px-3 py-2 text-xs font-bold text-gray-5">
+                  <span className="rounded-full border border-gray-3 bg-white px-3 py-2 typo-body-4 text-gray-5">
                     # {hashtag}
                   </span>
                 ) : null}

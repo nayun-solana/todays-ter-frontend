@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
-import type { ApiError } from '../../api/types';
+import { apiErrorStatusOf } from '../../api/types';
 import iconStar from '../../assets/icon-star.svg';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
@@ -264,18 +264,6 @@ function ReviewItem({ review }: { review: Review }) {
       <p className="text-xs leading-[18px] text-gray-5">{review.content}</p>
     </article>
   );
-}
-
-/**
- * 에러의 HTTP status를 꺼낸다.
- *
- * 인터셉터가 거절값을 ApiError 평범한 객체로 정규화하므로(Error 인스턴스가 아니다)
- * instanceof가 아니라 shape로 본다 — api/onboardingRequired.ts와 같은 방식이다.
- */
-function apiErrorStatusOf(error: unknown): number | undefined {
-  if (typeof error !== 'object' || error === null) return undefined;
-  const { status } = error as Partial<ApiError>;
-  return typeof status === 'number' ? status : undefined;
 }
 
 /**

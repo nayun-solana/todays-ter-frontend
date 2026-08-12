@@ -204,6 +204,9 @@ html {
   min-height: 100%;
   background: var(--color-gray-1);
   scrollbar-gutter: stable;
+  /* 아래로 당겼을 때 늘어나지 않게 한다. 늘어난 자리에는 화면이 아니라 html 배경이 비쳐서
+     상단 헤더(흰색)와 색이 어긋난 띠가 생겼다. 당겨서 새로고침은 쓰지 않는다. */
+  overscroll-behavior-y: none;
 }
 
 body,

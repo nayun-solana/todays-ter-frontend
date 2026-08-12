@@ -170,7 +170,24 @@ export default function SajuEditPage() {
     setDraft((current) => update(current ?? serverForm ?? DEFAULT_SAJU_FORM));
   };
 
+  /**
+   * 서버 값이 오기 전에는 편집을 막는다.
+   *
+   * ⚠️ 잠그지 않으면 **달력 종류가 조용히 양력으로 덮인다.** 응답 전에 시트를 열어 확정하면
+   * `updateForm`이 `serverForm`이 아직 null이라 `DEFAULT_SAJU_FORM`을 집는다. 그 순간 draft가
+   * 생겨 뒤늦게 온 서버 값이 화면에 영영 안 나오고, 그 상태로 저장하면 draft의
+   * `calendarType: 'SOLAR'`와 `hasTime: false`가 그대로 나간다 — 음력 사용자의 설정과
+   * 태어난 시간이 사라진다. **이 화면에는 달력 종류를 고치는 UI가 없어 되돌릴 방법도 없다.**
+   *
+   * 저장 버튼만으로는 못 막는다. `changed`가 `serverForm`을 요구해 로딩 중엔 잠기지만,
+   * 응답이 도착하는 순간 draft ≠ serverForm이라 열린다.
+   *
+   * `OnboardingPage3`의 고민 유형 프리필과 같은 문제이고 같은 방식으로 막는다.
+   */
+  const isPrefilling = sajuQuery.isPending;
+
   const openDateSheet = () => {
+    if (isPrefilling) return;
     setDraftDate(date);
     setOpenSheet('date');
   };
@@ -180,6 +197,7 @@ export default function SajuEditPage() {
   };
 
   const openTimeSheet = () => {
+    if (isPrefilling) return;
     setDraftTime(pickerTime);
     setOpenSheet('time');
   };
@@ -196,6 +214,7 @@ export default function SajuEditPage() {
    * 표시만 바꾼다. 시간값 자체는 남겨둔다 — 다시 체크를 풀면 고르던 값이 돌아온다.
    */
   const toggleUnknownTime = () => {
+    if (isPrefilling) return;
     updateForm((current) => ({ ...current, hasTime: !current.hasTime }));
   };
 
@@ -300,17 +319,26 @@ export default function SajuEditPage() {
         </p>
 
         {/* 온보딩1과 같은 입력 방식 — 눌러서 바텀시트 휠을 열고 '확인'으로 확정한다. */}
-        <section className="mt-4 flex flex-col gap-9">
+        {/* 불러오는 동안은 누를 수 없다 — 먼저 확정하면 서버 값을 못 본 채 덮어쓴다. */}
+        <section
+          aria-busy={isPrefilling}
+          className={cn('mt-4 flex flex-col gap-9', isPrefilling && 'pointer-events-none')}
+        >
           <SelectField
             label="생년월일"
-            value={`${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일`}
-            placeholder="날짜를 선택해주세요"
+            // 불러오기 전에는 기본값(1995-06-15)이 진짜 저장값인 척 보인다. 자리표시자를 쓴다.
+            value={isPrefilling ? null : `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일`}
+            placeholder="불러오는 중…"
             onClick={openDateSheet}
           />
           <SelectField
             label="태어난 시간"
-            value={hasSelectedTime ? `${formatHour(pickerTime.hour)} ${pickerTime.minute}분` : null}
-            placeholder="시간을 선택해주세요"
+            value={
+              isPrefilling || !hasSelectedTime
+                ? null
+                : `${formatHour(pickerTime.hour)} ${pickerTime.minute}분`
+            }
+            placeholder={isPrefilling ? '불러오는 중…' : '시간을 선택해주세요'}
             onClick={openTimeSheet}
             footer={
               <button

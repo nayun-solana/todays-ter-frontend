@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import Button from '../../../components/Button';
+import Button from './Button';
 
 const ROW_H = 48;
 

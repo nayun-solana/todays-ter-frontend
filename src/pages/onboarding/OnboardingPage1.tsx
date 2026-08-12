@@ -18,8 +18,8 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
 import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
-import SelectField from './components/SelectField';
-import WheelPickerSheet, { type WheelColumnSpec } from './components/WheelPickerSheet';
+import SelectField from '../../components/SelectField';
+import WheelPickerSheet, { type WheelColumnSpec } from '../../components/WheelPickerSheet';
 
 type CalendarType = 'solar' | 'lunar';
 type OpenSheet = 'date' | 'time' | null;

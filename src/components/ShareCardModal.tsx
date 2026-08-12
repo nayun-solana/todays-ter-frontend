@@ -2,15 +2,15 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { toPng } from 'html-to-image';
 import { Download, X } from 'lucide-react';
 
-import type { ApiError } from '../../../api/types';
-import defaultBg from '../../../assets/review/default.png';
-import earthIcon from '../../../assets/review/earth.png';
-import fireIcon from '../../../assets/review/fire.png';
-import metalIcon from '../../../assets/review/metal.png';
-import treeIcon from '../../../assets/review/tree.png';
-import waterIcon from '../../../assets/review/water.png';
-import { usePlaceShareCard } from '../../../hooks/place/usePlace';
-import type { PlaceDay } from './RecordPlaceCard';
+import type { ApiError } from '../api/types';
+import defaultBg from '../assets/review/default.png';
+import earthIcon from '../assets/review/earth.png';
+import fireIcon from '../assets/review/fire.png';
+import metalIcon from '../assets/review/metal.png';
+import treeIcon from '../assets/review/tree.png';
+import waterIcon from '../assets/review/water.png';
+import { usePlaceShareCard } from '../hooks/place/usePlace';
+import { DEFAULT_OHAENG, ohaengByLabel, ohaengCssVar, type OhaengLabel } from '../lib/ohaeng';
 
 /** Google Places 대표 이미지 없음 등 — 배경만 로컬 폴백 */
 const SHARE_CARD_IMAGE_MISSING_CODE = 'PLACE404_3';
@@ -20,20 +20,12 @@ type ShareCardModalProps = {
   /** API 실패(PLACE404_3) 시 카드에 표시할 장소명 */
   fallbackPlaceName?: string;
   /** 다녀온 터 목록에서 넘긴 오행(기운) — 공유 카드 색·도형에 사용 */
-  element?: PlaceDay;
+  element?: OhaengLabel;
   onClose: () => void;
 };
 
-const DAY_FILL: Record<PlaceDay, string> = {
-  화: 'var(--color-ohaeng-fire)',
-  수: 'var(--color-ohaeng-water)',
-  목: 'var(--color-ohaeng-wood)',
-  금: 'var(--color-ohaeng-metal)',
-  토: 'var(--color-ohaeng-earth)',
-};
-
 /** 오행별 장식·구멍 실루엣 */
-const ELEMENT_SHAPE: Record<PlaceDay, string> = {
+const ELEMENT_SHAPE: Record<OhaengLabel, string> = {
   화: fireIcon,
   수: waterIcon,
   목: treeIcon,
@@ -43,7 +35,7 @@ const ELEMENT_SHAPE: Record<PlaceDay, string> = {
 
 const DEFAULT_SHAPE_SIZE = 20;
 /** 토 아이콘만 조금 크게 */
-const ELEMENT_SHAPE_SIZE: Record<PlaceDay, number> = {
+const ELEMENT_SHAPE_SIZE: Record<OhaengLabel, number> = {
   화: DEFAULT_SHAPE_SIZE,
   수: DEFAULT_SHAPE_SIZE,
   목: DEFAULT_SHAPE_SIZE,
@@ -94,18 +86,11 @@ function panelHoleMaskStyle(shapeSrc: string, fill: string, size: number): CSSPr
       'linear-gradient(#fff, #fff)',
       ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
     ].join(', '),
-    maskImage: [
-      'linear-gradient(#fff, #fff)',
-      ...HOLE_SHAPES.map(() => `url(${shapeSrc})`),
-    ].join(', '),
-    WebkitMaskPosition: [
-      '0 0',
-      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
-    ].join(', '),
-    maskPosition: [
-      '0 0',
-      ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`),
-    ].join(', '),
+    maskImage: ['linear-gradient(#fff, #fff)', ...HOLE_SHAPES.map(() => `url(${shapeSrc})`)].join(
+      ', ',
+    ),
+    WebkitMaskPosition: ['0 0', ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`)].join(', '),
+    maskPosition: ['0 0', ...HOLE_SHAPES.map((hole) => `${hole.x}px ${hole.y}px`)].join(', '),
     // mask-size는 "가로 세로" 한 쌍. 정사각이면 값 하나만 써도 됨(가로=세로).
     WebkitMaskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
     maskSize: ['100% 100%', ...HOLE_SHAPES.map(() => holeSize)].join(', '),
@@ -117,7 +102,7 @@ function panelHoleMaskStyle(shapeSrc: string, fill: string, size: number): CSSPr
   };
 }
 
-function SolidShape({ fill, element }: { fill: string; element: PlaceDay }) {
+function SolidShape({ fill, element }: { fill: string; element: OhaengLabel }) {
   const size = ELEMENT_SHAPE_SIZE[element];
   return <div aria-hidden style={shapeMaskStyle(ELEMENT_SHAPE[element], fill, size)} />;
 }
@@ -129,9 +114,9 @@ function PanelWithHoles({
 }: {
   fill: string;
   message: string;
-  element: PlaceDay;
+  element: OhaengLabel;
 }) {
-  const size = ELEMENT_SHAPE_SIZE[element]-4;
+  const size = ELEMENT_SHAPE_SIZE[element] - 4;
 
   return (
     <div className="absolute inset-x-0 bottom-0">
@@ -193,9 +178,18 @@ export default function ShareCardModal({
   const isImageMissingError = error?.code === SHARE_CARD_IMAGE_MISSING_CODE;
 
   const placeName = card?.placeName ?? fallbackPlaceName ?? '오늘의 터';
-  /** 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게 */
-  const element: PlaceDay = listElement ?? card?.element ?? '수';
-  const fill = DAY_FILL[element];
+  /**
+   * 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게.
+   *
+   * `listElement`는 라우터 state에서 오므로 **검증된 값이 아니다**(`ReviewDetailPage`가
+   * `location.state`를 캐스팅해 넘긴다). 오래된 히스토리 항목이나 BE 라벨 변경으로 5종 밖의
+   * 값이 들어올 수 있어, 조회에 실패하면 기본값으로 떨어뜨린다. 여기서 단정하면 라벨 하나
+   * 때문에 공유 모달이 통째로 빈 화면이 된다.
+   */
+  const ohaeng = ohaengByLabel(listElement ?? card?.element) ?? DEFAULT_OHAENG;
+  const element: OhaengLabel = ohaeng.label;
+  // html-to-image가 캡처하는 인라인 스타일이라 Tailwind 클래스 대신 CSS 변수를 직접 넣는다.
+  const fill = ohaengCssVar(ohaeng.key);
   const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;
   const cardRef = useRef<HTMLElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);

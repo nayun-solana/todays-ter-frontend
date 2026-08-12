@@ -14,6 +14,11 @@ type MatchedTerAppBarProps = {
   isSaved?: boolean;
   /** 저장/해제 토글. 없으면 버튼을 비활성화한다. */
   onToggleBookmark?: () => void;
+  /**
+   * 잠긴 이유. 시각적으로는 흐려진 아이콘으로 드러나지만, 스크린리더에는 그냥 '저장'으로
+   * 읽혀 왜 못 누르는지 알 수 없다. 장소 상세와 같은 방식으로 라벨에 이유를 붙인다.
+   */
+  disabledReason?: string;
   /** 공유받은 화면에서는 북마크·공유 액션을 감춘다. */
   showActions?: boolean;
 };
@@ -25,8 +30,10 @@ export default function MatchedTerAppBar({
   onSharePrefetch,
   isSaved = false,
   onToggleBookmark,
+  disabledReason,
   showActions = true,
 }: MatchedTerAppBarProps) {
+  const suffix = disabledReason ? ` (${disabledReason})` : '';
   const navigate = useNavigate();
 
   return (
@@ -43,7 +50,7 @@ export default function MatchedTerAppBar({
                   <img>로 불러온 svg는 CSS로 fill을 바꿀 수 없다. */}
               <button
                 type="button"
-                aria-label={isSaved ? '저장 해제' : '저장'}
+                aria-label={`${isSaved ? '저장 해제' : '저장'}${onToggleBookmark ? '' : suffix}`}
                 aria-pressed={isSaved}
                 onClick={onToggleBookmark}
                 disabled={!onToggleBookmark}
@@ -57,7 +64,7 @@ export default function MatchedTerAppBar({
               </button>
               <button
                 type="button"
-                aria-label="공유"
+                aria-label={`공유${onShare ? '' : suffix}`}
                 onClick={onShare}
                 // 클릭보다 먼저 오는 이벤트에서 링크를 받아둔다 — 클릭 때 await가 없어야
                 // navigator.share가 사용자 제스처를 유지한다.

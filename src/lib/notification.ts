@@ -47,7 +47,10 @@ export function formatNotificationTime(createdAt: string, now = new Date()) {
   }).format(date);
 }
 
-export function groupNotifications(items: NotificationItem[], now = new Date()): NotificationGroup[] {
+export function groupNotifications(
+  items: NotificationItem[],
+  now = new Date(),
+): NotificationGroup[] {
   const todayKey = dateKey(now);
   const yesterdayKey = dateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
   const groups = new Map<string, NotificationGroup>();

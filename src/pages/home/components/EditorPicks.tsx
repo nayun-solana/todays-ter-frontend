@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router';
 import OhaengOrb from '../../../components/OhaengOrb';
 import { useEditorPicks } from '../../../hooks/search/useSearch';
 import { cn } from '../../../lib/cn';
-import { ohaengByKey } from '../../../lib/ohaeng';
-import { toOhaengKey } from '../../../types/home/homeEnergy';
+import { ohaengByKey, toOhaengKey } from '../../../lib/ohaeng';
+import { loadFailureMessageBrief, loadingMessage } from '../../../lib/messages';
 
 /**
  * 홈 하단 '에디터 오행 픽'. (Figma 2349:2783)
@@ -32,9 +32,9 @@ export default function EditorPicks() {
       <h2 className="typo-body-2 text-gray-6">에디터 오행 픽</h2>
       <div className="mt-3 flex flex-col gap-2">
         {editorPicksQuery.isPending ? (
-          <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오는 중입니다.</p>
+          <p className="typo-sub-2 py-4 text-gray-4">{loadingMessage('에디터 픽')}</p>
         ) : editorPicksQuery.isError ? (
-          <p className="typo-sub-2 py-4 text-gray-4">에디터 픽을 불러오지 못했습니다.</p>
+          <p className="typo-sub-2 py-4 text-gray-4">{loadFailureMessageBrief('에디터 픽')}</p>
         ) : picks.length === 0 ? (
           <p className="typo-sub-2 py-4 text-gray-4">등록된 에디터 픽이 없습니다.</p>
         ) : (
@@ -68,7 +68,7 @@ export default function EditorPicks() {
                     </p>
                     {/* 설명만 오행 색을 쓴다 — 카드 배경은 흰색이다(탐색에 있던 오행색 배경과 다름).
                         시안은 한 줄 기준이라 넘치면 자른다. */}
-                    <p className={cn('truncate text-xs leading-4 font-bold', meta.text)}>
+                    <p className={cn('truncate typo-body-4', meta.text)}>
                       {pick.description}
                     </p>
                   </div>

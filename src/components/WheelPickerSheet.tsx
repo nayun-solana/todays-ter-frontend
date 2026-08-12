@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-import Button from '../../../components/Button';
+import Button from './Button';
+import { useScrollLock } from '../lib/scrollLock';
 
 const ROW_H = 48;
 
 export interface WheelColumnSpec {
-  options: number[];
+  options: readonly number[];
   value: number;
   format: (value: number) => string;
   onChange: (value: number) => void;
@@ -79,13 +80,15 @@ export default function WheelPickerSheet({
   onConfirm,
   onClose,
 }: WheelPickerSheetProps) {
+  // 시트가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다.
+  useScrollLock(open);
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
 
-      <div className="relative w-full max-w-[375px] rounded-t-btn bg-white px-5 pb-8 pt-8">
+      <div className="relative w-full rounded-t-btn bg-white px-5 pb-8 pt-8">
         <h2 className="text-xl font-extrabold text-gray-6">{title}</h2>
 
         <div className="relative mt-6">

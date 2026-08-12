@@ -1,3 +1,5 @@
+import { fileURLToPath, URL } from 'node:url';
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -21,6 +23,7 @@ const API_PATHS = [
   '/recommendations',
   '/fortune-reports',
   '/members',
+  '/mypage',
   '/records',
   '/notifications',
 ];
@@ -35,7 +38,7 @@ const proxy = Object.fromEntries(
       cookieDomainRewrite: { '*': '' }, // Set-Cookie 도메인 제거 → localhost host-only 쿠키로 저장
       /**
        * 화면 이동(문서 요청)은 프록시를 태우지 않고 Vite가 SPA로 처리하게 한다.
-       * `/home`·`/recommendations/...`처럼 **앱 라우트와 API 접두어가 겹치는 경로**가 있어서,
+       * `/home`처럼 **앱 라우트와 API 접두어가 겹치는 경로**가 있어서,
        * 이 분기가 없으면 주소창으로 /home을 열었을 때 화면 대신 API JSON이 뜬다.
        * XHR/fetch는 Accept에 text/html이 없으므로 그대로 프록시를 탄다.
        */
@@ -72,5 +75,10 @@ export default defineConfig({
       workbox: { navigateFallback: 'index.html' },
     }),
   ],
+  // `@/`는 src 루트. 상대경로(`../../../`)는 파일을 옮길 때마다 깨지므로 새 코드는 alias를 쓴다.
+  // tsconfig.app.json의 paths와 vitest.config.ts에 같은 값이 들어가야 한다.
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   server: { proxy },
 });

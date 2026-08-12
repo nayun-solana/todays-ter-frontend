@@ -7,7 +7,7 @@ vi.mock('./axiosInstance', () => ({
 }));
 
 import axiosInstance from './axiosInstance';
-import { getCurrentFortuneReport } from './report';
+import { getCategorySajuReport } from './report';
 
 const mockedAxios = vi.mocked(axiosInstance);
 
@@ -22,12 +22,26 @@ const responseWith = (result: unknown) => ({
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('current fortune report API', () => {
-  it('gets the current member report id', async () => {
-    const result = { reportId: 102 };
+describe('fortune report API', () => {
+  it('gets category detail with the required category query', async () => {
+    const result = {
+      reportId: 2,
+      category: 'LOVE',
+      detail: {
+        code: 'LOVE',
+        title: '연애',
+        coreSummary: '연애에서는 감정의 깊이를 중요시합니다.',
+        contentBlocks: [],
+        keyPoints: [],
+      },
+    };
     mockedAxios.get.mockResolvedValue(responseWith(result));
 
-    await expect(getCurrentFortuneReport()).resolves.toEqual(result);
-    expect(mockedAxios.get).toHaveBeenCalledWith('/fortune-reports/me');
+    await expect(getCategorySajuReport({ reportId: 2, category: 'LOVE' })).resolves.toMatchObject(
+      result,
+    );
+    expect(mockedAxios.get).toHaveBeenCalledWith('/fortune-reports/2/details', {
+      params: { category: 'LOVE' },
+    });
   });
 });

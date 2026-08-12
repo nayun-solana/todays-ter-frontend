@@ -1,14 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
-import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
+import {
+  HOURS,
+  MINUTES,
+  birthYearsAscending,
+  clampDate,
+  dayOptions,
+  formatHour,
+  monthOptions,
+  pad,
+} from '../../lib/birthDate';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
+import {
+  useConvertGuestSession,
+  useInitGuestSession,
+  useSaveGuestSaju,
+} from '../../hooks/onboarding/useGuestOnboarding';
 import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
 import BirthTimeSkipSheet from './components/BirthTimeSkipSheet';
-import SelectField from './components/SelectField';
-import WheelPickerSheet, { type WheelColumnSpec } from './components/WheelPickerSheet';
+import SelectField from '../../components/SelectField';
+import WheelPickerSheet, { type WheelColumnSpec } from '../../components/WheelPickerSheet';
 
 type CalendarType = 'solar' | 'lunar';
 type OpenSheet = 'date' | 'time' | null;
@@ -22,10 +37,7 @@ interface TimeValue {
   minute: number;
 }
 
-const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 1 }, (_, i) => 1900 + i);
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const YEARS = birthYearsAscending();
 const DEFAULT_DATE: DateValue = { year: 2000, month: 1, day: 1 };
 const DEFAULT_TIME: TimeValue = { hour: 0, minute: 0 };
 
@@ -37,35 +49,6 @@ const GENDER_OPTIONS = [
   { value: 'MALE', label: '남자' },
   { value: 'FEMALE', label: '여자' },
 ] as const;
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const range = (length: number) => Array.from({ length }, (_, i) => i + 1);
-
-/**
- * 미래 날짜는 휠에 아예 올리지 않는다 — 고른 뒤 막는 게 아니라 고를 수 없게 하는 게 시안이다.
- * 올해를 고르면 이번 달까지, 이번 달을 고르면 오늘까지만 옵션이 생긴다.
- */
-function maxMonth(year: number) {
-  const now = new Date();
-  return year === now.getFullYear() ? now.getMonth() + 1 : 12;
-}
-
-function maxDay(year: number, month: number) {
-  const now = new Date();
-  if (year === now.getFullYear() && month === now.getMonth() + 1) return now.getDate();
-  // month는 1-based, Date의 day 0 = 전달 마지막 날 → 해당 월의 일수
-  return new Date(year, month, 0).getDate();
-}
-
-/** 연·월이 바뀌어 옵션이 줄면 월·일을 남은 범위 안으로 당긴다. */
-function clampDate({ year, month, day }: DateValue): DateValue {
-  const clampedMonth = Math.min(month, maxMonth(year));
-  return { year, month: clampedMonth, day: Math.min(day, maxDay(year, clampedMonth)) };
-}
-
-function formatHour(hour: number) {
-  return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
-}
 
 /** 달력 종류·성별처럼 2지선다를 pill로 고르는 그룹. (Figma 3099:1684) */
 function PillGroup<T extends string>({
@@ -123,15 +106,13 @@ export default function OnboardingPage1() {
   const [skipSheetOpen, setSkipSheetOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // 게스트 세션 보장(진입 경로 무관 안전망). 서버 idempotent — 쿠키 있으면 재사용.
+  // 게스트 세션 보장. 서버 idempotent — 쿠키 있으면 재사용.
+  // 마운트 시에도 부르던 것을 걷어냈다: SessionGate가 세션 없는 방문자를 여기 오기 전에 막으므로
+  // 그 호출은 닿지 않는 안전망이면서 진입마다 요청만 두 번 나갔다(배포본에서 실제 2회 확인).
+  const { isMember } = useAuthStatus();
   const initSession = useInitGuestSession();
-  useEffect(() => {
-    initSession.mutate();
-    // 마운트 시 1회. mutate는 안정 참조.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const saveSaju = useSaveGuestSaju();
+  const convertSession = useConvertGuestSession();
 
   const canSubmit =
     calendarType !== null && gender !== null && date !== null && (time !== null || unknownTime);
@@ -160,7 +141,7 @@ export default function OnboardingPage1() {
    * 서버가 idempotent하니 제출 시점에 한 번 더 보장하고 순서를 확정한다.
    */
   const submitSaju = async () => {
-    if (saveSaju.isPending) return; // 중복 제출 방지
+    if (saveSaju.isPending || convertSession.isPending) return; // 중복 제출 방지
     // 성별·생년월일은 앞 단계라 여기 도달 시 항상 채워져 있다. 타입 좁히기용 가드.
     if (gender === null || date === null) return;
 
@@ -168,6 +149,25 @@ export default function OnboardingPage1() {
     try {
       await initSession.mutateAsync();
       await saveSaju.mutateAsync(buildSajuRequest(gender, date));
+
+      /**
+       * 회원은 여기서 바로 회원 계정으로 옮긴다.
+       *
+       * 회원용 사주 저장 경로가 BE에 없어서(`PUT /members/me/saju`는 수정 전용) 회원도 게스트
+       * 세션으로 온보딩을 진행한 뒤 이전한다(`POST /api/guest-sessions/convert`).
+       *
+       * ⚠️ **이전 시점이 온보딩 끝이 아니라 여기다.** 다음 화면(온보딩2)이 곧바로
+       * `POST /fortune-reports`를 부르는데, BE는 회원 토큰이 있으면 `createForMember`로 가서
+       * `Onboarding` 행을 찾는다(`FortuneReportService`). 이전이 늦으면 그 행이 없어
+       * `ONBOARDING_NOT_FOUND`로 리포트 생성이 실패한다.
+       *
+       * 예전에는 회원이면 저장을 통째로 건너뛰고 step-2로 넘어갔다 — 사주가 어디에도 남지 않아
+       * 리포트 생성이 실패하고 고민 유형도 `MEMBER404_3`이 났다(#156 1번).
+       */
+      if (isMember) {
+        await convertSession.mutateAsync();
+      }
+
       navigate('/onboarding/step-2');
     } catch {
       setSubmitError('사주 정보를 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
@@ -217,13 +217,13 @@ export default function OnboardingPage1() {
       onChange: (year) => setDraftDate((prev) => clampDate({ ...prev, year })),
     },
     {
-      options: range(maxMonth(draftDate.year)),
+      options: monthOptions(draftDate.year),
       value: draftDate.month,
       format: (v) => `${v}월`,
       onChange: (month) => setDraftDate((prev) => clampDate({ ...prev, month })),
     },
     {
-      options: range(maxDay(draftDate.year, draftDate.month)),
+      options: dayOptions(draftDate.year, draftDate.month),
       value: draftDate.day,
       format: (v) => `${v}일`,
       onChange: (day) => setDraftDate((prev) => ({ ...prev, day })),
@@ -256,7 +256,7 @@ export default function OnboardingPage1() {
 
       <header className="mt-11 flex flex-col gap-4">
         <p className="text-base font-bold text-primary">내 사주 입력</p>
-        <h1 className="text-2xl font-extrabold leading-8 text-gray-6">
+        <h1 className="typo-head-1 text-gray-6">
           입력하신 생년월일시로
           <br />
           오행을 계산해요
@@ -298,7 +298,7 @@ export default function OnboardingPage1() {
                   type="button"
                   onClick={openSkipSheet}
                   className={cn(
-                    'flex items-center gap-1 self-start text-xs font-bold',
+                    'flex items-center gap-1 self-start typo-body-4',
                     unknownTime ? 'text-primary' : 'text-gray-3',
                   )}
                 >
@@ -322,13 +322,15 @@ export default function OnboardingPage1() {
 
       <div className="mt-auto flex flex-col gap-2">
         {submitError ? (
-          <p role="alert" className="text-center text-xs font-bold text-danger">
+          <p role="alert" className="text-center typo-body-4 text-danger">
             {submitError}
           </p>
         ) : null}
         <Button
           variant="primary"
-          disabled={!canSubmit || saveSaju.isPending || initSession.isPending}
+          disabled={
+            !canSubmit || saveSaju.isPending || initSession.isPending || convertSession.isPending
+          }
           onClick={() => void submitSaju()}
         >
           {saveSaju.isPending ? '저장 중…' : '내 기운 확인하기'}

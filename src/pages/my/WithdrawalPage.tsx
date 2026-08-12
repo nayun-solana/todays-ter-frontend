@@ -114,7 +114,7 @@ function WithdrawalCompletePage() {
 
       <Button
         onClick={() => navigate('/login')}
-        className="fixed bottom-[calc(1.875rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed inset-x-5 bottom-[calc(1.875rem+env(safe-area-inset-bottom))] w-auto"
       >
         시작 화면으로 돌아가기
       </Button>
@@ -234,7 +234,7 @@ export default function WithdrawalPage() {
       <Button
         disabled={!reason || !confirmedNotice || withdrawMutation.isPending}
         onClick={() => setConfirmOpen(true)}
-        className="fixed bottom-[calc(1.875rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed inset-x-5 bottom-[calc(1.875rem+env(safe-area-inset-bottom))] w-auto"
       >
         탈퇴 신청하기
       </Button>

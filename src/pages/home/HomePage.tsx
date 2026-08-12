@@ -5,17 +5,21 @@ import placeSample from '../../assets/home/place-sample.jpg';
 import notificationBell from '../../assets/notification-bell.svg';
 import notificationDot from '../../assets/notification-dot.svg';
 import GuestLoginPrompt from '../../components/GuestLoginPrompt';
+import SectionError from '../../components/SectionError';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useUnreadNotificationCount } from '../../hooks/notification/useNotification';
 import { formatKoreanDate } from '../../lib/date';
 import { hasUnreadNotificationCount } from '../../lib/notification';
+import { viewStateOf } from '../../lib/queryState';
 import {
   useEnergyRoutines,
   useHomeHeader,
   useRecommendedPlaces,
   useTodayEnergy,
 } from '../../hooks/home/useHome';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import { ohaengCssVar, toOhaengKey } from '../../lib/ohaeng';
+import { useTopColor } from '../../lib/topColor';
 import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
@@ -25,23 +29,6 @@ import { OHAENG_HOME } from './ohaeng';
 // 홈 데이터는 서버에서 온다. 실패했을 때 하드코딩된 값으로 화면을 채우면
 // 데이터가 안 왔다는 사실이 감춰지므로(배포본에서 실제로 그랬다), 로딩·에러를 각 영역에서 드러낸다.
 // 오행 테마(배경 그라데이션)만 로드 전 water로 두는데, 이건 데이터가 아니라 색상 뼈대다.
-
-/**
- * 화면에 보여줄 상태 판정. 데이터가 실제로 손에 있는지를 기준으로 한다.
- *
- * `isError`만 보면 안 된다 — react-query는 브라우저가 오프라인이라고 판단하면 재시도를 멈추고
- * `fetchStatus: 'paused'` + `status: 'pending'`으로 붙잡아 둔다. 그러면 에러 UI가 영영 안 뜨고
- * 스켈레톤만 남는다(실측으로 확인). 멈춘 것도 실패로 보여줘야 사용자가 다시 시도할 수 있다.
- */
-function viewStateOf(query: {
-  data: unknown;
-  isError: boolean;
-  fetchStatus: 'fetching' | 'paused' | 'idle';
-}): 'loading' | 'failed' | 'ready' {
-  if (query.data !== undefined) return 'ready';
-  if (query.isError || query.fetchStatus === 'paused') return 'failed';
-  return 'loading';
-}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -55,7 +42,9 @@ export default function HomePage() {
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
   const routinesQuery = useEnergyRoutines();
-  const recommendedQuery = useRecommendedPlaces();
+  // 좌표가 있으면 카드에 거리가 찍힌다. 거부·미지원이면 좌표 없이 그대로 조회한다.
+  const coords = useGeolocation();
+  const recommendedQuery = useRecommendedPlaces({ coords });
 
   const header = headerQuery.data;
   const routines = routinesQuery.data;
@@ -74,6 +63,9 @@ export default function HomePage() {
   const energy = energyQuery.data;
   const ohaengKey = energy ? toOhaengKey(energy.element.code) : 'water';
   const theme = OHAENG_HOME[ohaengKey];
+  // 노치·고무줄 영역은 화면이 못 칠하는 자리라 브라우저에 색을 따로 알려준다.
+  // 홈은 오행마다 배경이 달라 그 색을 그대로 넘긴다.
+  useTopColor(ohaengCssVar(ohaengKey));
 
   // 루틴 섹션 제목은 BE가 안 준다 — 오행 표시명으로 만든다("토" → "토기 에너지 루틴", 시안 기준).
   const routineTitle = routines ? `${routines.element.name}기 에너지 루틴` : '';
@@ -144,7 +136,7 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-col gap-2">
                   {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
-                  <p className="text-2xl font-extrabold">{header?.greeting}</p>
+                  <p className="typo-head-1">{header?.greeting}</p>
                   <p className="text-[17px] font-bold">{header?.subGreeting}</p>
                 </div>
               </>
@@ -164,11 +156,7 @@ export default function HomePage() {
                 className="absolute top-[2.5px] left-1 h-[21px] w-[18px]"
               />
               {hasUnreadNotificationCount(unreadCountQuery.data) ? (
-                <img
-                  src={notificationDot}
-                  alt=""
-                  className="absolute top-0 right-0 size-[3px]"
-                />
+                <img src={notificationDot} alt="" className="absolute top-0 right-0 size-[3px]" />
               ) : null}
             </button>
           )}
@@ -208,9 +196,7 @@ export default function HomePage() {
             <section className="flex flex-col gap-4">
               <h2 className="text-lg font-extrabold text-gray-6">오늘 가장 잘 맞는 터</h2>
               <div className="flex flex-col gap-3">
-                {recommendedState === 'loading' && (
-                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
-                )}
+                {recommendedState === 'loading' && <RecommendedPlaceCardSkeleton />}
                 {recommendedState === 'failed' && (
                   <SectionError
                     message="추천 터를 불러오지 못했어요."
@@ -226,7 +212,7 @@ export default function HomePage() {
                 {/* 잠금 게이트는 가릴 추천이 실제로 더 있을 때만 — 로딩·에러 상태에서 빈 오버레이가 뜨지 않게 한다 */}
                 {recommendedState === 'ready' && hasLockedMore && isAuthPending && (
                   // 회원 판정 전 — 게이트를 띄우면 복원되는 회원에게 깜빡였다 사라진다. 자리만 잡는다.
-                  <BlockSkeleton className="h-[224px] rounded-[20px]" label="추천 터 불러오는 중" />
+                  <RecommendedPlaceCardSkeleton />
                 )}
                 {recommendedState === 'ready' && hasLockedMore && !isAuthPending && (
                   // 서버가 잠긴 카드는 아예 내려주지 않으므로 가릴 대상이 없다 —
@@ -283,12 +269,40 @@ function OnboardingPrompt({ onStart }: { onStart: () => void }) {
 }
 
 /** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
+/**
+ * 추천 카드 로딩 자리.
+ *
+ * 예전에는 224px짜리 빈 블록 하나였다. 흰 배경 위에 흰색 반투명이라 배경과 거의 구분되지
+ * 않아 "카드가 올 자리"가 아니라 그냥 빈 구멍처럼 보였다. 실제 카드와 같은 구조
+ * (이미지 120px + 하단 설명 영역)를 세워 두면 뜰 내용을 미리 짐작할 수 있고,
+ * 로드된 뒤 레이아웃이 튀지 않는다.
+ */
+function RecommendedPlaceCardSkeleton() {
+  return (
+    <div role="status" aria-label="추천 터 불러오는 중" className="w-full animate-pulse">
+      {/* 이미지 자리 — 실제 카드와 같은 120px */}
+      <div className="flex h-[120px] flex-col justify-between rounded-t-[20px] bg-gray-3 px-[18px] py-4">
+        <span className="h-6 w-16 rounded-md bg-white/50" />
+        <span className="h-4 w-32 rounded bg-white/60" />
+      </div>
+      {/* 하단 설명 자리 */}
+      <div className="flex flex-col gap-2.5 rounded-b-[20px] bg-white p-[15px] shadow-[0_0_15px_0_rgba(0,0,0,0.05)]">
+        <span className="h-3 w-full rounded bg-gray-2" />
+        <span className="h-3 w-2/3 rounded bg-gray-2" />
+        <span className="h-3 w-20 rounded bg-gray-2" />
+      </div>
+    </div>
+  );
+}
+
 function BlockSkeleton({ className, label }: { className: string; label: string }) {
   return (
     <div
       role="status"
       aria-label={label}
-      className={`w-full animate-pulse bg-white/60 ${className}`}
+      // 배경(gray-1 #fafafa) 위에 흰색 반투명이면 거의 구분되지 않아 빈 구멍처럼 보였다.
+      // 카드가 올 자리라는 걸 알리려면 배경보다 확실히 어두워야 한다.
+      className={`w-full animate-pulse bg-gray-2 ${className}`}
     />
   );
 }
@@ -305,42 +319,6 @@ function HeaderSkeleton() {
         <div className="h-8 w-56 rounded bg-white/50" />
         <div className="h-[19px] w-44 rounded bg-white/50" />
       </div>
-    </div>
-  );
-}
-
-/**
- * 영역 단위 실패 안내. 홈은 4개 API가 독립적이라 한 곳이 실패해도 나머지는 보여준다.
- * tone='light'는 배경 그라데이션 위(인사말 영역)에서 쓰는 흰 글씨 버전.
- */
-function SectionError({
-  message,
-  onRetry,
-  tone = 'dark',
-}: {
-  message: string;
-  onRetry: () => void;
-  tone?: 'dark' | 'light';
-}) {
-  const isLight = tone === 'light';
-
-  return (
-    <div
-      role="alert"
-      className={`flex items-center justify-between gap-3 rounded-[20px] px-5 py-4 ${
-        isLight ? 'bg-white/20 text-white' : 'bg-white text-gray-5'
-      }`}
-    >
-      <p className="text-sm font-bold">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
-          isLight ? 'bg-white/30 text-white' : 'bg-gray-1 text-primary'
-        }`}
-      >
-        다시 시도
-      </button>
     </div>
   );
 }

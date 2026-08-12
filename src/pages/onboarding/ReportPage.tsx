@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import { CloseIcon } from '../../components/icons';
 import ContentBox from './components/ContentBox';
 import OhaengIcon from './components/OhaengIcon';
+import { ohaengByCode } from '../../lib/ohaeng';
 import ElementRadarChart from './components/ElementRadarChart';
 //types
 import type { ElementCode } from '../../types/onboarding/report';
@@ -40,46 +41,17 @@ function ReportNotice({
 }
 
 export default function ReportPage() {
-  // status bar 색상 변경 (iOS Safari, Android Chrome)
-  useEffect(() => {
-    const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-
-    const themeColor = existingThemeColor ?? document.createElement('meta');
-
-    const wasThemeColorCreated = !existingThemeColor;
-    const previousThemeColor = themeColor.getAttribute('content');
-
-    const previousHtmlBackground = document.documentElement.style.backgroundColor;
-    const previousBodyBackground = document.body.style.backgroundColor;
-
-    if (wasThemeColorCreated) {
-      themeColor.name = 'theme-color';
-      document.head.appendChild(themeColor);
-    }
-
-    themeColor.setAttribute('content', STATUS_BAR_COLOR);
-    document.documentElement.style.backgroundColor = STATUS_BAR_COLOR;
-    document.body.style.backgroundColor = STATUS_BAR_COLOR;
-
-    return () => {
-      if (wasThemeColorCreated) {
-        themeColor.remove();
-      } else if (previousThemeColor !== null) {
-        themeColor.setAttribute('content', previousThemeColor);
-      } else {
-        themeColor.removeAttribute('content');
-      }
-
-      document.documentElement.style.backgroundColor = previousHtmlBackground;
-
-      document.body.style.backgroundColor = previousBodyBackground;
-    };
-  }, []);
-
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const isMyReport = searchParams.get('from') === 'my';
+  const isSajuEditReport = searchParams.get('source') === 'saju-edit';
+  const isReadOnlyMyReport = isMyReport && !isSajuEditReport;
+
+  const reportContext = new URLSearchParams();
+  if (isMyReport) reportContext.set('from', 'my');
+  if (isSajuEditReport) reportContext.set('source', 'saju-edit');
+  const reportContextQuery = reportContext.toString();
 
   // 예전에는 화면 안에 목 객체가 박혀 있고 훅 호출은 주석 처리돼 있었다 — 실서버 값이 아니었다.
   const reportId = Number(id);
@@ -157,23 +129,6 @@ export default function ReportPage() {
     );
   }
 
-  const parseElementCodeandColor = (code: ElementCode) => {
-    switch (code) {
-      case 'WOOD':
-        return { label: '목', color: 'bg-ohaeng-wood' };
-      case 'FIRE':
-        return { label: '화', color: 'bg-ohaeng-fire' };
-      case 'EARTH':
-        return { label: '토', color: 'bg-ohaeng-earth' };
-      case 'METAL':
-        return { label: '금', color: 'bg-ohaeng-metal' };
-      case 'WATER':
-        return { label: '수', color: 'bg-ohaeng-water' };
-      default:
-        return { label: '', color: '' };
-    }
-  };
-
   return (
     <div className="relative mx-auto min-h-dvh bg-primary-bg">
       <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
@@ -226,7 +181,7 @@ export default function ReportPage() {
               {/* 오른쪽 오행 분포 */}
               <div className="flex w-40 shrink-0 flex-col gap-3">
                 {report!.elementDistribution.map((item) => {
-                  const { color } = parseElementCodeandColor(item.element);
+                  const color = ohaengByCode(item.element)?.bg ?? '';
                   // 라벨은 BE가 준 값을 그대로 쓴다.
                   const label = item.label;
                   // 실응답은 소수점이 있다(0.3 / 43.2). 36px 칸에 "43.2%"가 들어가면 넘친다.
@@ -280,7 +235,7 @@ export default function ReportPage() {
           <Button
             variant="primary"
             onClick={() => {
-              navigate(`/report/${id}/detail${isMyReport ? '?from=my' : ''}`);
+              navigate(`/report/${id}/detail${reportContextQuery ? `?${reportContextQuery}` : ''}`);
             }}
             className="flex items-center justify-center gap-3"
           >
@@ -288,16 +243,17 @@ export default function ReportPage() {
 
             <img src={RightIcon} alt="right" className="" />
           </Button>
-          {/* Figma 3514:5416 — outline CTA는 primary-bg 채움 + primary-light 테두리 */}
-          <Button
-            variant="secondary"
-            className="border-primary-light bg-primary-bg"
-            onClick={() => {
-              navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
-            }}
-          >
-            {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
-          </Button>
+          {!isReadOnlyMyReport ? (
+            <Button
+              variant="secondary"
+              className="border-primary-light bg-primary-bg"
+              onClick={() => {
+                navigate(isMyReport ? '/my/concerns' : '/onboarding/step-3');
+              }}
+            >
+              {isMyReport ? '고민유형 수정하기' : '상세 분석 없이 고민유형 선택하기'}
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

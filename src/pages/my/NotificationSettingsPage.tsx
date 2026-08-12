@@ -8,6 +8,7 @@ import {
   useUpdateNotificationSettings,
 } from '../../hooks/notification/useNotification';
 import type { NotificationSettingsResponse } from '../../types/notification/notification';
+import { loadFailureMessage, loadingMessage } from '../../lib/messages';
 
 const CYCLE_LABELS: Record<string, string> = {
   EVERY_DAY: '매일',
@@ -39,13 +40,7 @@ function NotificationToggleCard({
   );
 }
 
-function SettingRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function SettingRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex h-11 items-center justify-between border-t border-gray-2 text-gray-5">
       <span className="typo-body-3">{label}</span>
@@ -74,10 +69,10 @@ export default function NotificationSettingsPage() {
 
       <main className="space-y-5 px-5 pt-5 pb-8">
         {notificationSettingsQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">알림 설정을 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-gray-4">{loadingMessage('알림 설정')}</p>
         ) : null}
         {notificationSettingsQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">알림 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('알림 설정')}</p>
         ) : null}
 
         <section>
@@ -87,7 +82,9 @@ export default function NotificationSettingsPage() {
               <div className="flex min-h-[36px] items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="typo-body-3 text-gray-6">오늘의 터 리마인드</p>
-                  <p className="typo-caption mt-2 text-primary">설정한 간격과 시간에 맞춰 알려드려요.</p>
+                  <p className="typo-caption mt-2 text-primary">
+                    설정한 간격과 시간에 맞춰 알려드려요.
+                  </p>
                 </div>
                 <Toggle
                   checked={notificationSettings?.isTodayRemind ?? false}

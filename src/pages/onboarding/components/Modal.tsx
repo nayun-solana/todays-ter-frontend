@@ -3,16 +3,30 @@ import { useEffect } from 'react';
 // assets
 import PartyIcon from '../../../assets/onboarding/party.svg';
 import ErrorDotIcon from '../../../assets/onboarding/error-dot.svg';
+import { useScrollLock } from '../../../lib/scrollLock';
 
 type Props = {
   isOpen: boolean;
   onClick: () => void;
   isSuccess: boolean;
+  /**
+   * 실패 모달의 버튼 문구. 기본값은 '다시 시도'다.
+   * 서버가 재시도를 허용하지 않으면(canRetry=false) 이 버튼은 재시도가 아니라 화면을
+   * 빠져나가는 동작을 하므로, 호출부가 문구를 실제 동작에 맞게 바꿀 수 있어야 한다.
+   */
+  failureActionLabel?: string;
 };
 
 const MODAL_STATUS_BAR_COLOR = '#243364';
 
-export default function Modal({ isOpen, onClick, isSuccess }: Props) {
+export default function Modal({
+  isOpen,
+  onClick,
+  isSuccess,
+  failureActionLabel = '다시 시도',
+}: Props) {
+  // 시트가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다.
+  useScrollLock(isOpen);
   useEffect(() => {
     if (!isOpen) return;
 
@@ -97,7 +111,7 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
               )}
             </p>
 
-            <p className="text-center text-xs font-normal text-gray-6">
+            <p className="text-center typo-sub-2 text-gray-6">
               {isSuccess ? (
                 <>
                   생성된 리포트는 마이페이지에서
@@ -121,7 +135,7 @@ export default function Modal({ isOpen, onClick, isSuccess }: Props) {
           className="flex h-12 w-full items-center justify-center rounded-btn bg-primary py-4"
         >
           <span className="text-sm font-bold text-white">
-            {isSuccess ? '리포트 보러가기' : '다시 시도'}
+            {isSuccess ? '리포트 보러가기' : failureActionLabel}
           </span>
         </button>
       </div>

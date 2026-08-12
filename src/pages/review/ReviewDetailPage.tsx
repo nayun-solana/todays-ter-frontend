@@ -5,16 +5,17 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { useRecordDetail } from '../../hooks/review/useReview';
 import { recordDetailImagesOf } from '../../types/record/record';
-import type { PlaceDay } from '../record/components/RecordPlaceCard';
-import ShareCardModal from '../record/components/ShareCardModal';
-import Button from './components/Button';
-import DeleteReviewModal from './components/DeleteReviewModal';
+import ShareCardModal from '../../components/ShareCardModal';
+import type { OhaengLabel } from '../../lib/ohaeng';
+import Button from '../../components/Button';
+import DeleteReviewModal from '../../components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
-import ReviewMoreMenu from './components/ReviewMoreMenu';
-import StarRating from './components/StarRating';
+import ReviewMoreMenu from '../../components/ReviewMoreMenu';
+import StarRating from '../../components/StarRating';
+import { loadFailureMessageBrief } from '../../lib/messages';
 
 type ReviewDetailLocationState = {
-  element?: PlaceDay;
+  element?: OhaengLabel;
 };
 
 /** ISO/날짜 문자열 → "2025.06.28" */
@@ -50,7 +51,7 @@ export default function ReviewDetailPage() {
   }, [isMenuOpen]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1" data-record-id={recordId}>
+    <div className="flex min-h-dvh flex-col bg-gray-1" data-record-id={recordId}>
       <ReviewHeader
         title="후기 상세"
         rightSlot={
@@ -84,19 +85,15 @@ export default function ReviewDetailPage() {
       {reviewQuery.isPending ? (
         <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
       ) : reviewQuery.isError ? (
-        <p className="px-5 py-8 text-sm text-gray-4">후기를 불러오지 못했습니다.</p>
+        <p className="px-5 py-8 text-sm text-gray-4">{loadFailureMessageBrief('후기')}</p>
       ) : review ? (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
             <div className="size-25 shrink-0 overflow-hidden rounded-xl bg-gray-3">
-              {photos[0] ? (
-                <img src={photos[0]} alt="" className="size-full object-cover" />
-              ) : null}
+              {photos[0] ? <img src={photos[0]} alt="" className="size-full object-cover" /> : null}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-4">
-                방문 인증 완료 · {formatDate(review.createdAt)}
-              </p>
+              <p className="text-xs text-gray-4">방문 인증 완료 · {formatDate(review.createdAt)}</p>
               <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
             </div>
           </section>
@@ -124,7 +121,7 @@ export default function ReviewDetailPage() {
 
           <div className="flex-1" />
 
-          <Button className="mx-5 mb-5 w-auto" onClick={() => setIsShareOpen(true)}>
+          <Button size="padded" className="mx-5 mb-5 w-auto" onClick={() => setIsShareOpen(true)}>
             스토리 공유하기
           </Button>
         </div>
@@ -136,13 +133,16 @@ export default function ReviewDetailPage() {
             if (!deleteRecord.isPending) setIsDeleteModalOpen(false);
           }}
           onConfirm={() => {
-            if (!recordId || deleteRecord.isPending) return;
-            deleteRecord.mutate(recordId, {
-              onSuccess: () => {
-                setIsDeleteModalOpen(false);
-                navigate('/record', { replace: true });
+            if (!recordId || !review || deleteRecord.isPending) return;
+            deleteRecord.mutate(
+              { recordId, placeId: review.placeId },
+              {
+                onSuccess: () => {
+                  setIsDeleteModalOpen(false);
+                  navigate('/record', { replace: true });
+                },
               },
-            });
+            );
           }}
         />
       ) : null}

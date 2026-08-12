@@ -1,24 +1,26 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import type { ApiError } from '../../api/types';
+import { apiErrorStatusOf, type ApiError } from '../../api/types';
 import FileAttachButton from '../../components/FileAttachButton';
 import OhaengBadge from '../../components/OhaengBadge';
+import SectionError from '../../components/SectionError';
 import TextInput from '../../components/TextInput';
 import { useSubmitRecord, useSubmitRecordUpdate } from '../../hooks/record/useRecord';
 import { useRecommendationDetail } from '../../hooks/recommendation/useRecommendation';
 import { useRecordDetail } from '../../hooks/review/useReview';
 import { ohaengByKey } from '../../lib/ohaeng';
 import { viewStateOf } from '../../lib/queryState';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
 import {
   recordDetailImagesOf,
   type RecordDetailImage,
   type RecordDetailResponse,
 } from '../../types/record/record';
-import Button from './components/Button';
+import Button from '../../components/Button';
 import ReviewHeader from './components/ReviewHeader';
-import StarRating from './components/StarRating';
+import StarRating from '../../components/StarRating';
+import { loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
 
 type ReviewPageProps = {
   mode?: 'create' | 'edit';
@@ -74,13 +76,18 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1">
+    <div className="flex min-h-dvh flex-col bg-gray-1">
       <ReviewHeader title="방문 기록하기" />
 
       {viewState === 'loading' ? (
-        <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
+        <ReviewPlaceCardSkeleton />
       ) : viewState === 'failed' || !place ? (
-        <p className="px-5 py-8 text-sm text-gray-4">장소 정보를 불러오지 못했습니다.</p>
+        <div className="px-5 py-8">
+          <SectionError
+            message={loadFailureMessageBrief('장소 정보')}
+            onRetry={() => void detailQuery.refetch()}
+          />
+        </div>
       ) : (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-4 border-b border-gray-2 bg-white px-5 py-4">
@@ -97,7 +104,7 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
                   <OhaengBadge element={elementLabel} className="px-3 py-2 text-xs" />
                 ) : null}
                 {hashtag ? (
-                  <span className="rounded-full border border-gray-3 bg-white px-3 py-2 text-xs font-bold text-gray-5">
+                  <span className="rounded-full border border-gray-3 bg-white px-3 py-2 typo-body-4 text-gray-5">
                     # {hashtag}
                   </span>
                 ) : null}
@@ -127,7 +134,12 @@ function CreateReviewForm({ placeIdParam }: { placeIdParam?: string }) {
 
           <div className="flex-1" />
 
-          <Button disabled={!canSubmit} className="mx-5 mb-5 w-auto" onClick={handleSubmit}>
+          <Button
+            size="padded"
+            disabled={!canSubmit}
+            className="mx-5 mb-5 w-auto"
+            onClick={handleSubmit}
+          >
             {submitRecord.isPending ? '저장 중…' : '방문 기록 저장하기'}
           </Button>
         </div>
@@ -176,6 +188,9 @@ function EditReviewForm({
     updateRecord.mutate(
       {
         recordId,
+        // 이 후기가 달린 장소의 후기 목록도 비워야 한다. 안 넘기면 장소 상세가 옛 별점을
+        // 계속 보여준다(#174에서 PlaceReviewPage만 고치고 이 경로를 빠뜨렸다).
+        placeId: initial.placeId,
         rating,
         content: memo,
         files,
@@ -191,7 +206,7 @@ function EditReviewForm({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-1">
+    <div className="flex min-h-dvh flex-col bg-gray-1">
       <ReviewHeader title="후기 수정하기" />
 
       <div className="flex flex-1 flex-col gap-3">
@@ -202,12 +217,8 @@ function EditReviewForm({
             ) : null}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-gray-4">
-              방문 인증 완료 · {formatDate(initial.createdAt)}
-            </p>
-            <h2 className="mt-2 truncate text-base font-bold text-gray-6">
-              {initial.placeName}
-            </h2>
+            <p className="text-xs text-gray-4">방문 인증 완료 · {formatDate(initial.createdAt)}</p>
+            <h2 className="mt-2 truncate text-base font-bold text-gray-6">{initial.placeName}</h2>
           </div>
         </section>
 
@@ -244,7 +255,12 @@ function EditReviewForm({
 
         <div className="flex-1" />
 
-        <Button disabled={!canSubmit} className="mx-5 mb-5 w-auto" onClick={handleSubmit}>
+        <Button
+          size="padded"
+          disabled={!canSubmit}
+          className="mx-5 mb-5 w-auto"
+          onClick={handleSubmit}
+        >
           {updateRecord.isPending ? '수정 중…' : '후기 수정하기'}
         </Button>
       </div>
@@ -252,7 +268,29 @@ function EditReviewForm({
   );
 }
 
+/**
+ * 로딩 자리표시자. 폼 상단 장소 카드(size-25 이미지 + 텍스트)와 같은 높이를 잡는다.
+ * 폭은 실물과 같이 부모를 따라간다 — 고정하는 건 높이뿐이다.
+ */
+function ReviewPlaceCardSkeleton() {
+  return (
+    <section
+      role="status"
+      aria-label={loadingMessage('장소 정보')}
+      className="flex items-center gap-4 border-b border-gray-2 bg-white px-5 py-4"
+    >
+      <div className="size-25 shrink-0 animate-pulse rounded-2xl bg-gray-2" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="h-3 w-24 max-w-full animate-pulse rounded bg-gray-2" />
+        <div className="h-4 w-40 max-w-full animate-pulse rounded bg-gray-2" />
+        <div className="h-8 w-32 max-w-full animate-pulse rounded-full bg-gray-2" />
+      </div>
+    </section>
+  );
+}
+
 export default function ReviewPage({ mode = 'create' }: ReviewPageProps) {
+  const navigate = useNavigate();
   const { id: placeIdParam, recordId } = useParams();
   const isEdit = mode === 'edit';
   const reviewQuery = useRecordDetail(isEdit ? recordId : undefined);
@@ -260,18 +298,42 @@ export default function ReviewPage({ mode = 'create' }: ReviewPageProps) {
   if (isEdit) {
     if (reviewQuery.isPending) {
       return (
-        <div className="flex min-h-screen flex-col bg-gray-1">
+        <div className="flex min-h-dvh flex-col bg-gray-1" aria-busy="true">
           <ReviewHeader title="후기 수정하기" />
-          <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
+          <ReviewPlaceCardSkeleton />
         </div>
       );
     }
 
     if (reviewQuery.isError || !reviewQuery.data || !recordId) {
+      // 이미 지운 기록은 다시 시도해봐야 영영 404다 — 재시도 대신 기록 탭으로 돌려보낸다.
+      const status = apiErrorStatusOf(reviewQuery.error);
+      const isUnreachable = status === 404 || status === 400;
+
       return (
-        <div className="flex min-h-screen flex-col bg-gray-1">
+        <div className="flex min-h-dvh flex-col bg-gray-1">
           <ReviewHeader title="후기 수정하기" />
-          <p className="px-5 py-8 text-sm text-gray-4">후기를 불러오지 못했습니다.</p>
+          <div className="px-5 py-8">
+            {isUnreachable ? (
+              <>
+                <p className="text-sm text-gray-4">
+                  {status === 404 ? '이미 삭제된 후기예요.' : '잘못된 주소로 들어왔어요.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/record?tab=visited', { replace: true })}
+                  className="mt-4 rounded-btn border border-primary bg-white px-4 py-2 text-sm font-bold text-primary"
+                >
+                  내 터로 돌아가기
+                </button>
+              </>
+            ) : (
+              <SectionError
+                message={loadFailureMessageBrief('후기')}
+                onRetry={() => void reviewQuery.refetch()}
+              />
+            )}
+          </div>
         </div>
       );
     }

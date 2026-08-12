@@ -30,12 +30,16 @@ export function useShareAction() {
   }, []);
 
   const share = useCallback(
-    async (params: { url: string; title: string; text?: string }) => {
-      const { url, title, text } = params;
+    async (params: { url: string; title: string }) => {
+      const { url, title } = params;
 
       if (navigator.share) {
         try {
-          await navigator.share({ title, text, url });
+          // ⚠️ `text`는 넘기지 않는다. OS 공유 시트에서 "복사"를 고르면 플랫폼이 text와 url을
+          // **이어붙여** 클립보드에 넣어서, 붙여넣은 주소의 토큰 뒤에 문구가 딸려간다
+          // (`/matched-ter/shared/{token}%20오늘의%20터에서...` → 404). 링크 공유가 목적이라
+          // title + url이면 충분하다.
+          await navigator.share({ title, url });
           notify('shared');
           return;
         } catch (error) {

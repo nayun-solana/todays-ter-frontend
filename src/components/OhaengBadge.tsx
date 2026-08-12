@@ -1,41 +1,31 @@
 import { cn } from '../lib/cn';
-import { ohaengByLabel } from '../lib/ohaeng';
+import { ohaengByLabel, type OhaengLabel } from '../lib/ohaeng';
 import OhaengOrb from './OhaengOrb';
 
-export type OhaengElement = '목' | '화' | '토' | '금' | '수';
-
-const OHAENG_CLASS: Record<OhaengElement, string> = {
-  목: 'bg-ohaeng-wood',
-  화: 'bg-ohaeng-fire',
-  토: 'bg-ohaeng-earth',
-  금: 'bg-ohaeng-metal',
-  수: 'bg-ohaeng-water',
-};
+/** @deprecated 표시명 대신 `OhaengLabel`을 쓸 것. 남은 호출부 호환용 별칭. */
+export type OhaengElement = OhaengLabel;
 
 interface OhaengBadgeProps {
-  element: OhaengElement;
+  element: OhaengLabel;
   className?: string;
   /** 구슬 크기(px). 기본 16 */
   orbSize?: number;
 }
 
-export default function OhaengBadge({
-  element,
-  className,
-  orbSize = 16,
-}: OhaengBadgeProps) {
+export default function OhaengBadge({ element, className, orbSize = 16 }: OhaengBadgeProps) {
   const ohaeng = ohaengByLabel(element);
+  if (!ohaeng) return null;
 
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-3 py-1 font-sans text-sm font-bold text-white',
-        OHAENG_CLASS[element],
+        ohaeng.bg,
         className,
       )}
     >
       <span>{element}</span>
-      {ohaeng ? <OhaengOrb element={ohaeng.key} size={orbSize} /> : null}
+      <OhaengOrb element={ohaeng.key} size={orbSize} />
     </span>
   );
 }

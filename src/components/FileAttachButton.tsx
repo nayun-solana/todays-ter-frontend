@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from 'react';
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import { Plus, X } from 'lucide-react';
 
 import { cn } from '../lib/cn';

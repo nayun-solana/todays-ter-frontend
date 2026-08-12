@@ -53,10 +53,9 @@ export const UpdateRecordRequest = z
     content: z.string().optional(),
     imageIds: z.array(z.number().int().nonnegative()).optional(),
   })
-  .refine(
-    (body) => body.rating != null || body.content != null || body.imageIds != null,
-    { message: '수정할 필드가 없습니다.' },
-  );
+  .refine((body) => body.rating != null || body.content != null || body.imageIds != null, {
+    message: '수정할 필드가 없습니다.',
+  });
 export type UpdateRecordRequest = z.infer<typeof UpdateRecordRequest>;
 
 /** 상세 조회용 id — RECORD면 recordId, REVIEW면 reviewId */

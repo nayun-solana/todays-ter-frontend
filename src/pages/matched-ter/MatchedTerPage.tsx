@@ -11,7 +11,7 @@ import {
 } from '../../hooks/recommendation/useRecommendation';
 import { useShareAction } from '../../hooks/recommendation/useShareAction';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { toOhaengKey } from '../../types/home/homeEnergy';
+import { toOhaengKey } from '../../lib/ohaeng';
 import type { RecommendationDetail } from '../../types/recommendation/recommendationDetail';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
 import ImageCarousel from './components/ImageCarousel';
@@ -28,6 +28,9 @@ type MatchedTerPageProps = {
   /** 공유 링크로 들어온 화면. 데이터 출처가 공유 스냅샷이고 공유·북마크 액션이 없다. */
   variant?: 'default' | 'shared';
 };
+
+/** 추천 상세 앱바 제목. 본문·안내·스켈레톤 세 곳이 같이 쓴다. */
+const PAGE_TITLE = '오늘 가장 잘 맞는 터';
 
 /**
  * 나와 어울리는 터(추천 상세).
@@ -80,7 +83,9 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
 
   // 오행은 code로 매핑한다 — 표시명("토")은 BE가 문구를 다듬으면 같이 깨진다.
   const meta = ohaengByKey(data.primaryElement ? toOhaengKey(data.primaryElement.code) : 'water')!;
-  const canShare = !isShared && !shareUnavailable;
+  // 저장·공유 모두 회원 전용으로 잠근다. 예전에는 저장을 누르면 /login으로 보냈는데,
+  // 보던 화면이 끊기고 같은 화면의 '다녀왔어요'(잠금)와 규칙도 어긋났다.
+  const canShare = !isShared && !shareUnavailable && isMember;
 
   const handleShare = async () => {
     const url = shareUrl ?? (await ensureShareUrl());
@@ -92,29 +97,23 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       return;
     }
 
-    await share({
-      url,
-      title: `${data.placeName} — 나와 어울리는 터`,
-      text: '오늘의 터에서 받은 추천이에요.',
-    });
+    await share({ url, title: `${data.placeName} — 나와 어울리는 터` });
   };
 
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-28">
       <MatchedTerAppBar
-        title="나와 어울리는 터"
+        title={PAGE_TITLE}
         onShare={canShare ? handleShare : undefined}
         onSharePrefetch={canShare ? prefetchShareLink : undefined}
         isSaved={data.isSaved ?? false}
         // 연타로 PATCH가 겹치지 않게 진행 중에는 잠근다.
         onToggleBookmark={
-          isShared || bookmark.isPending
+          isShared || !isMember || bookmark.isPending
             ? undefined
-            : () =>
-                isMember
-                  ? bookmark.mutate(!(data.isSaved ?? false))
-                  : navigate('/login', { state: { from: `/matched-ter/${id}` } })
+            : () => bookmark.mutate(!(data.isSaved ?? false))
         }
+        disabledReason={isMember ? undefined : '로그인 필요'}
         showActions={!isShared}
       />
 
@@ -154,7 +153,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       {shareResult && <ShareToast result={shareResult} />}
 
       {/* 하단 고정 액션바. 공유 화면에서는 후기 작성이 남의 추천에 붙으므로 감춘다. */}
-      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-[375px] -translate-x-1/2 gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         {isShared ? (
           <Button variant="primary" onClick={() => navigate('/home')}>
             나도 추천 받기
@@ -212,7 +211,7 @@ function ShareToast({ result }: { result: keyof typeof SHARE_TOAST_TEXT }) {
 function NoticeShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <MatchedTerAppBar title="나와 어울리는 터" showActions={false} />
+      <MatchedTerAppBar title={PAGE_TITLE} showActions={false} />
       <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 text-center">
         {children}
       </div>
@@ -268,8 +267,8 @@ function DetailLoadFailed({ onRetry, onBack }: { onRetry: () => void; onBack: ()
 /** 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다. */
 function MatchedTerSkeleton({ isShared }: { isShared: boolean }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-28" aria-busy="true">
-      <MatchedTerAppBar title="나와 어울리는 터" showActions={!isShared} />
+    <div className="flex min-h-dvh flex-col bg-white pb-28" aria-busy="true">
+      <MatchedTerAppBar title={PAGE_TITLE} showActions={!isShared} />
       <div className="flex flex-col gap-5 px-5 pt-4">
         <span className="sr-only" role="status">
           터 정보를 불러오는 중

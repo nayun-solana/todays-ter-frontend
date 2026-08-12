@@ -1,71 +1,45 @@
-// assets
-import waterIcon from '../../../assets/orb-water.png';
-import woodIcon from '../../../assets/orb-wood.png';
-import fireIcon from '../../../assets/orb-fire.png';
-import earthIcon from '../../../assets/orb-earth.png';
-import metalIcon from '../../../assets/orb-metal.png';
+import { cn } from '../../../lib/cn';
+import { ohaengByCode, type OhaengCode } from '../../../lib/ohaeng';
+
+type OhaengIconType = 'primary' | 'complementary' | 'secondary';
 
 type Props = {
-  element: string;
-  type: 'primary' | 'complementary' | 'secondary';
+  /** BE 오행 코드. 표시명이 아니라 코드로 받는다 — 한글은 BE가 문구를 다듬으면 깨진다. */
+  element: OhaengCode;
+  type: OhaengIconType;
+  /** complementary일 때 테두리 색 클래스. 기본 primary. */
   border?: string;
+  /** complementary일 때 글자 색 클래스. 기본 primary. */
   textColor?: string;
 };
 
-export default function Orb({ element, type, border, textColor }: Props) {
-  const getIcon = () => {
-    switch (element) {
-      case 'WATER':
-        return waterIcon;
-      case 'WOOD':
-        return woodIcon;
-      case 'FIRE':
-        return fireIcon;
-      case 'EARTH':
-        return earthIcon;
-      case 'METAL':
-        return metalIcon;
-    }
-  };
+const SURFACE: Record<OhaengIconType, string> = {
+  primary: 'bg-primary border border-primary',
+  complementary: 'bg-white border',
+  secondary: 'bg-primary border border-white',
+};
 
-  const backgroundColor = () => {
-    switch (type) {
-      case 'primary':
-        return 'bg-primary border border-primary';
-      case 'complementary':
-        return `bg-white border ${border ? `${border}` : 'border-primary'}`;
-      case 'secondary':
-        return 'bg-primary border border-white ';
-    }
-  };
+/** 주 오행 / 보완 오행 배지. (온보딩 리포트) */
+export default function OhaengIcon({ element, type, border, textColor }: Props) {
+  const ohaeng = ohaengByCode(element);
+  if (!ohaeng) return null;
 
-  const description = () => {
-    switch (element) {
-      case 'WATER':
-        return '수';
-      case 'WOOD':
-        return '목';
-      case 'FIRE':
-        return '화';
-      case 'EARTH':
-        return '토';
-      case 'METAL':
-        return '금';
-    }
-  };
-  const text =
-    type === 'complementary' ? `${textColor ? `${textColor}` : 'text-primary'}` : 'text-white ';
-
-  const title = type === 'complementary' ? '보완 할 오행' : '주 오행';
+  const isComplementary = type === 'complementary';
 
   return (
     <div
-      className={`flex px-3 py-2 gap-1 rounded-btn w-fit items-center justify-center typo-body-4 ${backgroundColor()} ${text} '`}
+      className={cn(
+        'typo-body-4 flex w-fit items-center justify-center gap-1 rounded-btn px-3 py-2',
+        SURFACE[type],
+        isComplementary ? (border ?? 'border-primary') : undefined,
+        isComplementary ? (textColor ?? 'text-primary') : 'text-white',
+      )}
     >
-      <p>{title}</p>
+      <p>{isComplementary ? '보완 할 오행' : '주 오행'}</p>
       <p>:</p>
-      <p>{description()}</p>
-      <img src={getIcon()} alt={element} className="w-4 h-4" />
+      <p>{ohaeng.label}</p>
+      {/* OhaengOrb를 쓰지 않는다 — 그쪽은 rounded-full 클리핑 래퍼가 붙어 이 배지의 시안과 다르다. */}
+      <img src={ohaeng.orb} alt={element} className="h-4 w-4" />
     </div>
   );
 }

@@ -1,6 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
 import PageHeader from '../../components/PageHeader';
 import Toggle from '../../components/Toggle';
-import { usePermissionSettings, useUpdatePermissionSettings } from '../../hooks/my/useMy';
+import {
+  getBrowserPermissionState,
+  requestBrowserPermission,
+  type BrowserPermissionKind,
+  type BrowserPermissionState,
+} from '../../lib/browserPermissions';
 
 const PERMISSIONS = [
   {
@@ -20,29 +28,89 @@ const PERMISSIONS = [
   },
 ] as const;
 
+type PermissionKey = (typeof PERMISSIONS)[number]['key'];
+type DevicePermissionKey = Exclude<PermissionKey, 'photo'>;
+
+const INITIAL_PERMISSION_STATES: Record<BrowserPermissionKind, BrowserPermissionState> = {
+  camera: 'unavailable',
+  location: 'unavailable',
+};
+const browserPermissionKey = ['browser-permissions'] as const;
+
 export default function PermissionsPage() {
-  const permissionSettingsQuery = usePermissionSettings();
-  const updatePermissionSettings = useUpdatePermissionSettings();
-  const permissionSettings = permissionSettingsQuery.data;
+  const [requestingKey, setRequestingKey] = useState<DevicePermissionKey | null>(null);
+  const [permissionMessage, setPermissionMessage] = useState<string | null>(null);
+  const [isPermissionMessageVisible, setIsPermissionMessageVisible] = useState(false);
+  const fadePermissionMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const removePermissionMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryClient = useQueryClient();
+  const permissionStatesQuery = useQuery({
+    queryKey: browserPermissionKey,
+    queryFn: async () => {
+      const [camera, location] = await Promise.all([
+        getBrowserPermissionState('camera'),
+        getBrowserPermissionState('location'),
+      ]);
+      return { camera, location };
+    },
+    refetchOnWindowFocus: true,
+  });
+  const permissionStates = permissionStatesQuery.data ?? INITIAL_PERMISSION_STATES;
   const permissions = {
-    camera: permissionSettings?.isCameraAllowed ?? false,
-    location: permissionSettings?.isLocationAllowed ?? false,
-    photo: permissionSettings?.isPhotoLibraryAllowed ?? false,
+    camera: permissionStates.camera === 'granted',
+    location: permissionStates.location === 'granted',
+    // 웹의 파일 선택은 별도 영구 권한이 없으므로 항상 사용 가능하다.
+    photo: true,
   };
 
-  const togglePermission = (key: keyof typeof permissions) => {
-    const current = permissionSettings;
-    if (!current) return;
+  const clearPermissionMessageTimers = () => {
+    if (fadePermissionMessageTimer.current) {
+      clearTimeout(fadePermissionMessageTimer.current);
+    }
+    if (removePermissionMessageTimer.current) {
+      clearTimeout(removePermissionMessageTimer.current);
+    }
+  };
 
-    const next = !permissions[key];
-    updatePermissionSettings.mutate({
-      ...current,
-      ...(key === 'camera'
-        ? { isCameraAllowed: next }
-        : key === 'location'
-          ? { isLocationAllowed: next }
-          : { isPhotoLibraryAllowed: next }),
-    });
+  const showPermissionMessage = () => {
+    clearPermissionMessageTimers();
+    setPermissionMessage('권한 해제는 브라우저 설정에서 변경할 수 있어요.');
+    setIsPermissionMessageVisible(true);
+    fadePermissionMessageTimer.current = setTimeout(() => {
+      setIsPermissionMessageVisible(false);
+    }, 1500);
+    removePermissionMessageTimer.current = setTimeout(() => {
+      setPermissionMessage(null);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => clearPermissionMessageTimers();
+  }, []);
+
+  const togglePermission = async (key: PermissionKey) => {
+    if (key === 'photo' || permissionStates[key] === 'granted') {
+      showPermissionMessage();
+      return;
+    }
+
+    clearPermissionMessageTimers();
+    setPermissionMessage(null);
+    setIsPermissionMessageVisible(false);
+
+    setRequestingKey(key);
+    try {
+      const result = await requestBrowserPermission(key);
+      queryClient.setQueryData(
+        browserPermissionKey,
+        (current: typeof INITIAL_PERMISSION_STATES | undefined) => ({
+          ...(current ?? INITIAL_PERMISSION_STATES),
+          [key]: result,
+        }),
+      );
+    } finally {
+      setRequestingKey(null);
+    }
   };
 
   return (
@@ -50,11 +118,13 @@ export default function PermissionsPage() {
       <PageHeader title="권한 안내" backTo="/my" />
 
       <main className="space-y-5 px-5 pt-[17px]">
-        {permissionSettingsQuery.isPending ? (
+        {permissionStatesQuery.isPending ? (
           <p className="typo-sub-2 text-gray-4">권한 설정을 불러오는 중입니다.</p>
         ) : null}
-        {permissionSettingsQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">권한 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+        {permissionStatesQuery.isError ? (
+          <p className="typo-sub-2 text-gray-4">
+            권한 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </p>
         ) : null}
         {PERMISSIONS.map((permission) => {
           const enabled = permissions[permission.key];
@@ -66,14 +136,24 @@ export default function PermissionsPage() {
                 <Toggle
                   checked={enabled}
                   label={permission.title}
-                  onChange={() => togglePermission(permission.key)}
-                  disabled={!permissionSettings || updatePermissionSettings.isPending}
+                  onChange={() => void togglePermission(permission.key)}
+                  disabled={permissionStatesQuery.isPending || requestingKey !== null}
                 />
               </div>
               <p className="typo-sub-2 mt-3 text-gray-4">{permission.description}</p>
             </section>
           );
         })}
+        {permissionMessage ? (
+          <p
+            role="status"
+            className={`typo-caption text-danger transition-opacity duration-500 ${
+              isPermissionMessageVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {permissionMessage}
+          </p>
+        ) : null}
       </main>
     </div>
   );

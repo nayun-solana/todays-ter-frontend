@@ -53,8 +53,6 @@ describe('notification helpers', () => {
   });
 
   it('formats recent notification times for the card metadata', () => {
-    expect(
-      formatNotificationTime('2026-08-10T08:30:00+09:00', new Date(today)),
-    ).toBe('30분 전');
+    expect(formatNotificationTime('2026-08-10T08:30:00+09:00', new Date(today))).toBe('30분 전');
   });
 });

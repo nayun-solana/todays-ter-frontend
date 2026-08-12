@@ -1,17 +1,28 @@
-import { type RefObject, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
-import { ChevronDownIcon } from '../../components/icons';
-import { useMemberSaju, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import SelectField from '../../components/SelectField';
+import WheelPickerSheet, { type WheelColumnSpec } from '../../components/WheelPickerSheet';
+import { cn } from '../../lib/cn';
+import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
+import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
 import {
-  useCreateFortuneReport,
-  useCurrentFortuneReport,
-  useReportStatus,
-} from '../../hooks/onboarding/useGetReport';
+  HOURS,
+  MINUTES,
+  birthYearsDescending,
+  clampDate,
+  dayOptions,
+  formatBirthDate,
+  formatHour,
+  monthOptions,
+  pad,
+} from '../../lib/birthDate';
+import { loadFailureMessage, loadingMessage } from '../../lib/messages';
 
-type DateField = 'year' | 'month' | 'day';
+type OpenSheet = 'date' | 'time' | null;
 type DateValue = { year: number; month: number; day: number };
 type TimeValue = { hour: number; minute: number };
 type SajuForm = {
@@ -29,26 +40,8 @@ const DEFAULT_SAJU_FORM: SajuForm = {
   time: INITIAL_TIME,
   hasTime: false,
 };
-const YEARS = Array.from(
-  { length: new Date().getFullYear() - 1900 + 1 },
-  (_, index) => new Date().getFullYear() - index,
-);
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
-const HOURS = Array.from({ length: 24 }, (_, index) => index);
-const MINUTES = Array.from({ length: 60 }, (_, index) => index);
-const WHEEL_ROW_HEIGHT = 48;
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate();
-}
-
-function formatHour(hour: number) {
-  return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
-}
-
-function formatDate(date: { year: number; month: number; day: number }) {
-  return `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-}
+/** 최근 해부터 내려온다 — 온보딩 휠과 정렬이 반대다(`lib/birthDate` 주석 참고). */
+const YEARS = birthYearsDescending();
 
 function toSajuForm(saju: {
   calendarType: 'SOLAR' | 'LUNAR';
@@ -67,139 +60,6 @@ function toSajuForm(saju: {
     time: { hour, minute },
     hasTime: !saju.birthTimeUnknown,
   };
-}
-
-function DateSelect({
-  label,
-  value,
-  options,
-  open,
-  onToggle,
-  onSelect,
-}: {
-  label: string;
-  value: number;
-  options: number[];
-  open: boolean;
-  onToggle: () => void;
-  onSelect: (value: number) => void;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false);
-
-  useEffect(() => {
-    if (!open) {
-      initialized.current = false;
-      return;
-    }
-    if (initialized.current) return;
-
-    initialized.current = true;
-    const index = options.indexOf(value);
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ top: Math.max(index, 0) * WHEEL_ROW_HEIGHT });
-    });
-  }, [open, options, value]);
-
-  return (
-    <div>
-      <p className="typo-head-4 mb-2 text-gray-6">{label}</p>
-      <div className="relative h-[52px]">
-        {open ? (
-          <div className="absolute inset-x-0 top-0 z-10 overflow-hidden rounded-btn border border-primary-light bg-gray-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            <button
-              type="button"
-              aria-expanded
-              onClick={onToggle}
-              className="typo-body-3 flex h-[52px] w-full items-center justify-between bg-white px-5 text-gray-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            >
-              {value}
-              <ChevronDownIcon className="text-gray-5" />
-            </button>
-            <div className="relative">
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-[7px] top-12 h-12 rounded-btn bg-gray-2"
-              />
-              <div
-                ref={scrollRef}
-                onScroll={(event) => {
-                  const index = Math.max(
-                    0,
-                    Math.min(
-                      options.length - 1,
-                      Math.round(event.currentTarget.scrollTop / WHEEL_ROW_HEIGHT),
-                    ),
-                  );
-                  onSelect(options[index]);
-                }}
-                className="no-scrollbar relative z-10 h-36 snap-y snap-mandatory overflow-y-auto py-12 text-center"
-              >
-                {options.map((option) => (
-                  <div
-                    key={option}
-                    aria-selected={option === value}
-                    role="option"
-                    className="typo-body-3 flex h-12 snap-center items-center px-5 text-gray-5"
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            aria-expanded={false}
-            onClick={onToggle}
-            className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-gray-5 shadow-card"
-          >
-            {value}
-            <ChevronDownIcon className="text-gray-5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TimeWheel({
-  options,
-  format,
-  scrollRef,
-  onSelect,
-}: {
-  options: number[];
-  format: (value: number) => string;
-  scrollRef: RefObject<HTMLDivElement | null>;
-  onSelect: (value: number) => void;
-}) {
-  return (
-    <div
-      ref={scrollRef}
-      onScroll={(event) => {
-        const index = Math.max(
-          0,
-          Math.min(
-            options.length - 1,
-            Math.round(event.currentTarget.scrollTop / WHEEL_ROW_HEIGHT),
-          ),
-        );
-        onSelect(options[index]);
-      }}
-      className="no-scrollbar relative z-10 h-36 snap-y snap-mandatory overflow-y-auto py-12 text-center"
-    >
-      {options.map((option) => (
-        <div
-          key={option}
-          className="typo-body-3 flex h-12 snap-center items-center justify-center text-gray-5"
-        >
-          {format(option)}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 /** 완료 화면 공통 체크 배지 (Figma 그라데이션 원 + 흰 체크). 고민유형 수정 완료 화면도 재사용한다. */
@@ -272,18 +132,16 @@ export default function SajuEditPage() {
   const [regeneratingReportId, setRegeneratingReportId] = useState<number | null>(null);
   const reportStatusQuery = useReportStatus(regeneratingReportId ?? undefined);
   const [draft, setDraft] = useState<SajuForm | null>(null);
-  const [openField, setOpenField] = useState<DateField | null>(null);
-  const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const hourWheelRef = useRef<HTMLDivElement>(null);
-  const minuteWheelRef = useRef<HTMLDivElement>(null);
-  const ignoreInitialTimeScroll = useRef(false);
+  // 시트를 돌리는 동안의 값. '확인'을 눌러야 draft로 옮겨온다 — 온보딩1과 같은 구조다.
+  const [openSheet, setOpenSheet] = useState<OpenSheet>(null);
+  const [draftDate, setDraftDate] = useState<DateValue>(INITIAL_DATE);
+  const [draftTime, setDraftTime] = useState<TimeValue>(INITIAL_TIME);
   const serverForm = sajuQuery.data ? toSajuForm(sajuQuery.data) : null;
   const form = draft ?? serverForm ?? DEFAULT_SAJU_FORM;
   const { date, calendarType, time: pickerTime, hasTime: hasSelectedTime } = form;
-  const days = Array.from({ length: daysInMonth(date.year, date.month) }, (_, index) => index + 1);
   const changed =
     Boolean(serverForm) &&
-    (formatDate(date) !== formatDate(serverForm!.date) ||
+    (formatBirthDate(date) !== formatBirthDate(serverForm!.date) ||
       hasSelectedTime !== serverForm!.hasTime ||
       pickerTime.hour !== serverForm!.time.hour ||
       pickerTime.minute !== serverForm!.time.minute);
@@ -300,48 +158,108 @@ export default function SajuEditPage() {
 
   useEffect(() => {
     if (regeneratingReportId && reportStatusQuery.data?.status === 'completed') {
-      navigate('/my/saju/complete', { replace: true });
+      navigate('/my/saju/complete', {
+        replace: true,
+        state: { reportId: regeneratingReportId },
+      });
     }
   }, [navigate, regeneratingReportId, reportStatusQuery.data?.status]);
 
-  const setDate = (update: (current: DateValue) => DateValue) => {
-    setDraft((current) => {
-      const base = current ?? serverForm ?? DEFAULT_SAJU_FORM;
-      return { ...base, date: update(base.date) };
-    });
-  };
-  const setPickerTime = (update: (current: TimeValue) => TimeValue) => {
-    setDraft((current) => {
-      const base = current ?? serverForm ?? DEFAULT_SAJU_FORM;
-      return { ...base, time: update(base.time) };
-    });
-  };
-  const setHasSelectedTime = (hasTime: boolean) => {
-    setDraft((current) => ({ ...(current ?? serverForm ?? DEFAULT_SAJU_FORM), hasTime }));
+  /** 서버 값을 기준으로 편집을 시작한다 — 아직 아무것도 안 고쳤으면 draft가 null이다. */
+  const updateForm = (update: (current: SajuForm) => SajuForm) => {
+    setDraft((current) => update(current ?? serverForm ?? DEFAULT_SAJU_FORM));
   };
 
-  useEffect(() => {
-    if (!timePickerOpen) return;
+  /**
+   * 서버 값이 오기 전에는 편집을 막는다.
+   *
+   * ⚠️ 잠그지 않으면 **달력 종류가 조용히 양력으로 덮인다.** 응답 전에 시트를 열어 확정하면
+   * `updateForm`이 `serverForm`이 아직 null이라 `DEFAULT_SAJU_FORM`을 집는다. 그 순간 draft가
+   * 생겨 뒤늦게 온 서버 값이 화면에 영영 안 나오고, 그 상태로 저장하면 draft의
+   * `calendarType: 'SOLAR'`와 `hasTime: false`가 그대로 나간다 — 음력 사용자의 설정과
+   * 태어난 시간이 사라진다. **이 화면에는 달력 종류를 고치는 UI가 없어 되돌릴 방법도 없다.**
+   *
+   * 저장 버튼만으로는 못 막는다. `changed`가 `serverForm`을 요구해 로딩 중엔 잠기지만,
+   * 응답이 도착하는 순간 draft ≠ serverForm이라 열린다.
+   *
+   * `OnboardingPage3`의 고민 유형 프리필과 같은 문제이고 같은 방식으로 막는다.
+   */
+  const isPrefilling = sajuQuery.isPending;
 
-    ignoreInitialTimeScroll.current = true;
-    requestAnimationFrame(() => {
-      hourWheelRef.current?.scrollTo({ top: pickerTime.hour * WHEEL_ROW_HEIGHT });
-      minuteWheelRef.current?.scrollTo({ top: pickerTime.minute * WHEEL_ROW_HEIGHT });
-      requestAnimationFrame(() => {
-        ignoreInitialTimeScroll.current = false;
-      });
-    });
-  }, [pickerTime.hour, pickerTime.minute, timePickerOpen]);
-
-  const updateDate = (field: DateField, value: number) => {
-    setDate((current) => {
-      const next = { ...current, [field]: value };
-      return {
-        ...next,
-        day: Math.min(next.day, daysInMonth(next.year, next.month)),
-      };
-    });
+  const openDateSheet = () => {
+    if (isPrefilling) return;
+    setDraftDate(date);
+    setOpenSheet('date');
   };
+  const confirmDate = () => {
+    updateForm((current) => ({ ...current, date: draftDate }));
+    setOpenSheet(null);
+  };
+
+  const openTimeSheet = () => {
+    if (isPrefilling) return;
+    setDraftTime(pickerTime);
+    setOpenSheet('time');
+  };
+  const confirmTime = () => {
+    // 시간을 확정했으면 '모름'이 아니다.
+    updateForm((current) => ({ ...current, time: draftTime, hasTime: true }));
+    setOpenSheet(null);
+  };
+
+  /**
+   * '태어난 시간을 몰라요' 토글.
+   *
+   * 온보딩1은 여기서 안내 시트를 띄우고 곧바로 제출하지만, 이 화면은 저장 버튼이 따로 있어
+   * 표시만 바꾼다. 시간값 자체는 남겨둔다 — 다시 체크를 풀면 고르던 값이 돌아온다.
+   */
+  const toggleUnknownTime = () => {
+    if (isPrefilling) return;
+    updateForm((current) => ({ ...current, hasTime: !current.hasTime }));
+  };
+
+  /**
+   * 연·월이 바뀌면 남은 범위 밖으로 나간 월·일을 당긴다.
+   *
+   * 예전에는 일수만 맞췄고 미래 차단이 없어서 **올해 12월 31일 같은 미래 생년월일을 저장할 수
+   * 있었다.** 온보딩1은 같은 입력을 미래는 휠에 올리지 않는 방식으로 막고 있었다 —
+   * 같은 값을 고르는 화면이 서로 다른 답을 허용하고 있었던 것이라 온보딩 쪽으로 맞춘다(#163).
+   */
+  const dateColumns: WheelColumnSpec[] = [
+    {
+      options: YEARS,
+      value: draftDate.year,
+      format: (value) => `${value}년`,
+      onChange: (year) => setDraftDate((prev) => clampDate({ ...prev, year })),
+    },
+    {
+      options: monthOptions(draftDate.year),
+      value: draftDate.month,
+      format: (value) => `${value}월`,
+      onChange: (month) => setDraftDate((prev) => clampDate({ ...prev, month })),
+    },
+    {
+      options: dayOptions(draftDate.year, draftDate.month),
+      value: draftDate.day,
+      format: (value) => `${value}일`,
+      onChange: (day) => setDraftDate((prev) => ({ ...prev, day })),
+    },
+  ];
+
+  const timeColumns: WheelColumnSpec[] = [
+    {
+      options: HOURS,
+      value: draftTime.hour,
+      format: formatHour,
+      onChange: (hour) => setDraftTime((prev) => ({ ...prev, hour })),
+    },
+    {
+      options: MINUTES,
+      value: draftTime.minute,
+      format: (value) => `${value}분`,
+      onChange: (minute) => setDraftTime((prev) => ({ ...prev, minute })),
+    },
+  ];
 
   const submit = async () => {
     if ((!changed && !regenerationFailed) || isRegenerating) return;
@@ -351,10 +269,8 @@ export default function SajuEditPage() {
     try {
       await updateSajuMutation.mutateAsync({
         calendarType,
-        birthDate: formatDate(date),
-        birthTime: hasSelectedTime
-          ? `${String(pickerTime.hour).padStart(2, '0')}:${String(pickerTime.minute).padStart(2, '0')}`
-          : '',
+        birthDate: formatBirthDate(date),
+        birthTime: hasSelectedTime ? `${pad(pickerTime.hour)}:${pad(pickerTime.minute)}` : '',
         birthTimeUnknown: !hasSelectedTime,
       });
 
@@ -372,12 +288,10 @@ export default function SajuEditPage() {
 
       <main className="px-5 pt-5">
         {sajuQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">현재 사주 정보를 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-gray-4">{loadingMessage('현재 사주 정보')}</p>
         ) : null}
         {sajuQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">
-            사주 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
-          </p>
+          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('사주 정보')}</p>
         ) : null}
         <section className="rounded-btn border border-gray-2 bg-white p-5 shadow-card-soft">
           <p className="typo-body-3 text-primary">현재 사주 정보</p>
@@ -385,8 +299,8 @@ export default function SajuEditPage() {
             <div className="flex gap-1.5">
               <dt className="w-20 font-bold">생년월일</dt>
               <dd>
-                {calendarType === 'SOLAR' ? '양력' : '음력'} {date.year}.
-                {String(date.month).padStart(2, '0')}.{String(date.day).padStart(2, '0')}
+                {calendarType === 'SOLAR' ? '양력' : '음력'} {date.year}.{pad(date.month)}.
+                {pad(date.day)}
               </dd>
             </div>
             <div className="flex gap-1.5">
@@ -404,94 +318,59 @@ export default function SajuEditPage() {
           <br />새 추천 결과부터 변경된 사주 정보가 적용됩니다.
         </p>
 
-        <section className="mt-4 space-y-3">
-          <DateSelect
-            label="년"
-            value={date.year}
-            options={YEARS}
-            open={openField === 'year'}
-            onToggle={() => {
-              setTimePickerOpen(false);
-              setOpenField(openField === 'year' ? null : 'year');
-            }}
-            onSelect={(value) => updateDate('year', value)}
+        {/* 온보딩1과 같은 입력 방식 — 눌러서 바텀시트 휠을 열고 '확인'으로 확정한다. */}
+        {/* 불러오는 동안은 누를 수 없다 — 먼저 확정하면 서버 값을 못 본 채 덮어쓴다. */}
+        <section
+          aria-busy={isPrefilling}
+          className={cn('mt-4 flex flex-col gap-9', isPrefilling && 'pointer-events-none')}
+        >
+          <SelectField
+            label="생년월일"
+            // 불러오기 전에는 기본값(1995-06-15)이 진짜 저장값인 척 보인다. 자리표시자를 쓴다.
+            value={isPrefilling ? null : `${date.year}년 ${pad(date.month)}월 ${pad(date.day)}일`}
+            placeholder="불러오는 중…"
+            onClick={openDateSheet}
           />
-          <DateSelect
-            label="월"
-            value={date.month}
-            options={MONTHS}
-            open={openField === 'month'}
-            onToggle={() => {
-              setTimePickerOpen(false);
-              setOpenField(openField === 'month' ? null : 'month');
-            }}
-            onSelect={(value) => updateDate('month', value)}
-          />
-          <DateSelect
-            label="일"
-            value={date.day}
-            options={days}
-            open={openField === 'day'}
-            onToggle={() => {
-              setTimePickerOpen(false);
-              setOpenField(openField === 'day' ? null : 'day');
-            }}
-            onSelect={(value) => updateDate('day', value)}
-          />
-          <div>
-            <p className="typo-head-4 mb-2 text-gray-6">시</p>
-            <div className="relative">
+          <SelectField
+            label="태어난 시간"
+            value={
+              isPrefilling || !hasSelectedTime
+                ? null
+                : `${formatHour(pickerTime.hour)} ${pickerTime.minute}분`
+            }
+            placeholder={isPrefilling ? '불러오는 중…' : '시간을 선택해주세요'}
+            onClick={openTimeSheet}
+            footer={
               <button
                 type="button"
-                aria-expanded={timePickerOpen}
-                onClick={() => {
-                  setOpenField(null);
-                  setTimePickerOpen(!timePickerOpen);
-                }}
-                className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-gray-5 shadow-card"
+                aria-pressed={!hasSelectedTime}
+                onClick={toggleUnknownTime}
+                className={cn(
+                  'flex items-center gap-1 self-start text-xs font-bold',
+                  hasSelectedTime ? 'text-gray-3' : 'text-primary',
+                )}
               >
-                {hasSelectedTime ? `${formatHour(pickerTime.hour)} ${pickerTime.minute}분` : '모름'}
-                <ChevronDownIcon className="text-gray-5" />
+                <span
+                  className={cn(
+                    'flex size-5 items-center justify-center rounded-full border',
+                    hasSelectedTime
+                      ? 'border-gray-disabled text-transparent'
+                      : 'border-primary bg-primary text-white',
+                  )}
+                >
+                  <Check size={12} strokeWidth={3} />
+                </span>
+                태어난 시간을 몰라요
               </button>
-              {timePickerOpen ? (
-                <div className="absolute z-10 w-full overflow-hidden rounded-btn border border-primary-light bg-gray-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                  <div className="relative grid grid-cols-2">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-x-[7px] top-12 h-12 rounded-btn bg-gray-2"
-                    />
-                    <TimeWheel
-                      options={HOURS}
-                      format={formatHour}
-                      scrollRef={hourWheelRef}
-                      onSelect={(hour) => {
-                        if (ignoreInitialTimeScroll.current) return;
-                        setPickerTime((current) => ({ ...current, hour }));
-                        setHasSelectedTime(true);
-                      }}
-                    />
-                    <TimeWheel
-                      options={MINUTES}
-                      format={(minute) => `${minute}분`}
-                      scrollRef={minuteWheelRef}
-                      onSelect={(minute) => {
-                        if (ignoreInitialTimeScroll.current) return;
-                        setPickerTime((current) => ({ ...current, minute }));
-                        setHasSelectedTime(true);
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
+            }
+          />
         </section>
       </main>
 
       <Button
         disabled={(!changed && !regenerationFailed) || isRegenerating}
         onClick={() => void submit()}
-        className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 w-[calc(100%-40px)] max-w-[350px] -translate-x-1/2"
+        className="fixed inset-x-5 bottom-[calc(2rem+env(safe-area-inset-bottom))] w-auto"
       >
         {isRegenerating ? '리포트 재생성 중...' : '저장하고 리포트 재생성'}
       </Button>
@@ -504,14 +383,37 @@ export default function SajuEditPage() {
           리포트 재생성에 실패했습니다. 다시 시도해주세요.
         </p>
       ) : null}
+
+      <WheelPickerSheet
+        open={openSheet === 'date'}
+        title="생년월일 입력"
+        columns={dateColumns}
+        onConfirm={confirmDate}
+        onClose={() => setOpenSheet(null)}
+      />
+      <WheelPickerSheet
+        open={openSheet === 'time'}
+        title="태어난 시간 입력"
+        columns={timeColumns}
+        onConfirm={confirmTime}
+        onClose={() => setOpenSheet(null)}
+      />
     </div>
   );
 }
 
 export function SajuReportCompletePage() {
   const navigate = useNavigate();
-  const currentReportQuery = useCurrentFortuneReport();
-  const reportId = currentReportQuery.data?.reportId;
+  const location = useLocation();
+  const locationState = location.state as { reportId?: unknown } | null;
+  const reportIdFromState =
+    typeof locationState?.reportId === 'number' &&
+    Number.isInteger(locationState.reportId) &&
+    locationState.reportId > 0
+      ? locationState.reportId
+      : undefined;
+  const myPageQuery = useMyPage(!reportIdFromState);
+  const reportId = reportIdFromState ?? myPageQuery.data?.reportId;
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-white">
@@ -530,7 +432,9 @@ export function SajuReportCompletePage() {
         <Button
           disabled={!reportId}
           onClick={() => {
-            if (reportId) navigate(`/report/${reportId}?from=my`, { replace: true });
+            if (reportId) {
+              navigate(`/report/${reportId}?from=my&source=saju-edit`, { replace: true });
+            }
           }}
         >
           {reportId ? '재생성된 리포트 보러가기' : '리포트 불러오는 중'}

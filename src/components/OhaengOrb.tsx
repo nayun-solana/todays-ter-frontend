@@ -1,21 +1,5 @@
-import type { CSSProperties } from 'react';
-
-import orbEarth from '../assets/orb-earth.png';
-import orbFire from '../assets/orb-fire.png';
-import orbMetal from '../assets/orb-metal.png';
-import orbWater from '../assets/orb-water.png';
-import orbWood from '../assets/orb-wood.png';
 import { cn } from '../lib/cn';
-import type { OhaengKey } from '../lib/ohaeng';
-
-/** Figma 원본 asset의 crop 오프셋 (mask 36px 기준 백분율) */
-const ORBS: Record<OhaengKey, { src: string; img?: CSSProperties }> = {
-  fire: { src: orbFire },
-  earth: { src: orbEarth },
-  wood: { src: orbWood },
-  water: { src: orbWater },
-  metal: { src: orbMetal },
-};
+import { ohaengByKey, type OhaengKey } from '../lib/ohaeng';
 
 interface OhaengOrbProps {
   element: OhaengKey;
@@ -24,9 +8,11 @@ interface OhaengOrbProps {
   className?: string;
 }
 
-/** 오행 기운 구슬 (Figma export asset). */
+/** 오행 기운 구슬 (Figma export asset). 이미지는 lib/ohaeng의 `orb`가 단일 소스다. */
 export default function OhaengOrb({ element, size = 36, className }: OhaengOrbProps) {
-  const orb = ORBS[element];
+  const orb = ohaengByKey(element)?.orb;
+  if (!orb) return null;
+
   return (
     <span
       aria-hidden="true"
@@ -34,10 +20,10 @@ export default function OhaengOrb({ element, size = 36, className }: OhaengOrbPr
       style={{ width: size, height: size }}
     >
       <img
-        src={orb.src}
+        src={orb}
         alt=""
         className="pointer-events-none absolute max-w-none"
-        style={orb.img ?? { inset: 0, width: '100%', height: '100%' }}
+        style={{ inset: 0, width: '100%', height: '100%' }}
       />
     </span>
   );

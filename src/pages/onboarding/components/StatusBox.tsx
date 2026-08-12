@@ -19,7 +19,7 @@ export default function StatusBox({ isSuccess, title, description, onClick }: Pr
       onClick={onClick}
     >
       <div className="flex flex-col gap-1">
-        <span className={`text-xs font-bold ${textColor}`}>{title}</span>
+        <span className={`typo-body-4 ${textColor}`}>{title}</span>
         <span className={`text-[10px] font-normal ${descriptionColor}`}>{description}</span>
       </div>
       {isSuccess && <img src={CheckIcon} alt="check" className="w-5 h-5" />}

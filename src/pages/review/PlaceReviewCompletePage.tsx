@@ -1,7 +1,7 @@
 import { useNavigate, useLocation, useParams } from 'react-router';
 
 import checkIcon from '../../assets/review/check.png';
-import Button from './components/Button';
+import Button from '../../components/Button';
 
 type CompleteLocationState = {
   placeName?: string;
@@ -22,11 +22,17 @@ export default function PlaceReviewCompletePage() {
       </div>
 
       <div className="flex flex-col gap-2 px-5 pb-8">
-        <Button variant="primary" onClick={() => navigate(`/place/${id}`, { replace: true })}>
+        <Button
+          size="padded"
+          variant="primary"
+          onClick={() => navigate(`/place/${id}`, { replace: true })}
+        >
           장소 상세 화면으로 돌아가기
         </Button>
         <Button
+          size="padded"
           variant="secondary"
+          className="border-primary-light bg-primary-bg"
           onClick={() => navigate(`/place/${id}?tab=reviews`, { replace: true })}
         >
           내가 쓴 후기 보러가기

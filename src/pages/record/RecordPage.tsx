@@ -5,6 +5,7 @@ import { useMyPlaces } from '../../hooks/record/useRecord';
 import type { MyPlaceListType } from '../../types/record/myPlace';
 import RecordPlaceCard from './components/RecordPlaceCard';
 import { loadFailureMessageBrief } from '../../lib/messages';
+import TabPageHeader from '../../components/TabPageHeader';
 
 type RecordTab = 'saved' | 'visited';
 
@@ -53,9 +54,7 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-safe-5">
-        <h1 className="text-2xl font-extrabold text-primary">내 터</h1>
-      </header>
+      <TabPageHeader title="내 터" />
 
       <div className="px-5 pt-4 pb-6">
         <PillTabs items={RECORD_TABS} value={activeTab} onChange={setActiveTab} />

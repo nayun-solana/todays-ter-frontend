@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
+import { apiErrorStatusOf } from '../../api/types';
 import iconStar from '../../assets/icon-star.svg';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
+import SectionError from '../../components/SectionError';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import {
@@ -99,7 +101,16 @@ function PlaceMap({ latitude, longitude }: { latitude: number; longitude: number
     };
   }, [latitude, longitude]);
 
-  if (isMapUnavailable) return <div className="h-40 rounded-btn bg-placeholder" />;
+  // 지도를 못 띄워도 주소는 아래에 그대로 있다. 빈 회색 박스만 남으면 왜 안 보이는지 알 수 없다.
+  if (isMapUnavailable) {
+    return (
+      <div className="flex h-40 items-center justify-center rounded-btn bg-placeholder px-5">
+        <p className="typo-sub-2 text-center text-gray-5">
+          지도를 불러오지 못했어요. 아래 주소를 확인해주세요.
+        </p>
+      </div>
+    );
+  }
 
   return <div ref={mapRef} className="h-40 rounded-btn" />;
 }
@@ -253,6 +264,28 @@ function ReviewItem({ review }: { review: Review }) {
   );
 }
 
+/**
+ * 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다.
+ * 폭은 실물과 같이 여백(mx-5)을 따라간다 — 고정하는 건 높이뿐이다.
+ */
+function PlaceDetailSkeleton() {
+  return (
+    <div className="min-h-dvh w-full bg-white" aria-busy="true">
+      <PageHeader title="장소 상세" className="border-b-0" />
+      <span className="sr-only" role="status">
+        {loadingMessage('장소 정보')}
+      </span>
+      <div className="mx-5 mt-[5px] h-[210px] animate-pulse rounded-btn bg-gray-2" />
+      <div className="mx-5 mt-5 h-7 w-40 max-w-full animate-pulse rounded-lg bg-gray-2" />
+      <div className="mt-2 flex gap-1 px-5">
+        <div className="h-8 w-[72px] animate-pulse rounded-btn bg-gray-2" />
+        <div className="h-8 w-20 animate-pulse rounded-btn bg-gray-2" />
+      </div>
+      <div className="mx-5 mt-2 h-[86px] animate-pulse rounded-btn bg-gray-2" />
+    </div>
+  );
+}
+
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -269,23 +302,31 @@ export default function PlaceDetailPage() {
   const deleteReviewMutation = useDeleteRecord();
   const place = placeQuery.data;
 
-  if (placeQuery.isPending) {
-    return (
-      <div className="min-h-dvh w-full bg-white">
-        <PageHeader title="장소 상세" />
-        <p className="px-5 py-8 text-sm text-gray-4">{loadingMessage('장소 정보')}</p>
-      </div>
-    );
-  }
+  if (placeQuery.isPending) return <PlaceDetailSkeleton />;
 
   if (placeQuery.isError || !place) {
+    // 없는 장소(404)나 잘못된 id(400)는 다시 시도해봐야 결과가 같다.
+    // 재시도 버튼을 물리면 빠져나갈 길이 없으므로 탐색으로 돌려보낸다.
+    const status = apiErrorStatusOf(placeQuery.error);
+    const isUnreachable = status === 404 || status === 400;
+
     return (
       <div className="min-h-dvh w-full bg-white">
         <PageHeader title="장소 상세" />
         <div className="px-5 py-8">
-          <p className="text-sm text-gray-4">{loadFailureMessageBrief('장소 정보')}</p>
-          <Button variant="secondary" onClick={() => placeQuery.refetch()} className="mt-4">
-            다시 시도
+          <p className="text-sm text-gray-4">
+            {status === 404
+              ? '찾을 수 없는 장소예요. 삭제되었을 수 있어요.'
+              : status === 400
+                ? '잘못된 주소로 들어왔어요.'
+                : loadFailureMessageBrief('장소 정보')}
+          </p>
+          <Button
+            variant="secondary"
+            onClick={() => (isUnreachable ? navigate('/search') : placeQuery.refetch())}
+            className="mt-4"
+          >
+            {isUnreachable ? '탐색으로 돌아가기' : '다시 시도'}
           </Button>
         </div>
       </div>
@@ -331,6 +372,14 @@ export default function PlaceDetailPage() {
       />
 
       <PlaceThumbnail key={place.placeId} placeId={place.placeId} placeName={placeName} />
+
+      {/* 저장 실패는 낙관적 갱신을 되돌리기만 해서, 켜졌던 북마크가 조용히 꺼진다.
+          왜 되돌아갔는지 알려준다. */}
+      {bookmark.isError ? (
+        <p role="alert" aria-live="polite" className="mt-2 px-5 text-xs text-danger">
+          저장 상태를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.
+        </p>
+      ) : null}
 
       <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{placeName}</h2>
 
@@ -392,9 +441,21 @@ export default function PlaceDetailPage() {
         {tab === '후기' && (
           <div className="pt-4">
             {reviewsQuery.isPending ? (
-              <p className="px-5 py-4 text-sm text-gray-4">{loadingMessage('후기')}</p>
+              <div
+                role="status"
+                aria-label={loadingMessage('후기')}
+                className="flex flex-col gap-2 px-5"
+              >
+                <div className="h-[17px] w-[92px] animate-pulse rounded bg-gray-2" />
+                <div className="h-3 w-32 animate-pulse rounded bg-gray-2" />
+                <div className="mt-1 h-3 w-full animate-pulse rounded bg-gray-2" />
+              </div>
             ) : reviewsQuery.isError ? (
-              <p className="px-5 py-4 text-sm text-gray-4">{loadFailureMessage('후기')}</p>
+              <SectionError
+                className="mx-5"
+                message={loadFailureMessage('후기')}
+                onRetry={() => void reviewsQuery.refetch()}
+              />
             ) : myReview ? (
               <>
                 <div className="px-5">
@@ -442,11 +503,23 @@ export default function PlaceDetailPage() {
 
       {deleteTarget ? (
         <DeleteReviewModal
-          onCancel={() => setDeleteTarget(null)}
+          isPending={deleteReviewMutation.isPending}
+          // 실패하면 모달을 닫지 않는다 — 닫아버리면 왜 안 지워졌는지 알 수 없고
+          // 다시 시도하려면 메뉴부터 다시 열어야 한다. 이 자리에서 바로 다시 누르게 한다.
+          errorMessage={
+            deleteReviewMutation.isError ? '후기를 삭제하지 못했어요. 다시 시도해주세요.' : undefined
+          }
+          onCancel={() => {
+            if (deleteReviewMutation.isPending) return;
+            deleteReviewMutation.reset();
+            setDeleteTarget(null);
+          }}
           onConfirm={() => {
+            if (deleteReviewMutation.isPending) return;
+
             // 후기 목록 무효화는 useDeleteRecord가 한다 — 작성·수정과 같은 규칙을 쓰도록.
             deleteReviewMutation.mutate(
-              { recordId: deleteTarget, placeId: id },
+              { recordId: deleteTarget, placeId: place.placeId },
               { onSuccess: () => setDeleteTarget(null) },
             );
           }}

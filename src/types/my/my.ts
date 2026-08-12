@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ConcernType } from '../onboarding/guestOnboarding';
+
 export const MyPageResponse = z.object({
   reportId: z.number().int().positive(),
   nickname: z.string().min(1),
@@ -49,6 +51,21 @@ export const MemberWithdrawRequest = z.object({
   withdrawReason: WithdrawReason,
 });
 export type MemberWithdrawRequest = z.infer<typeof MemberWithdrawRequest>;
+
+/**
+ * 회원 고민 유형. 게스트 온보딩과 같은 enum을 쓴다(BE도 `onboarding.enums.ConcernType` 하나다) —
+ * 회원/게스트용으로 따로 정의하면 값이 갈릴 여지만 생긴다.
+ */
+export const MemberConcernsResponse = z.object({
+  concernTypes: z.array(ConcernType),
+});
+export type MemberConcernsResponse = z.infer<typeof MemberConcernsResponse>;
+
+/** PUT /members/me/concerns — BE가 `@NotEmpty`라 빈 배열은 400이다. */
+export const MemberConcernsUpdateRequest = z.object({
+  concernTypes: z.array(ConcernType).min(1),
+});
+export type MemberConcernsUpdateRequest = z.infer<typeof MemberConcernsUpdateRequest>;
 
 const PolicyType = z.enum(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'MARKETING_CONSENT']);
 

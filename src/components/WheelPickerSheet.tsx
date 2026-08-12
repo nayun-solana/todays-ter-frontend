@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import Button from './Button';
+import { useScrollLock } from '../lib/scrollLock';
 
 const ROW_H = 48;
 
@@ -79,6 +80,8 @@ export default function WheelPickerSheet({
   onConfirm,
   onClose,
 }: WheelPickerSheetProps) {
+  // 시트가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다.
+  useScrollLock(open);
   if (!open) return null;
 
   return (

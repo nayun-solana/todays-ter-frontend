@@ -136,12 +136,24 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
       return;
     }
 
-    // 여기는 첫 온보딩 경로다. 회원은 게스트 저장 API를 부를 수 없고(`GUEST401_2`),
-    // 회원용 `PUT /members/me/concerns`도 아직 못 쓴다 — 연결된 `Onboarding` 행이 없어
-    // `MEMBER404_3`이 난다(이슈 #156 1번, BE 대기). 로그인 직후 온보딩으로 들어오는 경로가
-    // 있어서 `edit`만 막아두면 여기서 401 → 강제 로그아웃으로 이어졌다(#145).
+    /**
+     * 회원은 회원 경로로 저장한다.
+     *
+     * 온보딩1에서 `POST /api/guest-sessions/convert`로 온보딩을 회원에게 옮기면서 게스트 쿠키가
+     * 지워진다. 그래서 여기서는 게스트 API를 부를 수 없고(`GUEST_COOKIE_REQUIRED`), 대신
+     * 연결된 `Onboarding` 행이 생겼으므로 `PUT /members/me/concerns`가 동작한다.
+     *
+     * 예전에는 저장을 통째로 건너뛰고 홈으로 보냈다 — 그 행이 없어 `MEMBER404_3`이 났기
+     * 때문인데(#156 1번), 이전이 붙으면서 해소됐다.
+     */
     if (isMember) {
-      navigate('/home', { state: { selectedConcerns: selectedIds } });
+      setSaveError(null);
+      try {
+        await updateConcerns.mutateAsync({ concernTypes: selectedIds });
+        navigate('/home', { state: { selectedConcerns: selectedIds } });
+      } catch (error) {
+        setSaveError(concernSaveErrorMessage(error));
+      }
       return;
     }
 

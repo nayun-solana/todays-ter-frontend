@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  convertGuestSession,
   getGuestOnboarding,
   initGuestSession,
   saveGuestConcerns,
@@ -27,6 +28,23 @@ export function useInitGuestSession() {
     mutationFn: initGuestSession,
     onSuccess: () => {
       queryClient.setQueryData(onboardingKeys.sessionStatus, { hasGuestId: true });
+    },
+  });
+}
+
+/**
+ * 비회원 온보딩 → 회원 이전.
+ *
+ * 서버가 게스트 쿠키를 지우므로 세션 유무 캐시도 같이 내린다. 안 내리면 `staleTime: Infinity`인
+ * SessionGate 캐시가 "세션 있음"으로 남아 실제와 어긋난다.
+ */
+export function useConvertGuestSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: convertGuestSession,
+    onSuccess: () => {
+      queryClient.setQueryData(onboardingKeys.sessionStatus, { hasGuestId: false });
     },
   });
 }

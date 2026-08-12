@@ -30,9 +30,7 @@ export const recordKeys = {
  * `placeKeys`는 `usePlace`가 아니라 `placeKeys` 모듈에서 가져온다 — `usePlace`가 이미
  * `recordKeys`를 쓰고 있어서 훅끼리 직접 물리면 순환 참조가 된다.
  */
-function invalidatePlaceReviews(queryClient: QueryClient, placeId: number | string | undefined) {
-  if (placeId == null) return;
-
+function invalidatePlaceReviews(queryClient: QueryClient, placeId: number | string) {
   const id = String(placeId);
   void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id) });
   // 상세도 함께 — 후기 수·평균 별점이 여기 들어 있다.
@@ -82,8 +80,13 @@ export function useCreateRecord() {
 
 type SubmitRecordUpdateInput = {
   recordId: number | string;
-  /** 이 후기가 달린 장소. 장소 상세의 후기 목록을 비우는 데 쓴다. */
-  placeId?: number | string;
+  /**
+   * 이 후기가 달린 장소. 장소 상세의 후기 목록을 비우는 데 쓴다.
+   *
+   * 선택값이 아니라 **필수다.** 처음에는 `placeId?`로 뒀다가 `ReviewPage`에서 빠뜨렸고,
+   * 타입이 통과시켜서 "별점을 고쳐도 장소 상세가 그대로"인 증상이 그대로 남았다(#191).
+   */
+  placeId: number | string;
   rating: number;
   content: string;
   files?: File[];
@@ -118,8 +121,8 @@ export function useUpdateRecord() {
     }: {
       recordId: number | string;
       body: RecordUpdateRequest;
-      /** 이 후기가 달린 장소. 장소 상세의 후기 목록을 비우는 데 쓴다. */
-      placeId?: number | string;
+      /** 이 후기가 달린 장소. 빠뜨리면 장소 상세가 옛 별점을 계속 보여준다 — 필수다(#191). */
+      placeId: number | string;
     }) => updateRecord(recordId, body),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: recordKeys.all });
@@ -133,8 +136,8 @@ export function useUpdateRecord() {
 
 type DeleteRecordInput = {
   recordId: number | string;
-  /** 이 후기가 달린 장소. 장소 상세의 후기 목록을 비우는 데 쓴다. */
-  placeId?: number | string;
+  /** 이 후기가 달린 장소. 빠뜨리면 장소 상세가 지운 후기를 계속 보여준다 — 필수다(#191). */
+  placeId: number | string;
 };
 
 /**

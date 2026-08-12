@@ -103,14 +103,13 @@ describe('후기 작성·수정·삭제 후 장소 캐시 무효화', () => {
     expect(isStale(placeKeys.reviews(OTHER_PLACE_ID))).toBe(false);
   });
 
-  it('placeId를 모르면 장소 캐시는 건드리지 않는다 — 내 기록 목록만 비운다', async () => {
+  it('내 기록 목록도 함께 비운다 — 다녀온 터 카드의 별점도 같이 바뀐다', async () => {
     const { wrapper, isStale } = setup();
     const { result } = renderHook(() => useUpdateRecord(), { wrapper });
 
-    result.current.mutate({ recordId: 12, body: { rating: 3 } });
+    result.current.mutate({ recordId: 12, placeId: PLACE_ID, body: { rating: 3 } });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(isStale(placeKeys.reviews(PLACE_ID))).toBe(false);
     expect(isStale(recordKeys.myPlaces('visited'))).toBe(true);
   });
 

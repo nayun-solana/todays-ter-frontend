@@ -36,7 +36,7 @@ export default function WhyMatchCard({ meta, reason, points }: WhyMatchCardProps
             <span
               key={point}
               className={cn(
-                'rounded-[20px] border border-gray-2 bg-white px-3 py-1.5 text-xs font-normal',
+                'rounded-[20px] border border-gray-2 bg-white px-3 py-1.5 typo-sub-2',
                 meta.text,
               )}
             >

@@ -94,11 +94,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       return;
     }
 
-    await share({
-      url,
-      title: `${data.placeName} — 나와 어울리는 터`,
-      text: '오늘의 터에서 받은 추천이에요.',
-    });
+    await share({ url, title: `${data.placeName} — 나와 어울리는 터` });
   };
 
   return (

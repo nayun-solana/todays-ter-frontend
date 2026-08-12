@@ -182,6 +182,9 @@ function EditReviewForm({
     updateRecord.mutate(
       {
         recordId,
+        // 이 후기가 달린 장소의 후기 목록도 비워야 한다. 안 넘기면 장소 상세가 옛 별점을
+        // 계속 보여준다(#174에서 PlaceReviewPage만 고치고 이 경로를 빠뜨렸다).
+        placeId: initial.placeId,
         rating,
         content: memo,
         files,

@@ -446,7 +446,7 @@ export default function PlaceDetailPage() {
           onConfirm={() => {
             // 후기 목록 무효화는 useDeleteRecord가 한다 — 작성·수정과 같은 규칙을 쓰도록.
             deleteReviewMutation.mutate(
-              { recordId: deleteTarget, placeId: id },
+              { recordId: deleteTarget, placeId: place.placeId },
               { onSuccess: () => setDeleteTarget(null) },
             );
           }}

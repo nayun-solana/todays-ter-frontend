@@ -133,9 +133,9 @@ export default function ReviewDetailPage() {
             if (!deleteRecord.isPending) setIsDeleteModalOpen(false);
           }}
           onConfirm={() => {
-            if (!recordId || deleteRecord.isPending) return;
+            if (!recordId || !review || deleteRecord.isPending) return;
             deleteRecord.mutate(
-              { recordId, placeId: review?.placeId },
+              { recordId, placeId: review.placeId },
               {
                 onSuccess: () => {
                   setIsDeleteModalOpen(false);

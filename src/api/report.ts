@@ -59,7 +59,8 @@ export async function getCategorySajuReport({
   const res = await axiosInstance.get<ApiResponse>(`/fortune-reports/${reportId}/details`, {
     params: { category },
   });
-  return CategorySajuReportResponse.parse(getResult(res));
+
+  return CategorySajuReportResponse.parse(res.data.result);
 }
 
 /** POST /fortune-reports/{reportId}/share — 공유 링크 생성. */

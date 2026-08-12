@@ -40,6 +40,42 @@ function ReportNotice({
 }
 
 export default function ReportPage() {
+  // status bar 색상 변경 (iOS Safari, Android Chrome)
+  useEffect(() => {
+    const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+    const themeColor = existingThemeColor ?? document.createElement('meta');
+
+    const wasThemeColorCreated = !existingThemeColor;
+    const previousThemeColor = themeColor.getAttribute('content');
+
+    const previousHtmlBackground = document.documentElement.style.backgroundColor;
+    const previousBodyBackground = document.body.style.backgroundColor;
+
+    if (wasThemeColorCreated) {
+      themeColor.name = 'theme-color';
+      document.head.appendChild(themeColor);
+    }
+
+    themeColor.setAttribute('content', STATUS_BAR_COLOR);
+    document.documentElement.style.backgroundColor = STATUS_BAR_COLOR;
+    document.body.style.backgroundColor = STATUS_BAR_COLOR;
+
+    return () => {
+      if (wasThemeColorCreated) {
+        themeColor.remove();
+      } else if (previousThemeColor !== null) {
+        themeColor.setAttribute('content', previousThemeColor);
+      } else {
+        themeColor.removeAttribute('content');
+      }
+
+      document.documentElement.style.backgroundColor = previousHtmlBackground;
+
+      document.body.style.backgroundColor = previousBodyBackground;
+    };
+  }, []);
+
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -84,42 +120,6 @@ export default function ReportPage() {
       />
     );
   }
-
-  // status bar 색상 변경 (iOS Safari, Android Chrome)
-  useEffect(() => {
-    const existingThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-
-    const themeColor = existingThemeColor ?? document.createElement('meta');
-
-    const wasThemeColorCreated = !existingThemeColor;
-    const previousThemeColor = themeColor.getAttribute('content');
-
-    const previousHtmlBackground = document.documentElement.style.backgroundColor;
-    const previousBodyBackground = document.body.style.backgroundColor;
-
-    if (wasThemeColorCreated) {
-      themeColor.name = 'theme-color';
-      document.head.appendChild(themeColor);
-    }
-
-    themeColor.setAttribute('content', STATUS_BAR_COLOR);
-    document.documentElement.style.backgroundColor = STATUS_BAR_COLOR;
-    document.body.style.backgroundColor = STATUS_BAR_COLOR;
-
-    return () => {
-      if (wasThemeColorCreated) {
-        themeColor.remove();
-      } else if (previousThemeColor !== null) {
-        themeColor.setAttribute('content', previousThemeColor);
-      } else {
-        themeColor.removeAttribute('content');
-      }
-
-      document.documentElement.style.backgroundColor = previousHtmlBackground;
-
-      document.body.style.backgroundColor = previousBodyBackground;
-    };
-  }, []);
 
   const parseElementCodeandColor = (code: ElementCode) => {
     switch (code) {

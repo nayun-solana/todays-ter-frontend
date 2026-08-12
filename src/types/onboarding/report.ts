@@ -102,112 +102,110 @@ export type SajuReportResponse = z.infer<typeof SajuReportResponse>;
 // 카테고리별 사주 리포트
 // ─────────────────────────────────────
 
+// ─────────────────────────────────────
 // GENERAL
+// ─────────────────────────────────────
 
-export const SajuCoreType = z.enum(['DAY_STEM', 'DAY_BRANCH', 'DAY_PILLAR']);
-export type SajuCoreType = z.infer<typeof SajuCoreType>;
-
-export const FlowAnalysisType = z.enum([
-  'EMOTIONAL_FLOW',
-  'RELATIONSHIP_PATTERN',
-  'ACTION_STYLE',
-  'RECOVERY_POINT',
-]);
-export type FlowAnalysisType = z.infer<typeof FlowAnalysisType>;
-
-export const SajuReportSummary = z.object({
+export const DayPillarItem = z.object({
+  label: z.string(),
+  displayText: z.string(),
   description: z.string(),
-  primaryElement: ElementCode,
 });
-export type SajuReportSummary = z.infer<typeof SajuReportSummary>;
 
-export const SajuCoreItem = z.object({
-  type: SajuCoreType,
-  title: z.string(),
-  value: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
+export type DayPillarItem = z.infer<typeof DayPillarItem>;
+
+export const DayPillars = z.object({
+  dayStem: DayPillarItem,
+  dayBranch: DayPillarItem,
+  dayPillar: DayPillarItem,
 });
-export type SajuCoreItem = z.infer<typeof SajuCoreItem>;
 
-export const FlowAnalysisItem = z.object({
-  type: FlowAnalysisType,
-  title: z.string(),
-  description: z.string(),
-  displayOrder: z.number().int(),
+export type DayPillars = z.infer<typeof DayPillars>;
+
+export const GeneralFlowAnalysisItem = z.object({
+  label: z.string(),
+  text: z.string(),
 });
-export type FlowAnalysisItem = z.infer<typeof FlowAnalysisItem>;
 
-export const RecommendationItem = z.object({
-  description: z.string(),
-  displayOrder: z.number().int(),
+export type GeneralFlowAnalysisItem = z.infer<typeof GeneralFlowAnalysisItem>;
+
+export const GeneralSajuReportDetail = z.object({
+  coreSummary: z.string(),
+  primaryElements: z.array(ElementCode),
+  dayPillars: DayPillars,
+  flowAnalysis: z.array(GeneralFlowAnalysisItem),
 });
-export type RecommendationItem = z.infer<typeof RecommendationItem>;
 
-/**
- * GENERAL 카테고리 응답
- */
+export type GeneralSajuReportDetail = z.infer<typeof GeneralSajuReportDetail>;
+
+export const ComplementAction = z.object({
+  order: z.number().int(),
+  type: z.string(),
+  text: z.string(),
+});
+
+export type ComplementAction = z.infer<typeof ComplementAction>;
+
+export const ComplementActionGuide = z.object({
+  element: ElementCode,
+  label: z.string(),
+  actions: z.array(ComplementAction),
+});
+
+export type ComplementActionGuide = z.infer<typeof ComplementActionGuide>;
+
 export const GeneralSajuReportResponse = z.object({
   reportId: z.number().int(),
   category: z.literal('GENERAL'),
-
-  summary: SajuReportSummary,
-  sajuCore: z.array(SajuCoreItem),
-  flowAnalysis: z.array(FlowAnalysisItem),
-
-  complementaryElement: ElementCode,
-
-  recommendations: z.array(RecommendationItem),
+  detail: GeneralSajuReportDetail,
+  complementActionGuide: ComplementActionGuide,
 });
+
 export type GeneralSajuReportResponse = z.infer<typeof GeneralSajuReportResponse>;
 
+// ─────────────────────────────────────
 // LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
+// ─────────────────────────────────────
 
 export const SajuReportContentBlock = z.object({
   title: z.string(),
   content: z.string(),
 });
+
 export type SajuReportContentBlock = z.infer<typeof SajuReportContentBlock>;
 
 export const SajuReportKeyPoint = z.object({
   label: z.string(),
   text: z.string(),
 });
+
 export type SajuReportKeyPoint = z.infer<typeof SajuReportKeyPoint>;
 
 export const SajuReportDetail = z.object({
-  code: DetailSajuReportCategory,
-  title: z.string(),
   coreSummary: z.string(),
-
-  contentBlocks: z.array(SajuReportContentBlock).default([]),
-  keyPoints: z.array(SajuReportKeyPoint).default([]),
+  contentBlocks: z.array(SajuReportContentBlock),
+  keyPoints: z.array(SajuReportKeyPoint),
 });
+
 export type SajuReportDetail = z.infer<typeof SajuReportDetail>;
 
-/**
- * GENERAL을 제외한 카테고리 응답
- */
 export const DetailSajuReportResponse = z.object({
   reportId: z.number().int(),
   category: DetailSajuReportCategory,
   detail: SajuReportDetail,
 });
+
 export type DetailSajuReportResponse = z.infer<typeof DetailSajuReportResponse>;
 
-/**
- * 카테고리별 사주 리포트 응답
- *
- * GENERAL
- * → GeneralSajuReportResponse
- *
- * LOVE / CAREER / WEALTH / RELATIONSHIP / HEALTH
- * → DetailSajuReportResponse
- */
-export const CategorySajuReportResponse = z.discriminatedUnion('category', [
+// ─────────────────────────────────────
+// 전체 카테고리 응답
+// ─────────────────────────────────────
+
+export const CategorySajuReportResponse = z.union([
   GeneralSajuReportResponse,
   DetailSajuReportResponse,
 ]);
+
 export type CategorySajuReportResponse = z.infer<typeof CategorySajuReportResponse>;
 
 // ── 생성·진행 상태 ──

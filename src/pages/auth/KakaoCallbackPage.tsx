@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import type { ApiError } from '../../api/types';
 import Button from '../../components/Button';
 import StatusView from '../../components/StatusView';
 import { useKakaoLogin } from '../../hooks/auth/useAuth';
@@ -23,13 +24,14 @@ export default function KakaoCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const kakaoLogin = useKakaoLogin();
-  const [requestFailed, setRequestFailed] = useState(false);
+  // 실패 원인을 화면에 남긴다 — 아래 주석 참고.
+  const [failure, setFailure] = useState<ApiError | null>(null);
 
   const code = searchParams.get('code');
   // 사용자가 동의를 취소하면 code 대신 error가 온다(예: access_denied).
   const denied = searchParams.get('error') !== null;
   // 코드 없이 들어온 경우는 상태가 아니라 URL로 이미 정해져 있으므로 파생시킨다.
-  const failed = denied || !code || requestFailed;
+  const failed = denied || !code || failure !== null;
 
   useEffect(() => {
     if (denied || !code) return;
@@ -46,7 +48,23 @@ export default function KakaoCallbackPage() {
       .then(({ onboardingStep }) => {
         navigate(nextPathForOnboardingStep(onboardingStep), { replace: true });
       })
-      .catch(() => setRequestFailed(true));
+      /**
+       * 서버가 준 코드를 버리지 않는다.
+       *
+       * 예전에는 `catch(() => setRequestFailed(true))`로 원인을 통째로 삼키고 "잠시 후 다시
+       * 시도해 주세요"만 띄웠다. 이 화면은 카카오에서 돌아온 뒤 한 번만 지나가는 자리라
+       * 재현이 어렵고, 사용자가 볼 수 있는 단서가 하나도 남지 않아 원인 파악이 막혔다.
+       * 인가코드는 1회용이라 "다시 눌러보며 확인"도 안 된다.
+       */
+      .catch((error: unknown) => {
+        const apiError = error as Partial<ApiError> | null;
+        setFailure({
+          status: apiError?.status ?? 0,
+          code: apiError?.code ?? 'UNKNOWN',
+          message: apiError?.message ?? '알 수 없는 오류',
+          result: apiError?.result,
+        });
+      });
     // 마운트 시 1회. code/denied는 URL에서 오므로 이 화면이 사는 동안 바뀌지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -72,9 +90,18 @@ export default function KakaoCallbackPage() {
             : '잠시 후 다시 시도해 주세요. 계속 실패하면 비회원으로 둘러볼 수 있어요.'
         }
         actions={
-          <Button variant="primary" onClick={() => navigate('/login', { replace: true })}>
-            로그인 화면으로
-          </Button>
+          <>
+            <Button variant="primary" onClick={() => navigate('/login', { replace: true })}>
+              로그인 화면으로
+            </Button>
+            {failure ? (
+              // 문의받을 때 이 줄만 있으면 원인을 바로 좁힐 수 있다.
+              <p className="mt-3 text-center text-xs text-gray-4">
+                오류 코드 {failure.code}
+                {failure.status ? ` (${failure.status})` : ''}
+              </p>
+            ) : null}
+          </>
         }
       />
     </div>

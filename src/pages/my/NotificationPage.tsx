@@ -7,6 +7,7 @@ import notificationRedDot from '../../assets/notification-red-dot.svg';
 import notificationSavedPlace from '../../assets/notification-saved-place.png';
 import notificationStar from '../../assets/notification-star.svg';
 import PageHeader from '../../components/PageHeader';
+import SectionError from '../../components/SectionError';
 import {
   useMarkAllNotificationsAsRead,
   useMarkNotificationAsRead,
@@ -20,7 +21,7 @@ import {
 } from '../../lib/notification';
 import { shouldMarkNotificationsRead } from '../../lib/notificationScroll';
 import type { NotificationItem } from '../../types/notification/notification';
-import { loadFailureMessage, loadingMessage, loadingMoreMessage } from '../../lib/messages';
+import { loadFailureMessageBrief, loadingMessage, loadingMoreMessage } from '../../lib/messages';
 
 function NotificationTypeIcon({ type }: { type: string }) {
   const normalizedType = type.toUpperCase();
@@ -74,6 +75,26 @@ function NotificationCard({
         </span>
       ) : null}
     </button>
+  );
+}
+
+/**
+ * 로딩 자리표시자. NotificationCard와 같은 규칙(min-h-20)을 쓴다 —
+ * 실물이 최소 높이만 정해두고 내용이 길면 늘어나므로, 높이를 고정하면 오히려 어긋난다.
+ */
+function NotificationListSkeleton({
+  count,
+  label = loadingMessage('알림'),
+}: {
+  count: number;
+  label?: string;
+}) {
+  return (
+    <div role="status" aria-label={label} className="space-y-3">
+      {Array.from({ length: count }, (_, index) => (
+        <div key={index} className="min-h-20 w-full animate-pulse rounded-btn bg-gray-2" />
+      ))}
+    </div>
   );
 }
 
@@ -152,11 +173,14 @@ export default function NotificationPage() {
       />
 
       <main className="space-y-5 px-[18px] pt-5 pb-8" aria-busy={notificationsQuery.isPending}>
-        {notificationsQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">{loadingMessage('알림')}</p>
-        ) : null}
-        {notificationsQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('알림')}</p>
+        {notificationsQuery.isPending ? <NotificationListSkeleton count={3} /> : null}
+        {/* 목록이 이미 있으면 실패는 맨 위가 아니라 이어받기 자리(하단)에 붙인다 —
+            다음 페이지가 실패한 것뿐인데 상단에 경고가 뜨면 목록 전체가 잘못된 것처럼 보인다. */}
+        {notificationsQuery.isError && groups.length === 0 ? (
+          <SectionError
+            message={loadFailureMessageBrief('알림')}
+            onRetry={() => void notificationsQuery.refetch()}
+          />
         ) : null}
         {!notificationsQuery.isPending && !notificationsQuery.isError && groups.length === 0 ? (
           <p className="rounded-btn bg-white px-5 py-8 text-center typo-sub-2 text-gray-4 shadow-card">
@@ -187,7 +211,13 @@ export default function NotificationPage() {
 
         <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
         {notificationsQuery.isFetchingNextPage ? (
-          <p className="typo-sub-2 text-center text-gray-4">{loadingMoreMessage('알림')}</p>
+          <NotificationListSkeleton count={1} label={loadingMoreMessage('알림')} />
+        ) : null}
+        {notificationsQuery.isError && groups.length > 0 ? (
+          <SectionError
+            message="더 불러오지 못했어요."
+            onRetry={() => void notificationsQuery.fetchNextPage()}
+          />
         ) : null}
       </main>
     </div>

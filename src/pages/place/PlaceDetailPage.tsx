@@ -103,7 +103,16 @@ function PlaceMap({ latitude, longitude }: { latitude: number; longitude: number
     };
   }, [latitude, longitude]);
 
-  if (isMapUnavailable) return <div className="h-40 rounded-btn bg-placeholder" />;
+  // 지도를 못 띄워도 주소는 아래에 그대로 있다. 빈 회색 박스만 남으면 왜 안 보이는지 알 수 없다.
+  if (isMapUnavailable) {
+    return (
+      <div className="flex h-40 items-center justify-center rounded-btn bg-placeholder px-5">
+        <p className="typo-sub-2 text-center text-gray-5">
+          지도를 불러오지 못했어요. 아래 주소를 확인해주세요.
+        </p>
+      </div>
+    );
+  }
 
   return <div ref={mapRef} className="h-40 rounded-btn" />;
 }
@@ -258,6 +267,18 @@ function ReviewItem({ review }: { review: Review }) {
 }
 
 /**
+ * 에러의 HTTP status를 꺼낸다.
+ *
+ * 인터셉터가 거절값을 ApiError 평범한 객체로 정규화하므로(Error 인스턴스가 아니다)
+ * instanceof가 아니라 shape로 본다 — api/onboardingRequired.ts와 같은 방식이다.
+ */
+function apiErrorStatusOf(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const { status } = error as Partial<ApiError>;
+  return typeof status === 'number' ? status : undefined;
+}
+
+/**
  * 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다.
  * 폭은 실물과 같이 여백(mx-5)을 따라간다 — 고정하는 건 높이뿐이다.
  */
@@ -299,25 +320,28 @@ export default function PlaceDetailPage() {
   if (placeQuery.isPending) return <PlaceDetailSkeleton />;
 
   if (placeQuery.isError || !place) {
-    // 없는 장소(삭제됐거나 잘못된 id)는 다시 시도해봐야 영영 404다.
+    // 없는 장소(404)나 잘못된 id(400)는 다시 시도해봐야 결과가 같다.
     // 재시도 버튼을 물리면 빠져나갈 길이 없으므로 탐색으로 돌려보낸다.
-    const notFound = (placeQuery.error as Partial<ApiError> | null)?.status === 404;
+    const status = apiErrorStatusOf(placeQuery.error);
+    const isUnreachable = status === 404 || status === 400;
 
     return (
       <div className="min-h-dvh w-full bg-white">
         <PageHeader title="장소 상세" />
         <div className="px-5 py-8">
           <p className="text-sm text-gray-4">
-            {notFound
+            {status === 404
               ? '찾을 수 없는 장소예요. 삭제되었을 수 있어요.'
-              : loadFailureMessageBrief('장소 정보')}
+              : status === 400
+                ? '잘못된 주소로 들어왔어요.'
+                : loadFailureMessageBrief('장소 정보')}
           </p>
           <Button
             variant="secondary"
-            onClick={() => (notFound ? navigate('/search') : placeQuery.refetch())}
+            onClick={() => (isUnreachable ? navigate('/search') : placeQuery.refetch())}
             className="mt-4"
           >
-            {notFound ? '탐색으로 돌아가기' : '다시 시도'}
+            {isUnreachable ? '탐색으로 돌아가기' : '다시 시도'}
           </Button>
         </div>
       </div>
@@ -363,6 +387,14 @@ export default function PlaceDetailPage() {
       />
 
       <PlaceThumbnail key={place.placeId} placeId={place.placeId} placeName={placeName} />
+
+      {/* 저장 실패는 낙관적 갱신을 되돌리기만 해서, 켜졌던 북마크가 조용히 꺼진다.
+          왜 되돌아갔는지 알려준다. */}
+      {bookmark.isError ? (
+        <p role="alert" aria-live="polite" className="mt-2 px-5 text-xs text-danger">
+          저장 상태를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.
+        </p>
+      ) : null}
 
       <h2 className="typo-head-2 mt-5 px-5 text-gray-6">{placeName}</h2>
 
@@ -486,13 +518,22 @@ export default function PlaceDetailPage() {
 
       {deleteTarget ? (
         <DeleteReviewModal
-          onCancel={() => setDeleteTarget(null)}
+          isPending={deleteReviewMutation.isPending}
+          // 실패하면 모달을 닫지 않는다 — 닫아버리면 왜 안 지워졌는지 알 수 없고
+          // 다시 시도하려면 메뉴부터 다시 열어야 한다. 이 자리에서 바로 다시 누르게 한다.
+          errorMessage={
+            deleteReviewMutation.isError ? '후기를 삭제하지 못했어요. 다시 시도해주세요.' : undefined
+          }
+          onCancel={() => {
+            if (deleteReviewMutation.isPending) return;
+            deleteReviewMutation.reset();
+            setDeleteTarget(null);
+          }}
           onConfirm={() => {
+            if (deleteReviewMutation.isPending) return;
+
             deleteReviewMutation.mutate(deleteTarget, {
-              // 실패해도 모달은 닫는다 — onSuccess만 있을 때는 삭제가 실패하면
-              // 모달이 열린 채 아무 일도 일어나지 않았다. 후기가 목록에 그대로
-              // 남아 있는 것이 "안 지워졌다"는 신호다.
-              onSettled: () => {
+              onSuccess: () => {
                 void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
                 setDeleteTarget(null);
               },

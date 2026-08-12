@@ -198,8 +198,11 @@ export default function SearchPage() {
     setIsFilterOpen(false);
   };
 
-  /** 결과가 0건일 때 빠져나갈 길. 검색어는 사용자가 직접 지우면 되므로 필터만 되돌린다. */
-  const resetFilters = () => {
+  // 결과가 0건일 때 빠져나갈 길. 검색어를 남겨두면 초기화해도 여전히 0건이라
+  // 버튼이 아무 일도 안 하는 것처럼 보인다 — 검색어·지역·테마·오행을 함께 되돌린다.
+  const hasSearchCondition = appliedFilters.length > 0 || keyword.trim().length > 0;
+  const resetConditions = () => {
+    setKeyword('');
     setRegion(null);
     setSelectedTheme(null);
     setParams({});
@@ -304,13 +307,13 @@ export default function SearchPage() {
             ) : (
               <div className="flex flex-col items-center gap-3 py-4">
                 <p className="typo-sub-2 text-gray-4">조건에 맞는 장소가 없습니다.</p>
-                {appliedFilters.length > 0 ? (
+                {hasSearchCondition ? (
                   <button
                     type="button"
-                    onClick={resetFilters}
+                    onClick={resetConditions}
                     className="typo-sub-2 rounded-full bg-white px-4 py-2 font-bold text-primary shadow-card"
                   >
-                    필터 초기화
+                    조건 초기화
                   </button>
                 ) : null}
               </div>
@@ -320,12 +323,18 @@ export default function SearchPage() {
           {placesQuery.isFetchingNextPage ? (
             <PlaceListSkeleton count={1} className="mt-2" label={loadingMoreMessage('장소')} />
           ) : null}
-          {/* 다음 페이지만 실패한 경우 — 목록은 그대로 두고 이어받기만 다시 시도한다. */}
-          {placesQuery.isError && places.length > 0 ? (
+          {/* 다음 페이지만 실패한 경우 — 목록은 그대로 두고 이어받기만 다시 시도한다.
+              isError로 판정하면 초기 실패와 구분이 안 된다. isFetchNextPageError가
+              "이미 받아둔 페이지는 멀쩡한데 이어받기만 실패했다"를 정확히 가리킨다. */}
+          {placesQuery.isFetchNextPageError ? (
             <SectionError
               className="mt-2"
               message="더 불러오지 못했어요."
-              onRetry={() => void placesQuery.fetchNextPage()}
+              onRetry={() => {
+                // 관측자가 이미 재요청을 걸었을 수 있다 — 연타로 같은 페이지를 겹쳐 부르지 않는다.
+                if (placesQuery.isFetchingNextPage) return;
+                void placesQuery.fetchNextPage();
+              }}
             />
           ) : null}
         </section>

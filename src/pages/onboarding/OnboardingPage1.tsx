@@ -4,6 +4,16 @@ import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
 import { cn } from '../../lib/cn';
+import {
+  HOURS,
+  MINUTES,
+  birthYearsAscending,
+  clampDate,
+  dayOptions,
+  formatHour,
+  monthOptions,
+  pad,
+} from '../../lib/birthDate';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useInitGuestSession, useSaveGuestSaju } from '../../hooks/onboarding/useGuestOnboarding';
 import type { Gender, GuestSajuRequest } from '../../types/onboarding/guestOnboarding';
@@ -23,10 +33,7 @@ interface TimeValue {
   minute: number;
 }
 
-const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 1 }, (_, i) => 1900 + i);
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const YEARS = birthYearsAscending();
 const DEFAULT_DATE: DateValue = { year: 2000, month: 1, day: 1 };
 const DEFAULT_TIME: TimeValue = { hour: 0, minute: 0 };
 
@@ -38,35 +45,6 @@ const GENDER_OPTIONS = [
   { value: 'MALE', label: '남자' },
   { value: 'FEMALE', label: '여자' },
 ] as const;
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const range = (length: number) => Array.from({ length }, (_, i) => i + 1);
-
-/**
- * 미래 날짜는 휠에 아예 올리지 않는다 — 고른 뒤 막는 게 아니라 고를 수 없게 하는 게 시안이다.
- * 올해를 고르면 이번 달까지, 이번 달을 고르면 오늘까지만 옵션이 생긴다.
- */
-function maxMonth(year: number) {
-  const now = new Date();
-  return year === now.getFullYear() ? now.getMonth() + 1 : 12;
-}
-
-function maxDay(year: number, month: number) {
-  const now = new Date();
-  if (year === now.getFullYear() && month === now.getMonth() + 1) return now.getDate();
-  // month는 1-based, Date의 day 0 = 전달 마지막 날 → 해당 월의 일수
-  return new Date(year, month, 0).getDate();
-}
-
-/** 연·월이 바뀌어 옵션이 줄면 월·일을 남은 범위 안으로 당긴다. */
-function clampDate({ year, month, day }: DateValue): DateValue {
-  const clampedMonth = Math.min(month, maxMonth(year));
-  return { year, month: clampedMonth, day: Math.min(day, maxDay(year, clampedMonth)) };
-}
-
-function formatHour(hour: number) {
-  return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
-}
 
 /** 달력 종류·성별처럼 2지선다를 pill로 고르는 그룹. (Figma 3099:1684) */
 function PillGroup<T extends string>({
@@ -224,13 +202,13 @@ export default function OnboardingPage1() {
       onChange: (year) => setDraftDate((prev) => clampDate({ ...prev, year })),
     },
     {
-      options: range(maxMonth(draftDate.year)),
+      options: monthOptions(draftDate.year),
       value: draftDate.month,
       format: (v) => `${v}월`,
       onChange: (month) => setDraftDate((prev) => clampDate({ ...prev, month })),
     },
     {
-      options: range(maxDay(draftDate.year, draftDate.month)),
+      options: dayOptions(draftDate.year, draftDate.month),
       value: draftDate.day,
       format: (v) => `${v}일`,
       onChange: (day) => setDraftDate((prev) => ({ ...prev, day })),

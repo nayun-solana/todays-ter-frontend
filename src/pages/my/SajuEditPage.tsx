@@ -6,6 +6,17 @@ import PageHeader from '../../components/PageHeader';
 import { ChevronDownIcon } from '../../components/icons';
 import { useMemberSaju, useMyPage, useUpdateMemberSaju } from '../../hooks/my/useMy';
 import { useCreateFortuneReport, useReportStatus } from '../../hooks/onboarding/useGetReport';
+import {
+  HOURS,
+  MINUTES,
+  birthYearsDescending,
+  clampDate,
+  dayOptions,
+  formatBirthDate,
+  formatHour,
+  monthOptions,
+  pad,
+} from '../../lib/birthDate';
 import { loadFailureMessage, loadingMessage } from '../../lib/messages';
 
 type DateField = 'year' | 'month' | 'day';
@@ -26,26 +37,9 @@ const DEFAULT_SAJU_FORM: SajuForm = {
   time: INITIAL_TIME,
   hasTime: false,
 };
-const YEARS = Array.from(
-  { length: new Date().getFullYear() - 1900 + 1 },
-  (_, index) => new Date().getFullYear() - index,
-);
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
-const HOURS = Array.from({ length: 24 }, (_, index) => index);
-const MINUTES = Array.from({ length: 60 }, (_, index) => index);
+/** 최근 해부터 내려온다 — 온보딩 휠과 정렬이 반대다(`lib/birthDate` 주석 참고). */
+const YEARS = birthYearsDescending();
 const WHEEL_ROW_HEIGHT = 48;
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate();
-}
-
-function formatHour(hour: number) {
-  return `${hour < 12 ? '오전' : '오후'} ${hour % 12 || 12}시`;
-}
-
-function formatDate(date: { year: number; month: number; day: number }) {
-  return `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-}
 
 function toSajuForm(saju: {
   calendarType: 'SOLAR' | 'LUNAR';
@@ -76,7 +70,7 @@ function DateSelect({
 }: {
   label: string;
   value: number;
-  options: number[];
+  options: readonly number[];
   open: boolean;
   onToggle: () => void;
   onSelect: (value: number) => void;
@@ -167,7 +161,7 @@ function TimeWheel({
   scrollRef,
   onSelect,
 }: {
-  options: number[];
+  options: readonly number[];
   format: (value: number) => string;
   scrollRef: RefObject<HTMLDivElement | null>;
   onSelect: (value: number) => void;
@@ -277,10 +271,9 @@ export default function SajuEditPage() {
   const serverForm = sajuQuery.data ? toSajuForm(sajuQuery.data) : null;
   const form = draft ?? serverForm ?? DEFAULT_SAJU_FORM;
   const { date, calendarType, time: pickerTime, hasTime: hasSelectedTime } = form;
-  const days = Array.from({ length: daysInMonth(date.year, date.month) }, (_, index) => index + 1);
   const changed =
     Boolean(serverForm) &&
-    (formatDate(date) !== formatDate(serverForm!.date) ||
+    (formatBirthDate(date) !== formatBirthDate(serverForm!.date) ||
       hasSelectedTime !== serverForm!.hasTime ||
       pickerTime.hour !== serverForm!.time.hour ||
       pickerTime.minute !== serverForm!.time.minute);
@@ -333,14 +326,15 @@ export default function SajuEditPage() {
     });
   }, [pickerTime.hour, pickerTime.minute, timePickerOpen]);
 
+  /**
+   * 연·월을 바꾸면 남은 범위 밖으로 나간 월·일을 당긴다.
+   *
+   * 예전에는 일수만 맞췄고 미래 차단이 없어서 **올해 12월 31일 같은 미래 생년월일을 저장할 수
+   * 있었다.** 온보딩1은 같은 입력을 미래는 휠에 올리지 않는 방식으로 막고 있었다 —
+   * 같은 값을 고르는 화면이 서로 다른 답을 허용하고 있었던 것이라 온보딩 쪽으로 맞춘다(#163).
+   */
   const updateDate = (field: DateField, value: number) => {
-    setDate((current) => {
-      const next = { ...current, [field]: value };
-      return {
-        ...next,
-        day: Math.min(next.day, daysInMonth(next.year, next.month)),
-      };
-    });
+    setDate((current) => clampDate({ ...current, [field]: value }));
   };
 
   const submit = async () => {
@@ -351,10 +345,8 @@ export default function SajuEditPage() {
     try {
       await updateSajuMutation.mutateAsync({
         calendarType,
-        birthDate: formatDate(date),
-        birthTime: hasSelectedTime
-          ? `${String(pickerTime.hour).padStart(2, '0')}:${String(pickerTime.minute).padStart(2, '0')}`
-          : '',
+        birthDate: formatBirthDate(date),
+        birthTime: hasSelectedTime ? `${pad(pickerTime.hour)}:${pad(pickerTime.minute)}` : '',
         birthTimeUnknown: !hasSelectedTime,
       });
 
@@ -383,8 +375,8 @@ export default function SajuEditPage() {
             <div className="flex gap-1.5">
               <dt className="w-20 font-bold">생년월일</dt>
               <dd>
-                {calendarType === 'SOLAR' ? '양력' : '음력'} {date.year}.
-                {String(date.month).padStart(2, '0')}.{String(date.day).padStart(2, '0')}
+                {calendarType === 'SOLAR' ? '양력' : '음력'} {date.year}.{pad(date.month)}.
+                {pad(date.day)}
               </dd>
             </div>
             <div className="flex gap-1.5">
@@ -417,7 +409,7 @@ export default function SajuEditPage() {
           <DateSelect
             label="월"
             value={date.month}
-            options={MONTHS}
+            options={monthOptions(date.year)}
             open={openField === 'month'}
             onToggle={() => {
               setTimePickerOpen(false);
@@ -428,7 +420,7 @@ export default function SajuEditPage() {
           <DateSelect
             label="일"
             value={date.day}
-            options={days}
+            options={dayOptions(date.year, date.month)}
             open={openField === 'day'}
             onToggle={() => {
               setTimePickerOpen(false);

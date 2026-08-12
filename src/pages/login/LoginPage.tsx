@@ -5,7 +5,7 @@ import { useDevLogin } from '../../hooks/auth/useAuth';
 import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { buildKakaoAuthorizeUrl } from '../../lib/kakao';
 import { useTopColor } from '../../lib/topColor';
-import { AppleIcon, GoogleIcon, KakaoIcon } from './components/BrandIcons';
+import { KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
 
@@ -221,7 +221,7 @@ function BallIntro({ onDone }: { onDone: () => void }) {
 
   return (
     <div ref={containerRef} className="absolute inset-0 bg-white">
-      <p className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 text-2xl font-extrabold text-gray-6">
+      <p className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 typo-head-1 text-gray-6">
         {/* '오'만 분리 — 공이 닿는 순간 색을 공과 일치시키기 위함 */}
         <span ref={oCharRef} className="transition-colors duration-100">
           오
@@ -265,7 +265,7 @@ function LoginContent({
         className="absolute left-1/2 top-[200px] flex w-40 -translate-x-1/2 flex-col items-center gap-2.5 text-center"
         style={{ animation: 'login-rise-in 0.45s ease-out 0.35s both' }}
       >
-        <p className="text-2xl font-extrabold text-primary">오늘의 터</p>
+        <p className="typo-head-1 text-primary">오늘의 터</p>
         <p className="text-sm text-gray-4">사주 기반 장소 추천 서비스</p>
       </div>
 
@@ -275,7 +275,7 @@ function LoginContent({
         style={{ bottom: 72, animation: 'login-rise-in 0.5s ease-out 0.55s both' }}
       >
         {guestError ? (
-          <p role="alert" className="mb-2 text-center text-xs font-bold text-white">
+          <p role="alert" className="mb-2 text-center typo-body-4 text-white">
             {guestError}
           </p>
         ) : null}
@@ -290,7 +290,8 @@ function LoginContent({
 
         <div aria-hidden className="mx-auto mt-2.5 h-px w-[300px] bg-white/40" />
 
-        {/* 카카오는 연동 완료. Apple·구글은 BE 미구현 → 비활성화(회색) 유지 */}
+        {/* Apple·구글은 BE 미구현이라 눌리지 않는 회색 버튼으로 두고 있었는데, 쓸 수 없는 걸
+            보여주는 것보다 안 보여주는 편이 낫다고 판단해 걷어냈다. 지원이 붙으면 되살린다. */}
         <button
           type="button"
           onClick={() => {
@@ -301,24 +302,6 @@ function LoginContent({
         >
           <KakaoIcon className="size-5" />
           <span className="text-sm font-bold text-[#191600]">카카오로 로그인</span>
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
-        >
-          <AppleIcon className="h-5 w-4 grayscale" />
-          <span className="text-sm font-bold text-white">Apple로 로그인</span>
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled
-          className="mt-2 flex h-12 items-center justify-center gap-2.5 rounded-full bg-gray-3 opacity-60"
-        >
-          <GoogleIcon className="size-5 grayscale" />
-          <span className="text-sm font-bold text-white">구글로 로그인</span>
         </button>
 
         {/* 개발용 로그인 — dev 빌드에만 렌더된다(카카오 키 대기 중 회원 상태 테스트용, #72) */}
@@ -357,7 +340,7 @@ function DevLoginButton() {
           { onSuccess: () => navigate(from, { replace: true }) },
         )
       }
-      className="mt-4 flex h-10 items-center justify-center rounded-full border border-dashed border-white/60 text-xs font-bold text-white/80"
+      className="mt-4 flex h-10 items-center justify-center rounded-full border border-dashed border-white/60 typo-body-4 text-white/80"
     >
       {devLogin.isPending ? '발급 중…' : '개발용 로그인 (dev 전용)'}
     </button>

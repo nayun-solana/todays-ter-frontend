@@ -20,6 +20,19 @@ export type ApiError = {
   result?: unknown;
 };
 
+/**
+ * 에러의 HTTP status를 꺼낸다. 못 꺼내면 undefined.
+ *
+ * 인터셉터가 거절값을 ApiError 평범한 객체로 정규화하므로(Error 인스턴스가 아니다)
+ * instanceof가 아니라 shape로 본다 — onboardingRequired.ts와 같은 방식이다.
+ * 404·400처럼 "다시 시도해도 결과가 같은" 실패를 갈라낼 때 쓴다.
+ */
+export function apiErrorStatusOf(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const { status } = error as Partial<ApiError>;
+  return typeof status === 'number' ? status : undefined;
+}
+
 /** @see SuccessCode */
 export const SuccessCode = {
   OK: 'COMMON200',

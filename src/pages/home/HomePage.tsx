@@ -136,7 +136,7 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-col gap-2">
                   {/* 인사 문구는 서버가 통째로 내려준다(게스트/회원, 닉네임 유무까지 서버 판단). */}
-                  <p className="text-2xl font-extrabold">{header?.greeting}</p>
+                  <p className="typo-head-1">{header?.greeting}</p>
                   <p className="text-[17px] font-bold">{header?.subGreeting}</p>
                 </div>
               </>

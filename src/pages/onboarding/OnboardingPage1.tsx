@@ -241,7 +241,7 @@ export default function OnboardingPage1() {
 
       <header className="mt-11 flex flex-col gap-4">
         <p className="text-base font-bold text-primary">내 사주 입력</p>
-        <h1 className="text-2xl font-extrabold leading-8 text-gray-6">
+        <h1 className="typo-head-1 text-gray-6">
           입력하신 생년월일시로
           <br />
           오행을 계산해요
@@ -283,7 +283,7 @@ export default function OnboardingPage1() {
                   type="button"
                   onClick={openSkipSheet}
                   className={cn(
-                    'flex items-center gap-1 self-start text-xs font-bold',
+                    'flex items-center gap-1 self-start typo-body-4',
                     unknownTime ? 'text-primary' : 'text-gray-3',
                   )}
                 >
@@ -307,7 +307,7 @@ export default function OnboardingPage1() {
 
       <div className="mt-auto flex flex-col gap-2">
         {submitError ? (
-          <p role="alert" className="text-center text-xs font-bold text-danger">
+          <p role="alert" className="text-center typo-body-4 text-danger">
             {submitError}
           </p>
         ) : null}

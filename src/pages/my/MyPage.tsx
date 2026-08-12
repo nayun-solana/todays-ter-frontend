@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router';
 
 import iconChevronRight from '../../assets/icon-chevron-right.svg';
+import SectionError from '../../components/SectionError';
 import { ChevronRightIcon } from '../../components/icons';
 import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
-import { loadFailureMessage } from '../../lib/messages';
+import { loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
+import TabPageHeader from '../../components/TabPageHeader';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
@@ -32,6 +34,23 @@ function DefaultAvatar() {
   );
 }
 
+/**
+ * 프로필 카드 자리표시자. 실제 카드와 같은 높이(아바타 size-25 + 닉네임 한 줄)를 잡는다.
+ * 닉네임을 '닉네임'으로 폴백해두면 실패해도 그럴듯한 화면이 남아 사용자가 실패를 모른다.
+ */
+function ProfileSkeleton() {
+  return (
+    <section
+      role="status"
+      aria-label={loadingMessage('회원 정보')}
+      className="flex flex-col items-center gap-2 rounded-btn bg-white p-5 shadow-card-lg"
+    >
+      <div className="size-25 animate-pulse rounded-full bg-gray-2" />
+      <div className="h-6 w-24 max-w-full animate-pulse rounded bg-gray-2" />
+    </section>
+  );
+}
+
 export default function MyPage() {
   const navigate = useNavigate();
   const { isMember, isPending: isAuthPending } = useAuthStatus();
@@ -43,31 +62,44 @@ export default function MyPage() {
   // 게스트는 여기까지 오지 않는다 — 라우트가 RequireMemberTab 아래라 가드가 잠금 화면(GuestTabGate)을
   // 대신 렌더한다. 예전에는 이 파일에도 같은 시안의 잠금 화면이 따로 있었지만 도달할 수 없는 코드였고,
   // 두 벌이 이미 서로 어긋나 있었다(가드 쪽은 GuestLoginPrompt를 쓴다).
+  // 게스트/회원 분기 전이라 설정 메뉴는 아직 못 보여주지만, 헤더와 프로필 자리는 잡아둔다 —
+  // 통짜 빈 배경은 화면이 멈춘 것처럼 보인다.
   if (isAuthPending) {
-    return <div className="w-full flex-1 bg-gray-1" aria-busy="true" aria-label="불러오는 중" />;
+    return (
+      <div className="w-full flex-1 bg-gray-1">
+        <header className="bg-white px-5 pb-4 pt-safe-5">
+          <h1 className="typo-head-1 text-primary">마이페이지</h1>
+        </header>
+        <div className="px-5 pt-3">
+          <ProfileSkeleton />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="w-full flex-1 bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-safe-5">
-        <h1 className="typo-head-1 text-primary">마이페이지</h1>
-      </header>
+      <TabPageHeader title="마이페이지" />
 
       <main className="px-5 pt-3">
-        <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
-          <div className="flex flex-col items-center gap-2">
-            {profile?.profileImageUrl ? (
-              <img
-                src={profile.profileImageUrl}
-                alt="프로필 이미지"
-                className="size-25 rounded-full object-cover"
-              />
-            ) : (
-              <DefaultAvatar />
-            )}
-            <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
-          </div>
-        </section>
+        {myPageQuery.isPending ? (
+          <ProfileSkeleton />
+        ) : (
+          <section className="flex flex-col items-center gap-5 rounded-btn bg-white p-5 shadow-card-lg">
+            <div className="flex flex-col items-center gap-2">
+              {profile?.profileImageUrl ? (
+                <img
+                  src={profile.profileImageUrl}
+                  alt="프로필 이미지"
+                  className="size-25 rounded-full object-cover"
+                />
+              ) : (
+                <DefaultAvatar />
+              )}
+              <p className="typo-head-4 text-gray-5">{profile?.nickname ?? '닉네임'}</p>
+            </div>
+          </section>
+        )}
 
         <button
           type="button"
@@ -82,7 +114,11 @@ export default function MyPage() {
           <img src={iconChevronRight} alt="" className="h-[14px] w-[8px] rotate-180" />
         </button>
         {myPageQuery.isError ? (
-          <p className="typo-sub-2 mt-2 text-gray-4">{loadFailureMessage('마이페이지 정보')}</p>
+          <SectionError
+            className="mt-2"
+            message={loadFailureMessageBrief('마이페이지 정보')}
+            onRetry={() => void myPageQuery.refetch()}
+          />
         ) : null}
         <section className="mt-6">
           <h2 className="typo-head-3 text-gray-6">설정</h2>

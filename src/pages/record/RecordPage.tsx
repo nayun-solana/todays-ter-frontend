@@ -1,10 +1,12 @@
 import { useNavigate, useSearchParams } from 'react-router';
 
 import PillTabs, { type PillTabItem } from '../../components/PillTabs';
+import SectionError from '../../components/SectionError';
 import { useMyPlaces } from '../../hooks/record/useRecord';
 import type { MyPlaceListType } from '../../types/record/myPlace';
 import RecordPlaceCard from './components/RecordPlaceCard';
-import { loadFailureMessageBrief } from '../../lib/messages';
+import { loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
+import TabPageHeader from '../../components/TabPageHeader';
 
 type RecordTab = 'saved' | 'visited';
 
@@ -30,6 +32,24 @@ function dateLabel(savedDate: string) {
   return `저장일 ${month}/${day}`;
 }
 
+/**
+ * 로딩 자리표시자. RecordPlaceCard와 같은 높이(p-3 + size-16 = 88px)를 잡는다.
+ * 카드 안 텍스트가 truncate라 실물도 이 높이에서 늘어나지 않는다.
+ */
+function RecordListSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label={loadingMessage('목록')}
+      className="mt-4 flex flex-col gap-3"
+    >
+      {Array.from({ length: 3 }, (_, index) => (
+        <div key={index} className="h-22 w-full animate-pulse rounded-btn bg-gray-2" />
+      ))}
+    </div>
+  );
+}
+
 export default function RecordPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,17 +73,25 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-safe-5">
-        <h1 className="text-2xl font-extrabold text-primary">내 터</h1>
-      </header>
+      <TabPageHeader title="내 터" />
 
       <div className="px-5 pt-4 pb-6">
         <PillTabs items={RECORD_TABS} value={activeTab} onChange={setActiveTab} />
 
+        {/* 탭마다 쿼리 키가 달라서 전환할 때마다 목록이 사라졌다 찬다 —
+            자리표시자로 높이를 잡아 화면이 무너지지 않게 한다. */}
         {placesQuery.isPending ? (
-          <p className="mt-4 text-sm text-gray-4">불러오는 중…</p>
+          <RecordListSkeleton />
         ) : placesQuery.isError ? (
-          <p className="mt-4 text-sm text-gray-4">{loadFailureMessageBrief('목록')}</p>
+          <SectionError
+            className="mt-4"
+            message={loadFailureMessageBrief('목록')}
+            onRetry={() => void placesQuery.refetch()}
+          />
+        ) : places.length === 0 ? (
+          <p className="mt-4 rounded-btn bg-white px-5 py-8 text-center text-sm text-gray-4 shadow-xs">
+            {activeTab === 'saved' ? '아직 저장한 터가 없어요.' : '아직 다녀온 터가 없어요.'}
+          </p>
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
             {places.map((place) => {

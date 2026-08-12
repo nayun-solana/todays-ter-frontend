@@ -1,4 +1,5 @@
 import GuestLoginPrompt from '../components/GuestLoginPrompt';
+import TabPageHeader from '../components/TabPageHeader';
 
 /**
  * 기록·마이 탭에 게스트가 들어왔을 때 보여주는 잠금 화면 (Figma 3509:4479 · 3509:4591).
@@ -21,9 +22,7 @@ type GuestTabGateProps = {
 export default function GuestTabGate({ title, variant }: GuestTabGateProps) {
   return (
     <div className="relative min-h-dvh bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-safe-5">
-        <h1 className="typo-head-1 text-primary">{title}</h1>
-      </header>
+      <TabPageHeader title={title} />
 
       <div aria-hidden className="px-5 pt-4">
         {variant === 'record' ? <RecordPlaceholder /> : <MyPlaceholder />}

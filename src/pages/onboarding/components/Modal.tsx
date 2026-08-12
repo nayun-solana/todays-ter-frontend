@@ -108,7 +108,7 @@ export default function Modal({
               )}
             </p>
 
-            <p className="text-center text-xs font-normal text-gray-6">
+            <p className="text-center typo-sub-2 text-gray-6">
               {isSuccess ? (
                 <>
                   생성된 리포트는 마이페이지에서

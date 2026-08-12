@@ -103,7 +103,13 @@ export function useUpdateMemberConcerns() {
       queryClient.setQueryData(myKeys.concerns(), data);
       // 홈 4개(기운·루틴·추천·헤더)와 추천 상세가 전부 고민에서 파생된다.
       void queryClient.invalidateQueries({ queryKey: homeKeys.all });
-      void queryClient.invalidateQueries({ queryKey: recommendationKeys.all });
+      // 공유 토큰 쿼리(`recommendationKeys.share`)는 제외한다. 그쪽 queryFn은 서버에 토큰을
+      // 만드는 POST고 `staleTime: Infinity`로 재발급을 막아둔 건데, invalidate는 staleTime을
+      // 무시하므로 프리픽스로 싹 쓸면 고민 수정만으로 발급 요청이 다시 나간다.
+      void queryClient.invalidateQueries({
+        queryKey: recommendationKeys.all,
+        predicate: (query) => query.queryKey[2] !== 'share',
+      });
     },
   });
 }

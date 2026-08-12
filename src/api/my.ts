@@ -6,7 +6,7 @@ import {
   MemberSajuResponse,
   MemberWithdrawRequest,
   MemberSajuUpdateRequest,
-  type MemberConcernsUpdateRequest,
+  MemberConcernsUpdateRequest,
 } from '../types/my/my';
 import axiosInstance from './axiosInstance';
 import { getResult } from './helpers';
@@ -48,11 +48,18 @@ export async function getMemberConcerns(): Promise<MemberConcernsResponse> {
   return MemberConcernsResponse.parse(getResult(response));
 }
 
-/** PUT /members/me/concerns — 회원 고민 유형 수정. 404 조건은 위 조회와 같다. */
+/**
+ * PUT /members/me/concerns — 회원 고민 유형 수정. 404 조건은 위 조회와 같다.
+ *
+ * 요청도 parse한다 — 타입만 걸어두면 `min(1)`이 런타임에는 아무 일도 하지 않아서,
+ * 빈 배열이 그대로 나가 BE의 `@NotEmpty` 400(`COMMON400_1`)으로 돌아온다. 그건 호출부에서
+ * 일반 실패 문구로 뭉개지므로, 계약 위반은 나가기 전에 여기서 드러내는 편이 낫다.
+ */
 export async function updateMemberConcerns(
   body: MemberConcernsUpdateRequest,
 ): Promise<MemberConcernsResponse> {
-  const response = await axiosInstance.put<ApiResponse>('/members/me/concerns', body);
+  const payload = MemberConcernsUpdateRequest.parse(body);
+  const response = await axiosInstance.put<ApiResponse>('/members/me/concerns', payload);
   return MemberConcernsResponse.parse(getResult(response));
 }
 

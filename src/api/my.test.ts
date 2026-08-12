@@ -56,6 +56,11 @@ describe('member concerns API', () => {
     await expect(getMemberConcerns()).rejects.toThrow();
   });
 
+  it('빈 배열은 요청을 보내기 전에 막는다 — BE @NotEmpty 400을 일반 실패 문구로 뭉개지 않게', async () => {
+    await expect(updateMemberConcerns({ concernTypes: [] })).rejects.toThrow();
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+  });
+
   it('writes concern types with PUT — POST 는 계약에 없다', async () => {
     mockedAxios.put.mockResolvedValue(responseWith({ concernTypes: ['CAREER'] }));
 

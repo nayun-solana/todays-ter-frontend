@@ -12,6 +12,7 @@ import type { ConcernType } from '../../types/onboarding/guestOnboarding';
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
 import CategoryCard from './components/CategoryCard';
+import { cn } from '../../lib/cn';
 
 //assets
 import num1 from '../../assets/onboarding/3-1.svg';
@@ -22,6 +23,18 @@ import num5 from '../../assets/onboarding/3-5.svg';
 import num6 from '../../assets/onboarding/3-6.svg';
 
 const CONCERN_ICONS = [num1, num2, num3, num4, num5, num6];
+
+/**
+ * 회원 고민 유형 조회·저장 실패 문구. 조회와 저장이 같은 이유로 실패하므로 한 곳에서 만든다.
+ *
+ * 온보딩 행이 없는 회원(`MEMBER404_3`)은 다시 시도해도 계속 404다 —
+ * "잠시 후 다시 시도해주세요"는 거짓말이 되므로 원인을 알려준다.
+ */
+function concernSaveErrorMessage(error: unknown): string {
+  return isMemberOnboardingMissing(error)
+    ? '사주 정보가 없어 고민 유형을 저장할 수 없어요. 먼저 사주 리포트를 만들어주세요.'
+    : '고민 유형을 저장하지 못했어요. 잠시 후 다시 시도해주세요.';
+}
 
 interface Concern {
   /** BE `ConcernType` 값을 그대로 쓴다 — 화면용 id를 따로 두면 매핑 층이 하나 더 생긴다. */
@@ -68,7 +81,31 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
   const [draftIds, setDraftIds] = useState<ConcernType[] | null>(null);
   const selectedIds = draftIds ?? savedConcerns ?? [];
 
+  /**
+   * 프리필이 끝나기 전에는 고를 수 없게 잠근다.
+   *
+   * ⚠️ 잠그지 않으면 **저장돼 있던 고민이 조용히 지워진다.** 응답 전에 카드를 하나 누르면
+   * `draftIds`가 채워져, 뒤늦게 도착한 서버 값이 화면에 영영 안 나타난다. 그 상태로 저장하면
+   * `PUT`이 전체 치환이라(BE `onboarding.updateConcerns(request.concernTypes())`)
+   * 사용자가 본 적 없는 기존 선택이 날아간다 — 저장값 [LOVE, HEALTH]에서 CAREER만 빨리
+   * 누르면 결과가 [CAREER]가 된다.
+   *
+   * `SajuEditPage`에는 이 노출이 없다. 그쪽은 필드를 하나씩 치환하지만 여기는 배열 전체다.
+   */
+  const isPrefilling = isEdit && isMember && memberConcernsQuery.isPending;
   const isSaving = saveConcerns.isPending || updateConcerns.isPending;
+
+  /**
+   * 조회 실패도 저장 실패와 같은 문구로 알린다.
+   *
+   * 이걸 안 보여주면 조회에 실패한 회원이 "아직 아무것도 저장 안 됨"과 구분되지 않는 빈 화면을
+   * 보고, 다 고르고 저장을 눌러서야 문제를 알게 된다. 특히 `MEMBER404_3`은 저장도 같은 이유로
+   * 실패할 것이 확정이라 미리 말해주는 편이 낫다.
+   */
+  const loadError = memberConcernsQuery.isError
+    ? concernSaveErrorMessage(memberConcernsQuery.error)
+    : null;
+  const errorMessage = saveError ?? loadError;
 
   /**
    * 고민 유형 저장 후 다음 화면으로.
@@ -86,7 +123,7 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
    * 새로 계산한다. 리포트 재생성은 필요 없고, FE는 캐시만 비우면 된다(`useUpdateMemberConcerns`).
    */
   const submit = async () => {
-    if (isSaving) return;
+    if (isSaving || isPrefilling) return;
 
     if (isEdit) {
       setSaveError(null);
@@ -94,13 +131,7 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
         await updateConcerns.mutateAsync({ concernTypes: selectedIds });
         navigate('/my/concerns/complete', { state: { selectedConcerns: selectedIds } });
       } catch (error) {
-        // 회원에게 연결된 온보딩 행이 없는 경우(로그인 후 온보딩한 회원). 재시도해도 계속 404라
-        // "잠시 후 다시" 안내는 거짓말이 된다 — 원인을 알려준다.
-        setSaveError(
-          isMemberOnboardingMissing(error)
-            ? '사주 정보가 없어 고민 유형을 저장할 수 없어요. 먼저 사주 리포트를 만들어주세요.'
-            : '고민 유형을 저장하지 못했어요. 잠시 후 다시 시도해주세요.',
-        );
+        setSaveError(concernSaveErrorMessage(error));
       }
       return;
     }
@@ -124,6 +155,9 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
   };
 
   const toggle = (id: ConcernType) => {
+    // 프리필 전 입력은 받지 않는다 — 위 `isPrefilling` 주석 참고.
+    if (isPrefilling) return;
+
     setDraftIds((prev) => {
       const base = prev ?? savedConcerns ?? [];
       return base.includes(id) ? base.filter((v) => v !== id) : [...base, id];
@@ -147,7 +181,11 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
         </div>
       </header>
 
-      <div className="mt-8 grid grid-cols-2 gap-2.5">
+      {/* 저장된 값을 불러오는 동안은 누를 수 없다 — 먼저 누르면 서버 값을 못 본 채 덮어쓴다. */}
+      <div
+        aria-busy={isPrefilling}
+        className={cn('mt-8 grid grid-cols-2 gap-2.5', isPrefilling && 'pointer-events-none')}
+      >
         {CONCERNS.map((concern, index) => (
           <CategoryCard
             icon={CONCERN_ICONS[index]}
@@ -161,18 +199,24 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
       </div>
 
       <div className="mt-auto flex flex-col gap-2">
-        {saveError ? (
+        {errorMessage ? (
           <p role="alert" className="text-center text-xs font-bold text-danger">
-            {saveError}
+            {errorMessage}
           </p>
         ) : null}
         <Button
           variant="primary"
           // BE가 `@NotEmpty`라 빈 선택은 400이다 — 보내기 전에 막는다.
-          disabled={selectedIds.length === 0 || isSaving}
+          disabled={selectedIds.length === 0 || isSaving || isPrefilling}
           onClick={() => void submit()}
         >
-          {isSaving ? '저장 중…' : isEdit ? '고민유형 수정 완료' : '오늘의 터 시작하기'}
+          {isPrefilling
+            ? '불러오는 중…'
+            : isSaving
+              ? '저장 중…'
+              : isEdit
+                ? '고민유형 수정 완료'
+                : '오늘의 터 시작하기'}
         </Button>
       </div>
     </div>

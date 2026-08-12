@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { useDevLogin } from '../../hooks/auth/useAuth';
 import { useInitGuestSession } from '../../hooks/onboarding/useGuestOnboarding';
 import { buildKakaoAuthorizeUrl } from '../../lib/kakao';
+import { useTopColor } from '../../lib/topColor';
 import { KakaoIcon } from './components/BrandIcons';
 
 type Phase = 'intro' | 'login';
@@ -20,6 +21,8 @@ function prefersReducedMotion(): boolean {
  * 공 폭발이 끝나는 시점에 phase가 'login'으로 전환된다.
  */
 export default function LoginPage() {
+  // 화면 전체가 primary라 노치·고무줄 영역도 같은 색이어야 이어져 보인다.
+  useTopColor('var(--color-primary)');
   const navigate = useNavigate();
   // 모션 최소화 설정이면 인트로를 건너뛰고 바로 로그인 화면을 보여준다.
   const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? 'login' : 'intro'));

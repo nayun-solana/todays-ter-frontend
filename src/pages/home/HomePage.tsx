@@ -18,7 +18,8 @@ import {
   useTodayEnergy,
 } from '../../hooks/home/useHome';
 import { useGeolocation } from '../../hooks/useGeolocation';
-import { toOhaengKey } from '../../lib/ohaeng';
+import { ohaengCssVar, toOhaengKey } from '../../lib/ohaeng';
+import { useTopColor } from '../../lib/topColor';
 import EditorPicks from './components/EditorPicks';
 import EnergyCard from './components/EnergyCard';
 import RecommendedPlaceCard from './components/RecommendedPlaceCard';
@@ -62,6 +63,9 @@ export default function HomePage() {
   const energy = energyQuery.data;
   const ohaengKey = energy ? toOhaengKey(energy.element.code) : 'water';
   const theme = OHAENG_HOME[ohaengKey];
+  // 노치·고무줄 영역은 화면이 못 칠하는 자리라 브라우저에 색을 따로 알려준다.
+  // 홈은 오행마다 배경이 달라 그 색을 그대로 넘긴다.
+  useTopColor(ohaengCssVar(ohaengKey));
 
   // 루틴 섹션 제목은 BE가 안 준다 — 오행 표시명으로 만든다("토" → "토기 에너지 루틴", 시안 기준).
   const routineTitle = routines ? `${routines.element.name}기 에너지 루틴` : '';

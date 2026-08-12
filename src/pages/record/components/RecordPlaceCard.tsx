@@ -1,15 +1,11 @@
 import { useState } from 'react';
 
-import waterOrb from '../../../assets/ohaeng/water-orb.png';
 import OhaengBadge from '../../../components/OhaengBadge';
 import { cn } from '../../../lib/cn';
 import { ohaengByLabel, type OhaengLabel } from '../../../lib/ohaeng';
 
 /** 화·수·목·금·토 (오행 한글 표시명) */
 export type PlaceDay = OhaengLabel;
-
-/** thumbnailUrl이 없을 때 쓰는 폴백 이미지 */
-const LOGO_FALLBACK = waterOrb;
 
 export type RecordPlaceCardProps = {
   name: string;
@@ -32,8 +28,7 @@ export default function RecordPlaceCard({
 }: RecordPlaceCardProps) {
   const dayTextClass = ohaengByLabel(day)?.text;
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const showLogo = !imageUrl || failedUrl === imageUrl;
-  const src = showLogo ? LOGO_FALLBACK : imageUrl;
+  const showPlaceholder = !imageUrl || failedUrl === imageUrl;
 
   return (
     <article
@@ -60,17 +55,21 @@ export default function RecordPlaceCard({
         <div
           className={cn(
             'flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl',
-            showLogo ? 'bg-primary-bg p-2.5' : 'bg-gray-3',
+            showPlaceholder ? '' : 'bg-gray-3',
           )}
         >
-          <img
-            src={src}
-            alt=""
-            className={cn('size-full', showLogo ? 'object-contain' : 'object-cover')}
-            onError={() => {
-              if (imageUrl) setFailedUrl(imageUrl);
-            }}
-          />
+          {showPlaceholder ? (
+            <div className="size-full bg-placeholder" />
+          ) : (
+            <img
+              src={imageUrl}
+              alt=""
+              className="size-full object-cover"
+              onError={() => {
+                if (imageUrl) setFailedUrl(imageUrl);
+              }}
+            />
+          )}
         </div>
 
         <div className="min-w-0 flex-1 py-2.5">

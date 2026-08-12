@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-import Button from '../../../components/Button';
+import Button from './Button';
 
 const ROW_H = 48;
 
 export interface WheelColumnSpec {
-  options: number[];
+  options: readonly number[];
   value: number;
   format: (value: number) => string;
   onChange: (value: number) => void;

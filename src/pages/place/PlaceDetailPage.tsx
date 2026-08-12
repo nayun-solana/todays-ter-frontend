@@ -3,10 +3,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
+import type { ApiError } from '../../api/types';
 import iconStar from '../../assets/icon-star.svg';
 import Button from '../../components/Button';
 import OhaengOrb from '../../components/OhaengOrb';
 import PageHeader from '../../components/PageHeader';
+import SectionError from '../../components/SectionError';
 import { MoreVerticalIcon, PencilIcon, PinIcon, TrashIcon } from '../../components/icons';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import {
@@ -255,6 +257,28 @@ function ReviewItem({ review }: { review: Review }) {
   );
 }
 
+/**
+ * 로딩 자리표시자. 실제 영역과 같은 높이를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다.
+ * 폭은 실물과 같이 여백(mx-5)을 따라간다 — 고정하는 건 높이뿐이다.
+ */
+function PlaceDetailSkeleton() {
+  return (
+    <div className="min-h-dvh w-full bg-white" aria-busy="true">
+      <PageHeader title="장소 상세" className="border-b-0" />
+      <span className="sr-only" role="status">
+        {loadingMessage('장소 정보')}
+      </span>
+      <div className="mx-5 mt-[5px] h-[210px] animate-pulse rounded-btn bg-gray-2" />
+      <div className="mx-5 mt-5 h-7 w-40 max-w-full animate-pulse rounded-lg bg-gray-2" />
+      <div className="mt-2 flex gap-1 px-5">
+        <div className="h-8 w-[72px] animate-pulse rounded-btn bg-gray-2" />
+        <div className="h-8 w-20 animate-pulse rounded-btn bg-gray-2" />
+      </div>
+      <div className="mx-5 mt-2 h-[86px] animate-pulse rounded-btn bg-gray-2" />
+    </div>
+  );
+}
+
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -272,23 +296,28 @@ export default function PlaceDetailPage() {
   const deleteReviewMutation = useDeleteRecord();
   const place = placeQuery.data;
 
-  if (placeQuery.isPending) {
-    return (
-      <div className="min-h-dvh w-full bg-white">
-        <PageHeader title="장소 상세" />
-        <p className="px-5 py-8 text-sm text-gray-4">{loadingMessage('장소 정보')}</p>
-      </div>
-    );
-  }
+  if (placeQuery.isPending) return <PlaceDetailSkeleton />;
 
   if (placeQuery.isError || !place) {
+    // 없는 장소(삭제됐거나 잘못된 id)는 다시 시도해봐야 영영 404다.
+    // 재시도 버튼을 물리면 빠져나갈 길이 없으므로 탐색으로 돌려보낸다.
+    const notFound = (placeQuery.error as Partial<ApiError> | null)?.status === 404;
+
     return (
       <div className="min-h-dvh w-full bg-white">
         <PageHeader title="장소 상세" />
         <div className="px-5 py-8">
-          <p className="text-sm text-gray-4">{loadFailureMessageBrief('장소 정보')}</p>
-          <Button variant="secondary" onClick={() => placeQuery.refetch()} className="mt-4">
-            다시 시도
+          <p className="text-sm text-gray-4">
+            {notFound
+              ? '찾을 수 없는 장소예요. 삭제되었을 수 있어요.'
+              : loadFailureMessageBrief('장소 정보')}
+          </p>
+          <Button
+            variant="secondary"
+            onClick={() => (notFound ? navigate('/search') : placeQuery.refetch())}
+            className="mt-4"
+          >
+            {notFound ? '탐색으로 돌아가기' : '다시 시도'}
           </Button>
         </div>
       </div>
@@ -395,9 +424,21 @@ export default function PlaceDetailPage() {
         {tab === '후기' && (
           <div className="pt-4">
             {reviewsQuery.isPending ? (
-              <p className="px-5 py-4 text-sm text-gray-4">{loadingMessage('후기')}</p>
+              <div
+                role="status"
+                aria-label={loadingMessage('후기')}
+                className="flex flex-col gap-2 px-5"
+              >
+                <div className="h-[17px] w-[92px] animate-pulse rounded bg-gray-2" />
+                <div className="h-3 w-32 animate-pulse rounded bg-gray-2" />
+                <div className="mt-1 h-3 w-full animate-pulse rounded bg-gray-2" />
+              </div>
             ) : reviewsQuery.isError ? (
-              <p className="px-5 py-4 text-sm text-gray-4">{loadFailureMessage('후기')}</p>
+              <SectionError
+                className="mx-5"
+                message={loadFailureMessage('후기')}
+                onRetry={() => void reviewsQuery.refetch()}
+              />
             ) : myReview ? (
               <>
                 <div className="px-5">
@@ -448,7 +489,10 @@ export default function PlaceDetailPage() {
           onCancel={() => setDeleteTarget(null)}
           onConfirm={() => {
             deleteReviewMutation.mutate(deleteTarget, {
-              onSuccess: () => {
+              // 실패해도 모달은 닫는다 — onSuccess만 있을 때는 삭제가 실패하면
+              // 모달이 열린 채 아무 일도 일어나지 않았다. 후기가 목록에 그대로
+              // 남아 있는 것이 "안 지워졌다"는 신호다.
+              onSettled: () => {
                 void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
                 setDeleteTarget(null);
               },

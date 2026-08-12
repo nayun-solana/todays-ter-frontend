@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router';
 import OhaengOrb from '../../../components/OhaengOrb';
 import { useEditorPicks } from '../../../hooks/search/useSearch';
 import { cn } from '../../../lib/cn';
-import { ohaengByKey } from '../../../lib/ohaeng';
-import { toOhaengKey } from '../../../lib/ohaeng';
+import { ohaengByKey, toOhaengKey } from '../../../lib/ohaeng';
 import { loadFailureMessageBrief, loadingMessage } from '../../../lib/messages';
 
 /**

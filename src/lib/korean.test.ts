@@ -12,7 +12,11 @@ describe('withObjectParticle', () => {
   it('받침이 없으면 "를"', () => {
     expect(withObjectParticle('장소')).toBe('장소를');
     expect(withObjectParticle('후기')).toBe('후기를');
-    expect(withObjectParticle('에디터 픽')).toBe('에디터 픽을');
+  });
+
+  it('띄어쓰기가 있어도 마지막 글자로 판정한다', () => {
+    expect(withObjectParticle('에디터 픽')).toBe('에디터 픽을'); // 픽 → 받침 있음
+    expect(withObjectParticle('장소 정보')).toBe('장소 정보를'); // 보 → 받침 없음
   });
 
   it('한글이 아닌 끝 글자는 "를"로 둔다 — 판단 근거가 없다', () => {

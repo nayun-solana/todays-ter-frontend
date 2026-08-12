@@ -10,7 +10,7 @@ import metalIcon from '../../../assets/review/metal.png';
 import treeIcon from '../../../assets/review/tree.png';
 import waterIcon from '../../../assets/review/water.png';
 import { usePlaceShareCard } from '../../../hooks/place/usePlace';
-import { ohaengByLabel, ohaengCssVar } from '../../../lib/ohaeng';
+import { DEFAULT_OHAENG, ohaengByLabel, ohaengCssVar } from '../../../lib/ohaeng';
 import type { PlaceDay } from './RecordPlaceCard';
 
 /** Google Places 대표 이미지 없음 등 — 배경만 로컬 폴백 */
@@ -179,10 +179,18 @@ export default function ShareCardModal({
   const isImageMissingError = error?.code === SHARE_CARD_IMAGE_MISSING_CODE;
 
   const placeName = card?.placeName ?? fallbackPlaceName ?? '오늘의 터';
-  /** 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게 */
-  const element: PlaceDay = listElement ?? card?.element ?? '수';
+  /**
+   * 목록에서 본 기운을 우선 — share-cards 실패/누락 시에도 수로 고정되지 않게.
+   *
+   * `listElement`는 라우터 state에서 오므로 **검증된 값이 아니다**(`ReviewDetailPage`가
+   * `location.state`를 캐스팅해 넘긴다). 오래된 히스토리 항목이나 BE 라벨 변경으로 5종 밖의
+   * 값이 들어올 수 있어, 조회에 실패하면 기본값으로 떨어뜨린다. 여기서 단정하면 라벨 하나
+   * 때문에 공유 모달이 통째로 빈 화면이 된다.
+   */
+  const ohaeng = ohaengByLabel(listElement ?? card?.element) ?? DEFAULT_OHAENG;
+  const element: PlaceDay = ohaeng.label;
   // html-to-image가 캡처하는 인라인 스타일이라 Tailwind 클래스 대신 CSS 변수를 직접 넣는다.
-  const fill = ohaengCssVar(ohaengByLabel(element)!.key);
+  const fill = ohaengCssVar(ohaeng.key);
   const shareMessage = `오늘은 ${element}의 기운 받으러\n${placeName}(으)로 !`;
   const cardRef = useRef<HTMLElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);

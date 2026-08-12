@@ -83,6 +83,14 @@ export type OhaengCode = OhaengMeta['code'];
 /** 한글 표시명. BE가 코드 대신 이 값을 주는 API가 아직 있다. */
 export type OhaengLabel = OhaengMeta['label'];
 
+/**
+ * 오행을 못 정했을 때의 기본값(수).
+ *
+ * 검증되지 않은 값(라우터 state 등)으로 조회한 결과가 없을 때 쓴다 — 조회 실패를 그대로
+ * 흘려보내면 호출부가 `!`로 단정하게 되고, 값 하나 때문에 화면이 통째로 죽는다.
+ */
+export const DEFAULT_OHAENG: OhaengMeta = OHAENG_LIST.find((o) => o.key === 'water')!;
+
 /** 오행 상생 순서(목→화→토→금→수). 차트 축처럼 순서가 고정돼야 하는 곳에서 쓴다. */
 export const OHAENG_ORDER: readonly OhaengCode[] = ['WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER'];
 

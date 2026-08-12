@@ -14,6 +14,7 @@ import iconReset from '../../assets/search/icon-reset.svg';
 import themeOther from '../../assets/search/theme-other.svg';
 import OhaengOrb from '../../components/OhaengOrb';
 import PlaceListItem from '../../components/PlaceListItem';
+import SectionError from '../../components/SectionError';
 import { useExploreFilters, useInfinitePlaces } from '../../hooks/search/useSearch';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { cn } from '../../lib/cn';
@@ -197,6 +198,13 @@ export default function SearchPage() {
     setIsFilterOpen(false);
   };
 
+  /** 결과가 0건일 때 빠져나갈 길. 검색어는 사용자가 직접 지우면 되므로 필터만 되돌린다. */
+  const resetFilters = () => {
+    setRegion(null);
+    setSelectedTheme(null);
+    setParams({});
+  };
+
   return (
     <div className="w-full flex-1 bg-gray-1">
       <header
@@ -268,13 +276,13 @@ export default function SearchPage() {
 
         <section className="mt-3 px-5">
           <div className="flex flex-col gap-2">
+            {/* 이미 받아둔 목록이 있으면 무엇보다 먼저 보여준다.
+                isError를 목록보다 먼저 보면, 다음 페이지 요청이 한 번 실패했을 때
+                (useInfiniteQuery는 이때 status를 'error'로 뒤집는다) 보고 있던 목록이
+                통째로 사라지고 에러 문구 한 줄만 남는다. */}
             {placesQuery.isPending ? (
-              <p className="typo-sub-2 py-4 text-gray-4">{loadingMessage('장소')}</p>
-            ) : placesQuery.isError ? (
-              <p className="typo-sub-2 py-4 text-gray-4">{loadFailureMessage('장소')}</p>
-            ) : places.length === 0 ? (
-              <p className="typo-sub-2 py-4 text-gray-4">조건에 맞는 장소가 없습니다.</p>
-            ) : (
+              <PlaceListSkeleton count={4} />
+            ) : places.length > 0 ? (
               places.map((place) => (
                 <PlaceListItem
                   key={place.id}
@@ -288,11 +296,37 @@ export default function SearchPage() {
                   onClick={() => navigate(`/place/${place.id}`)}
                 />
               ))
+            ) : placesQuery.isError ? (
+              <SectionError
+                message={loadFailureMessage('장소')}
+                onRetry={() => void placesQuery.refetch()}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <p className="typo-sub-2 text-gray-4">조건에 맞는 장소가 없습니다.</p>
+                {appliedFilters.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="typo-sub-2 rounded-full bg-white px-4 py-2 font-bold text-primary shadow-card"
+                  >
+                    필터 초기화
+                  </button>
+                ) : null}
+              </div>
             )}
           </div>
           <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
           {placesQuery.isFetchingNextPage ? (
-            <p className="typo-sub-2 py-4 text-center text-gray-4">{loadingMoreMessage('장소')}</p>
+            <PlaceListSkeleton count={1} className="mt-2" label={loadingMoreMessage('장소')} />
+          ) : null}
+          {/* 다음 페이지만 실패한 경우 — 목록은 그대로 두고 이어받기만 다시 시도한다. */}
+          {placesQuery.isError && places.length > 0 ? (
+            <SectionError
+              className="mt-2"
+              message="더 불러오지 못했어요."
+              onRetry={() => void placesQuery.fetchNextPage()}
+            />
           ) : null}
         </section>
       </main>
@@ -440,6 +474,28 @@ export default function SearchPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * 로딩 자리표시자. PlaceListItem과 같은 높이(h-21)를 잡아 데이터가 들어올 때 화면이 튀지 않게 한다.
+ * 폭은 실물과 같이 부모를 따라간다 — 고정하는 건 높이뿐이다.
+ */
+function PlaceListSkeleton({
+  count,
+  className,
+  label = loadingMessage('장소'),
+}: {
+  count: number;
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <div role="status" aria-label={label} className={cn('flex flex-col gap-2', className)}>
+      {Array.from({ length: count }, (_, index) => (
+        <div key={index} className="h-21 w-full animate-pulse rounded-xl bg-gray-2" />
+      ))}
     </div>
   );
 }

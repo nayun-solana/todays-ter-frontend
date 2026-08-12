@@ -15,8 +15,7 @@ export default function ConcernEditCompletePage() {
           <h1 className="typo-head-2">고민유형 수정 완료</h1>
           <p className="typo-sub-2 mt-3">
             수정된 고민유형을 바탕으로
-            <br />
-            터 추천이 재생성되었어요!
+            <br />터 추천이 재생성되었어요!
           </p>
         </div>
       </main>

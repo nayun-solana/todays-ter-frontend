@@ -12,12 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * neutral은 확인 다이얼로그의 취소/돌아가기 버튼 — gray-3 채움 + 흰 글자, 테두리 없음
  * (Figma 2398:3610 탈퇴 확인, 2380:2002 후기 삭제).
  */
-export default function Button({
-  variant = 'primary',
-  disabled,
-  className,
-  ...rest
-}: ButtonProps) {
+export default function Button({ variant = 'primary', disabled, className, ...rest }: ButtonProps) {
   return (
     <button
       type="button"

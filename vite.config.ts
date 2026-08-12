@@ -1,3 +1,5 @@
+import { fileURLToPath, URL } from 'node:url';
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -73,5 +75,10 @@ export default defineConfig({
       workbox: { navigateFallback: 'index.html' },
     }),
   ],
+  // `@/`는 src 루트. 상대경로(`../../../`)는 파일을 옮길 때마다 깨지므로 새 코드는 alias를 쓴다.
+  // tsconfig.app.json의 paths와 vitest.config.ts에 같은 값이 들어가야 한다.
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   server: { proxy },
 });

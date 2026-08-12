@@ -10,8 +10,7 @@ type CompleteLocationState = {
 export default function ReviewCompletePage() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const matchedTerName =
-    (state as CompleteLocationState | null)?.matchedTerName ?? '청계천 모전교';
+  const matchedTerName = (state as CompleteLocationState | null)?.matchedTerName ?? '청계천 모전교';
 
   return (
     <div className="flex min-h-dvh flex-col bg-gray-1">
@@ -26,9 +25,7 @@ export default function ReviewCompletePage() {
       </div>
 
       <div className="flex flex-col gap-2 px-5 pb-8">
-        <Button onClick={() => navigate('/home', { replace: true })}>
-          홈화면으로 돌아가기
-        </Button>
+        <Button onClick={() => navigate('/home', { replace: true })}>홈화면으로 돌아가기</Button>
         <Button
           variant="secondary"
           /** 방금 쓴 기록은 다녀온 터에만 보이므로 해당 탭으로 바로 보낸다. */

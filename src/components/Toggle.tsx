@@ -10,7 +10,13 @@ interface ToggleProps {
 }
 
 /** 공용 스위치. Figma: 40×24, 노브 18px, 켜짐 primary / 꺼짐 gray-3. */
-export default function Toggle({ checked, label, onChange, disabled = false, showState = false }: ToggleProps) {
+export default function Toggle({
+  checked,
+  label,
+  onChange,
+  disabled = false,
+  showState = false,
+}: ToggleProps) {
   return (
     <div className="flex shrink-0 items-center gap-1.5">
       {showState ? (

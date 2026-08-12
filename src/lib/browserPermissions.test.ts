@@ -36,11 +36,9 @@ describe('requestBrowserPermission', () => {
   });
 
   it('위치 권한 요청이 거부되면 denied를 반환한다', async () => {
-    const getCurrentPosition = vi.fn(
-      (_success: PositionCallback, error: PositionErrorCallback) => {
-        error({ code: 1, message: 'denied' } as GeolocationPositionError);
-      },
-    );
+    const getCurrentPosition = vi.fn((_success: PositionCallback, error: PositionErrorCallback) => {
+      error({ code: 1, message: 'denied' } as GeolocationPositionError);
+    });
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
 
     await expect(requestBrowserPermission('location')).resolves.toBe('denied');

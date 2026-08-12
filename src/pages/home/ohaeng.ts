@@ -1,4 +1,4 @@
-import { OHAENG_LIST, type OhaengKey } from '../../lib/ohaeng';
+import { OHAENG_LIST, ohaengCssVar, type OhaengKey } from '../../lib/ohaeng';
 
 export type { OhaengKey };
 
@@ -15,15 +15,6 @@ export interface OhaengHomeTheme {
   routineTitle: string;
   routines: string[];
 }
-
-/** 오행별 대표색 (index.css --color-ohaeng-* 확정값과 동일). */
-const OHAENG_COLOR: Record<OhaengKey, string> = {
-  water: '#5599ff',
-  wood: '#a0dd00',
-  fire: '#ff8b8d',
-  earth: '#ff9853',
-  metal: '#515151',
-};
 
 // 오행 라벨은 한자로 통일(수/목/화/토/금) — OHAENG_LIST.label 그대로 사용.
 // Figma 홈 시안이 earth/fire만 순우리말(흙/불)로 혼용했으나 디자이너 확인 결과 한자 통일로 정리됨.
@@ -55,19 +46,11 @@ function buildBgGradient(color: string): string {
   ].join(', ');
 }
 
-function buildTheme(key: OhaengKey, label: string): OhaengHomeTheme {
-  return {
-    key,
-    label,
-    bgGradient: buildBgGradient(OHAENG_COLOR[key]),
-    ...copy(),
-  };
-}
-
 /** 오행 5종 홈 테마. HomePage가 오행 키로 이 중 하나를 렌더한다. */
 export const OHAENG_HOME: Record<OhaengKey, OhaengHomeTheme> = OHAENG_LIST.reduce(
   (acc, { key, label }) => {
-    acc[key] = buildTheme(key, label);
+    // hex를 복사해두지 않고 CSS 변수를 그대로 참조한다 — 토큰(index.css)이 단일 소스다.
+    acc[key] = { key, label, bgGradient: buildBgGradient(ohaengCssVar(key)), ...copy() };
     return acc;
   },
   {} as Record<OhaengKey, OhaengHomeTheme>,

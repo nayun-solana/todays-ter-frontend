@@ -1,6 +1,7 @@
 import PageHeader from '../../components/PageHeader';
 import { ChevronRightIcon } from '../../components/icons';
 import { usePolicies } from '../../hooks/my/useMy';
+import { loadFailureMessage, loadingMessage } from '../../lib/messages';
 
 export default function PoliciesPage() {
   const policiesQuery = usePolicies();
@@ -12,9 +13,9 @@ export default function PoliciesPage() {
 
       <main className="px-5 pt-5">
         {policiesQuery.isPending ? (
-          <p className="typo-sub-2 text-gray-4">약관을 불러오는 중입니다.</p>
+          <p className="typo-sub-2 text-gray-4">{loadingMessage('약관')}</p>
         ) : policiesQuery.isError ? (
-          <p className="typo-sub-2 text-gray-4">약관을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+          <p className="typo-sub-2 text-gray-4">{loadFailureMessage('약관')}</p>
         ) : (
           <ul className="rounded-btn bg-white px-5 py-4 shadow-card">
             {policies.map((policy, index) => (

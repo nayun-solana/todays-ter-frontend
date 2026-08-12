@@ -21,6 +21,7 @@ import { loadNaverMaps } from '../../lib/naverMaps';
 import { ohaengByLabel } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 import DeleteReviewModal from '../review/components/DeleteReviewModal';
+import { loadFailureMessage, loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
 
 const TABS = ['지도', '후기'] as const;
 type Tab = (typeof TABS)[number];
@@ -275,7 +276,7 @@ export default function PlaceDetailPage() {
     return (
       <div className="min-h-dvh w-full bg-white">
         <PageHeader title="장소 상세" />
-        <p className="px-5 py-8 text-sm text-gray-4">장소 정보를 불러오는 중입니다.</p>
+        <p className="px-5 py-8 text-sm text-gray-4">{loadingMessage('장소 정보')}</p>
       </div>
     );
   }
@@ -285,7 +286,7 @@ export default function PlaceDetailPage() {
       <div className="min-h-dvh w-full bg-white">
         <PageHeader title="장소 상세" />
         <div className="px-5 py-8">
-          <p className="text-sm text-gray-4">장소 정보를 불러오지 못했습니다.</p>
+          <p className="text-sm text-gray-4">{loadFailureMessageBrief('장소 정보')}</p>
           <Button variant="secondary" onClick={() => placeQuery.refetch()} className="mt-4">
             다시 시도
           </Button>
@@ -394,11 +395,9 @@ export default function PlaceDetailPage() {
         {tab === '후기' && (
           <div className="pt-4">
             {reviewsQuery.isPending ? (
-              <p className="px-5 py-4 text-sm text-gray-4">후기를 불러오는 중입니다.</p>
+              <p className="px-5 py-4 text-sm text-gray-4">{loadingMessage('후기')}</p>
             ) : reviewsQuery.isError ? (
-              <p className="px-5 py-4 text-sm text-gray-4">
-                후기를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
-              </p>
+              <p className="px-5 py-4 text-sm text-gray-4">{loadFailureMessage('후기')}</p>
             ) : myReview ? (
               <>
                 <div className="px-5">

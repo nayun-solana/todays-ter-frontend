@@ -12,6 +12,7 @@ import DeleteReviewModal from './components/DeleteReviewModal';
 import ReviewHeader from './components/ReviewHeader';
 import ReviewMoreMenu from './components/ReviewMoreMenu';
 import StarRating from './components/StarRating';
+import { loadFailureMessageBrief } from '../../lib/messages';
 
 type ReviewDetailLocationState = {
   element?: PlaceDay;
@@ -84,19 +85,15 @@ export default function ReviewDetailPage() {
       {reviewQuery.isPending ? (
         <p className="px-5 py-8 text-sm text-gray-4">불러오는 중…</p>
       ) : reviewQuery.isError ? (
-        <p className="px-5 py-8 text-sm text-gray-4">후기를 불러오지 못했습니다.</p>
+        <p className="px-5 py-8 text-sm text-gray-4">{loadFailureMessageBrief('후기')}</p>
       ) : review ? (
         <div className="flex flex-1 flex-col gap-3">
           <section className="flex items-center gap-5 border-b border-gray-2 bg-white px-5 py-4">
             <div className="size-25 shrink-0 overflow-hidden rounded-xl bg-gray-3">
-              {photos[0] ? (
-                <img src={photos[0]} alt="" className="size-full object-cover" />
-              ) : null}
+              {photos[0] ? <img src={photos[0]} alt="" className="size-full object-cover" /> : null}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-4">
-                방문 인증 완료 · {formatDate(review.createdAt)}
-              </p>
+              <p className="text-xs text-gray-4">방문 인증 완료 · {formatDate(review.createdAt)}</p>
               <h2 className="mt-2 truncate text-base font-bold text-gray-6">{review.placeName}</h2>
             </div>
           </section>

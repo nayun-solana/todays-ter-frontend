@@ -3,17 +3,10 @@ import { useState } from 'react';
 import waterOrb from '../../../assets/ohaeng/water-orb.png';
 import OhaengBadge from '../../../components/OhaengBadge';
 import { cn } from '../../../lib/cn';
+import { ohaengByLabel, type OhaengLabel } from '../../../lib/ohaeng';
 
-/** 화·수·목·금·토 (오행) */
-export type PlaceDay = '화' | '수' | '목' | '금' | '토';
-
-const DAY_TEXT_CLASS: Record<PlaceDay, string> = {
-  화: 'text-ohaeng-fire',
-  수: 'text-ohaeng-water',
-  목: 'text-ohaeng-wood',
-  금: 'text-ohaeng-metal',
-  토: 'text-ohaeng-earth',
-};
+/** 화·수·목·금·토 (오행 한글 표시명) */
+export type PlaceDay = OhaengLabel;
 
 /** thumbnailUrl이 없을 때 쓰는 폴백 이미지 */
 const LOGO_FALLBACK = waterOrb;
@@ -37,7 +30,7 @@ export default function RecordPlaceCard({
   className,
   onClick,
 }: RecordPlaceCardProps) {
-  const dayTextClass = DAY_TEXT_CLASS[day];
+  const dayTextClass = ohaengByLabel(day)?.text;
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const showLogo = !imageUrl || failedUrl === imageUrl;
   const src = showLogo ? LOGO_FALLBACK : imageUrl;

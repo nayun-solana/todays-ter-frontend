@@ -4,6 +4,7 @@ import PillTabs, { type PillTabItem } from '../../components/PillTabs';
 import { useMyPlaces } from '../../hooks/record/useRecord';
 import type { MyPlaceListType } from '../../types/record/myPlace';
 import RecordPlaceCard from './components/RecordPlaceCard';
+import { loadFailureMessageBrief } from '../../lib/messages';
 
 type RecordTab = 'saved' | 'visited';
 
@@ -62,7 +63,7 @@ export default function RecordPage() {
         {placesQuery.isPending ? (
           <p className="mt-4 text-sm text-gray-4">불러오는 중…</p>
         ) : placesQuery.isError ? (
-          <p className="mt-4 text-sm text-gray-4">목록을 불러오지 못했습니다.</p>
+          <p className="mt-4 text-sm text-gray-4">{loadFailureMessageBrief('목록')}</p>
         ) : (
           <ul className="mt-4 flex flex-col gap-3">
             {places.map((place) => {

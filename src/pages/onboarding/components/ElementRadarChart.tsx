@@ -6,6 +6,7 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from 'recharts';
+import { OHAENG_ORDER, ohaengByCode } from '../../../lib/ohaeng';
 import type { ElementCode } from '../../../types/onboarding/report';
 
 type DistributionItem = {
@@ -32,15 +33,10 @@ type TickProps = {
   };
 };
 
-const ELEMENT_LABEL: Record<ElementCode, string> = {
-  WOOD: '목',
-  FIRE: '화',
-  EARTH: '토',
-  METAL: '금',
-  WATER: '수',
-};
-
-const ELEMENT_ORDER: ElementCode[] = ['WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER'];
+/** 축 라벨은 BE가 주는 한글 대신 고정 표기를 쓴다 — 축 순서와 짝이 맞아야 해서다. */
+function elementLabel(code: ElementCode) {
+  return ohaengByCode(code)?.label ?? code;
+}
 
 function ElementTick({
   x = 0,
@@ -92,17 +88,17 @@ function ElementTick({
 }
 
 export default function ElementRadarChart({ distribution, primaryElements }: Props) {
-  const chartData = ELEMENT_ORDER.map((code) => {
+  const chartData = OHAENG_ORDER.map((code) => {
     const matchedItem = distribution.find((item) => item.element === code);
 
     return {
       code,
-      label: ELEMENT_LABEL[code],
+      label: elementLabel(code),
       value: matchedItem?.percentage ?? 0,
     };
   });
 
-  const primaryLabels = new Set(primaryElements.map((code) => ELEMENT_LABEL[code]));
+  const primaryLabels = new Set(primaryElements.map(elementLabel));
 
   return (
     <div className="aspect-square w-full max-w-[180px] shrink-0">

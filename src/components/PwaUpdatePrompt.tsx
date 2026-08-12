@@ -1,7 +1,10 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export default function PwaUpdatePrompt() {
-  const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
     onRegisteredSW(_swUrl, registration) {
       if (!registration) return;
 

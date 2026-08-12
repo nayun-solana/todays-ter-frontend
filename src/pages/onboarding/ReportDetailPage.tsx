@@ -72,6 +72,36 @@ function ReportNotice({
   );
 }
 
+/**
+ * 상세 분석 로딩 자리.
+ *
+ * 헤더(h-13)와 카테고리 탭 줄은 데이터와 무관하게 늘 같은 자리에 있으므로 그대로 그리고,
+ * 본문만 카드 높이로 잡아둔다. 글자 한 줄만 띄우면 로딩이 끝나는 순간 헤더가 위에서
+ * 내려오는 것처럼 보인다.
+ */
+function ReportDetailSkeleton() {
+  return (
+    <div aria-busy="true">
+      <header className="flex h-13 w-full items-center justify-center bg-primary px-5 text-white typo-body-3">
+        상세 분석
+      </header>
+      <main className="flex flex-col gap-3 bg-primary-bg px-5 py-4">
+        <span className="sr-only" role="status">
+          상세 분석을 불러오는 중
+        </span>
+        <div className="-mr-5 flex gap-1 overflow-hidden">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="h-9 w-20 shrink-0 animate-pulse rounded-full bg-white" />
+          ))}
+        </div>
+        <div className="h-[120px] animate-pulse rounded-btn bg-white" />
+        <div className="h-[200px] animate-pulse rounded-btn bg-white" />
+        <div className="h-[160px] animate-pulse rounded-btn bg-white" />
+      </main>
+    </div>
+  );
+}
+
 type ReportDetailPageProps = {
   /**
    * 공유 링크로 들어온 화면(`/report/shared/:token`).
@@ -153,7 +183,7 @@ export default function ReportDetailPage({ variant = 'default' }: ReportDetailPa
   }
 
   if (reportQuery.isPending) {
-    return <ReportNotice title="상세 분석을 불러오는 중이에요" />;
+    return <ReportDetailSkeleton />;
   }
 
   if (reportQuery.isError || !reportQuery.data) {

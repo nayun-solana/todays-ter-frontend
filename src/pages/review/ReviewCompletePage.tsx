@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router';
 
 import checkIcon from '../../assets/review/check.png';
-import Button from './components/Button';
+import Button from '../../components/Button';
 
 type CompleteLocationState = {
   matchedTerName?: string;
@@ -25,9 +25,13 @@ export default function ReviewCompletePage() {
       </div>
 
       <div className="flex flex-col gap-2 px-5 pb-8">
-        <Button onClick={() => navigate('/home', { replace: true })}>홈화면으로 돌아가기</Button>
+        <Button size="padded" onClick={() => navigate('/home', { replace: true })}>
+          홈화면으로 돌아가기
+        </Button>
         <Button
+          size="padded"
           variant="secondary"
+          className="border-primary-light bg-primary-bg"
           /** 방금 쓴 기록은 다녀온 터에만 보이므로 해당 탭으로 바로 보낸다. */
           onClick={() => navigate('/record?tab=visited', { replace: true })}
         >

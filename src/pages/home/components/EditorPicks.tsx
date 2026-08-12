@@ -68,7 +68,7 @@ export default function EditorPicks() {
                     </p>
                     {/* 설명만 오행 색을 쓴다 — 카드 배경은 흰색이다(탐색에 있던 오행색 배경과 다름).
                         시안은 한 줄 기준이라 넘치면 자른다. */}
-                    <p className={cn('truncate text-xs leading-4 font-bold', meta.text)}>
+                    <p className={cn('truncate typo-body-4', meta.text)}>
                       {pick.description}
                     </p>
                   </div>

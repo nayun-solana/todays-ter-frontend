@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Bookmark } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
@@ -15,14 +14,13 @@ import {
   usePlaceBookmarkToggle,
   usePlaceDetail,
   usePlaceReviews,
-  placeKeys,
 } from '../../hooks/place/usePlace';
 import { useDeleteRecord } from '../../hooks/record/useRecord';
 import { cn } from '../../lib/cn';
 import { loadNaverMaps } from '../../lib/naverMaps';
 import { ohaengByLabel } from '../../lib/ohaeng';
 import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
-import DeleteReviewModal from '../review/components/DeleteReviewModal';
+import DeleteReviewModal from '../../components/DeleteReviewModal';
 import { loadFailureMessage, loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
 
 const TABS = ['지도', '후기'] as const;
@@ -290,7 +288,6 @@ function PlaceDetailSkeleton() {
 
 export default function PlaceDetailPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { id } = useParams();
   // 장소 상세는 게스트에게 열려 있지만(#109) 후기 작성은 회원 전용이다.
   const { isMember } = useAuthStatus();
@@ -520,12 +517,11 @@ export default function PlaceDetailPage() {
           onConfirm={() => {
             if (deleteReviewMutation.isPending) return;
 
-            deleteReviewMutation.mutate(deleteTarget, {
-              onSuccess: () => {
-                void queryClient.invalidateQueries({ queryKey: placeKeys.reviews(id ?? '') });
-                setDeleteTarget(null);
-              },
-            });
+            // 후기 목록 무효화는 useDeleteRecord가 한다 — 작성·수정과 같은 규칙을 쓰도록.
+            deleteReviewMutation.mutate(
+              { recordId: deleteTarget, placeId: id },
+              { onSuccess: () => setDeleteTarget(null) },
+            );
           }}
         />
       ) : null}

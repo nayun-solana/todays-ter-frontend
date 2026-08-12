@@ -44,20 +44,20 @@ export default function RecommendedPlaceCard({
           className="absolute inset-0 size-full rounded-t-[20px] object-cover"
         />
         <div className="absolute inset-x-0 bottom-0 h-[85px] rounded-t-[20px] bg-gradient-to-b from-transparent to-black/80" />
-        <span className="relative self-start rounded-md bg-gray-4/90 px-2.5 py-1.5 text-xs font-bold text-white">
+        <span className="relative self-start rounded-md bg-gray-4/90 px-2.5 py-1.5 typo-body-4 text-white">
           {badge}
         </span>
         <div className="relative flex flex-col gap-1 text-white">
           <p className="text-base font-bold">{name}</p>
-          {subtitle && <p className="text-xs font-normal">{subtitle}</p>}
+          {subtitle && <p className="typo-sub-2">{subtitle}</p>}
         </div>
       </div>
       {/* 하단 설명 영역 */}
       <div className="flex flex-col gap-2.5 rounded-b-[20px] bg-white/90 p-[15px] shadow-[0_0_15px_0_rgba(0,0,0,0.05)]">
-        <p className="whitespace-pre-line text-xs font-normal leading-4 text-gray-5">
+        <p className="whitespace-pre-line typo-sub-2 text-gray-5">
           {description}
         </p>
-        <div className="flex items-center gap-1 text-xs font-normal">
+        <div className="flex items-center gap-1 typo-sub-2">
           <span className="text-gray-4">{distance}</span>
           <span className="size-0.5 rounded-full bg-gray-4" />
           <span className="flex items-center gap-0.5">

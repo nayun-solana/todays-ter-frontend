@@ -23,6 +23,7 @@ import { getPlaceThumbnailUrl } from '../../lib/placeThumbnail';
 import { type ElementCode } from '../../types/home/homeEnergy';
 import { type RegionCode, type ThemeType } from '../../types/search/search';
 import { loadFailureMessage, loadingMessage, loadingMoreMessage } from '../../lib/messages';
+import TabPageHeader from '../../components/TabPageHeader';
 
 const REGIONS = [
   { code: 'ALL', name: '전체' },
@@ -210,14 +211,10 @@ export default function SearchPage() {
 
   return (
     <div className="w-full flex-1 bg-gray-1">
-      <header
-        className={cn(
-          'sticky top-0 z-40 bg-white px-5 pb-4 pt-safe-5 transition-shadow',
-          hasScrolled && 'shadow-card',
-        )}
-      >
-        <h1 className="typo-head-1 text-primary">모든 터 탐색</h1>
-      </header>
+      <TabPageHeader
+        title="모든 터 탐색"
+        className={cn('sticky top-0 z-40 transition-shadow', hasScrolled && 'shadow-card')}
+      />
 
       <main>
         <label className="mx-5 mt-3 flex h-11 items-center gap-1.5 rounded-btn border border-gray-2 bg-white px-4 py-2 shadow-card">

@@ -9,12 +9,10 @@ import {
 import type { PlaceDetailResponse } from '../../types/place/place';
 import { recordKeys } from '../record/useRecord';
 
-export const placeKeys = {
-  all: ['places'] as const,
-  detail: (placeId: string) => [...placeKeys.all, 'detail', placeId] as const,
-  reviews: (placeId: string) => [...placeKeys.all, 'reviews', placeId] as const,
-  shareCard: (placeId: string) => [...placeKeys.all, 'share-card', placeId] as const,
-};
+import { placeKeys } from './placeKeys';
+
+// 기존 import 경로를 유지한다 — 키는 순환 참조를 피하려고 별도 모듈에 있다.
+export { placeKeys };
 
 export function usePlaceDetail(placeId?: string | number) {
   const id = placeId != null ? String(placeId) : '';

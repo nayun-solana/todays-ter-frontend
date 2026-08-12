@@ -7,6 +7,7 @@ import { useLogout } from '../../hooks/auth/useAuth';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { useMyPage } from '../../hooks/my/useMy';
 import { loadFailureMessageBrief, loadingMessage } from '../../lib/messages';
+import TabPageHeader from '../../components/TabPageHeader';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
@@ -78,9 +79,7 @@ export default function MyPage() {
 
   return (
     <div className="w-full flex-1 bg-gray-1">
-      <header className="bg-white px-5 pb-4 pt-safe-5">
-        <h1 className="typo-head-1 text-primary">마이페이지</h1>
-      </header>
+      <TabPageHeader title="마이페이지" />
 
       <main className="px-5 pt-3">
         {myPageQuery.isPending ? (

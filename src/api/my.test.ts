@@ -3,11 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('./axiosInstance', () => ({
   default: {
     get: vi.fn(),
+    put: vi.fn(),
   },
 }));
 
 import axiosInstance from './axiosInstance';
-import { getMyPage } from './my';
+import {
+  getMemberConcerns,
+  getMyPage,
+  isMemberOnboardingMissing,
+  updateMemberConcerns,
+} from './my';
 
 const mockedAxios = vi.mocked(axiosInstance);
 
@@ -33,5 +39,46 @@ describe('my page API', () => {
 
     await expect(getMyPage()).resolves.toEqual(result);
     expect(mockedAxios.get).toHaveBeenCalledWith('/mypage');
+  });
+});
+
+describe('member concerns API', () => {
+  it('reads the saved concern types from /members/me/concerns', async () => {
+    mockedAxios.get.mockResolvedValue(responseWith({ concernTypes: ['LOVE', 'HEALTH'] }));
+
+    await expect(getMemberConcerns()).resolves.toEqual({ concernTypes: ['LOVE', 'HEALTH'] });
+    expect(mockedAxios.get).toHaveBeenCalledWith('/members/me/concerns');
+  });
+
+  it('rejects a concern type the contract does not define', async () => {
+    mockedAxios.get.mockResolvedValue(responseWith({ concernTypes: ['MONEY'] }));
+
+    await expect(getMemberConcerns()).rejects.toThrow();
+  });
+
+  it('writes concern types with PUT — POST 는 계약에 없다', async () => {
+    mockedAxios.put.mockResolvedValue(responseWith({ concernTypes: ['CAREER'] }));
+
+    await expect(updateMemberConcerns({ concernTypes: ['CAREER'] })).resolves.toEqual({
+      concernTypes: ['CAREER'],
+    });
+    expect(mockedAxios.put).toHaveBeenCalledWith('/members/me/concerns', {
+      concernTypes: ['CAREER'],
+    });
+  });
+});
+
+describe('isMemberOnboardingMissing', () => {
+  // 이 판정이 틀리면 "잠시 후 다시 시도해주세요"를 띄우는데, 실제로는 영영 404다.
+  it('회원에게 연결된 온보딩이 없다는 404만 참으로 본다', () => {
+    expect(isMemberOnboardingMissing({ status: 404, code: 'MEMBER404_3' })).toBe(true);
+  });
+
+  it('다른 404·다른 코드·비객체는 거짓', () => {
+    expect(isMemberOnboardingMissing({ status: 404, code: 'MEMBER404_1' })).toBe(false);
+    expect(isMemberOnboardingMissing({ status: 400, code: 'MEMBER404_3' })).toBe(false);
+    expect(isMemberOnboardingMissing(new Error('network'))).toBe(false);
+    expect(isMemberOnboardingMissing(null)).toBe(false);
+    expect(isMemberOnboardingMissing(undefined)).toBe(false);
   });
 });

@@ -13,6 +13,8 @@ import {
 } from '../../types/recommendation/recommendationDetail';
 
 export const recommendationKeys = {
+  /** 추천 전체를 한 번에 무효화할 때 쓰는 프리픽스. 고민 유형이 바뀌면 매칭 점수가 통째로 달라진다. */
+  all: ['recommendation'] as const,
   detail: (placeId: string) => ['recommendation', placeId] as const,
   shared: (shareToken: string) => ['recommendation', 'shared', shareToken] as const,
   share: (placeId: string) => ['recommendation', placeId, 'share'] as const,

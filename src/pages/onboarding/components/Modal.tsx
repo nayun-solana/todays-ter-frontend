@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 // assets
 import PartyIcon from '../../../assets/onboarding/party.svg';
 import ErrorDotIcon from '../../../assets/onboarding/error-dot.svg';
+import { useScrollLock } from '../../../lib/scrollLock';
 
 type Props = {
   isOpen: boolean;
@@ -24,6 +25,8 @@ export default function Modal({
   isSuccess,
   failureActionLabel = '다시 시도',
 }: Props) {
+  // 시트가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다.
+  useScrollLock(isOpen);
   useEffect(() => {
     if (!isOpen) return;
 

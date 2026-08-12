@@ -1,3 +1,5 @@
+import { useScrollLock } from '../../../lib/scrollLock';
+
 interface BirthTimeSkipSheetProps {
   open: boolean;
   /** '출생시간 입력하기' — 시트를 닫고 시간 입력을 계속한다. */
@@ -8,6 +10,8 @@ interface BirthTimeSkipSheetProps {
 
 /** 온보딩1 '시간 모름' 선택 시 뜨는 '출생시간 없이 진행' 바텀시트. (Figma 1137:1804) */
 export default function BirthTimeSkipSheet({ open, onClose, onConfirm }: BirthTimeSkipSheetProps) {
+  // 시트가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다.
+  useScrollLock(open);
   if (!open) return null;
 
   return (

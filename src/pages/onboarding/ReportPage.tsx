@@ -40,6 +40,38 @@ function ReportNotice({
   );
 }
 
+/**
+ * 기본 리포트 로딩 자리.
+ *
+ * 글자 한 줄만 띄우던 것을 실제 레이아웃 높이로 바꾼다 — 파란 헤더 띠와 카드 두 장의
+ * 자리를 미리 잡아두면 데이터가 들어올 때 화면이 튀지 않는다.
+ * 파란 띠 위 블록은 `bg-gray-2`가 아니라 흰색 반투명이어야 배경과 겉돌지 않는다.
+ */
+function ReportSkeleton() {
+  return (
+    <div className="relative mx-auto min-h-dvh bg-primary-bg" aria-busy="true">
+      <div className="absolute inset-x-0 top-0 z-0 h-53 rounded-b-[30px] bg-primary" />
+      <div className="relative z-10 flex flex-col gap-5 px-5 pt-[calc(1.375rem+env(safe-area-inset-top))] pb-10">
+        <span className="sr-only" role="status">
+          리포트를 불러오는 중
+        </span>
+        {/* 기본 리포트 · 유형 제목 · 유형 이름 */}
+        <div className="flex flex-col gap-3">
+          <div className="h-3 w-16 animate-pulse rounded bg-white/30" />
+          <div className="flex flex-col gap-1">
+            <div className="h-[22px] w-48 animate-pulse rounded bg-white/30" />
+            <div className="h-8 w-36 animate-pulse rounded-lg bg-white/40" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="h-[132px] animate-pulse rounded-btn bg-white/60" />
+          <div className="h-[232px] animate-pulse rounded-btn bg-white/60" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ReportPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -112,7 +144,7 @@ export default function ReportPage() {
   }
 
   if (isPending) {
-    return <ReportNotice title="리포트를 불러오는 중이에요" />;
+    return <ReportSkeleton />;
   }
 
   if (isError || !sajuReportData) {

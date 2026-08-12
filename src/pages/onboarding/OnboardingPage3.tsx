@@ -12,7 +12,6 @@ import type { ConcernType } from '../../types/onboarding/guestOnboarding';
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
 import CategoryCard from './components/CategoryCard';
-import { cn } from '../../lib/cn';
 
 //assets
 import num1 from '../../assets/onboarding/3-1.svg';
@@ -193,22 +192,36 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
         </div>
       </header>
 
-      {/* 저장된 값을 불러오는 동안은 누를 수 없다 — 먼저 누르면 서버 값을 못 본 채 덮어쓴다. */}
-      <div
-        aria-busy={isPrefilling}
-        className={cn('mt-8 grid grid-cols-2 gap-2.5', isPrefilling && 'pointer-events-none')}
-      >
-        {CONCERNS.map((concern, index) => (
-          <CategoryCard
-            icon={CONCERN_ICONS[index]}
-            key={concern.id}
-            title={concern.title}
-            description={concern.description}
-            selected={selectedIds.includes(concern.id)}
-            onClick={() => toggle(concern.id)}
-          />
-        ))}
-      </div>
+      {/*
+        저장된 값을 불러오는 동안은 카드 대신 자리만 그린다.
+
+        예전에는 진짜 카드를 아무것도 선택 안 된 채로 띄우고 누르지만 못하게 했는데,
+        수정 화면에서는 그게 "아직 못 불러왔다"가 아니라 **"저장된 게 없다"**로 읽힌다.
+        같은 칸 크기를 유지해 값이 도착해도 화면이 튀지 않는다.
+      */}
+      {isPrefilling ? (
+        <div className="mt-8 grid grid-cols-2 gap-2.5" aria-busy="true">
+          <span className="sr-only" role="status">
+            저장된 고민 유형을 불러오는 중
+          </span>
+          {CONCERNS.map((concern) => (
+            <div key={concern.id} className="h-[100px] animate-pulse rounded-btn bg-gray-2" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 grid grid-cols-2 gap-2.5">
+          {CONCERNS.map((concern, index) => (
+            <CategoryCard
+              icon={CONCERN_ICONS[index]}
+              key={concern.id}
+              title={concern.title}
+              description={concern.description}
+              selected={selectedIds.includes(concern.id)}
+              onClick={() => toggle(concern.id)}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="mt-auto flex flex-col gap-2">
         {errorMessage ? (

@@ -29,6 +29,9 @@ type MatchedTerPageProps = {
   variant?: 'default' | 'shared';
 };
 
+/** 추천 상세 앱바 제목. 본문·안내·스켈레톤 세 곳이 같이 쓴다. */
+const PAGE_TITLE = '오늘 가장 잘 맞는 터';
+
 /**
  * 나와 어울리는 터(추천 상세).
  * - 기본: 홈 "오늘 가장 잘 맞는 터"에서 진입 → GET /recommendations/places/{placeId}
@@ -100,7 +103,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-28">
       <MatchedTerAppBar
-        title="나와 어울리는 터"
+        title={PAGE_TITLE}
         onShare={canShare ? handleShare : undefined}
         onSharePrefetch={canShare ? prefetchShareLink : undefined}
         isSaved={data.isSaved ?? false}
@@ -208,7 +211,7 @@ function ShareToast({ result }: { result: keyof typeof SHARE_TOAST_TEXT }) {
 function NoticeShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <MatchedTerAppBar title="나와 어울리는 터" showActions={false} />
+      <MatchedTerAppBar title={PAGE_TITLE} showActions={false} />
       <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 text-center">
         {children}
       </div>
@@ -265,7 +268,7 @@ function DetailLoadFailed({ onRetry, onBack }: { onRetry: () => void; onBack: ()
 function MatchedTerSkeleton({ isShared }: { isShared: boolean }) {
   return (
     <div className="flex min-h-dvh flex-col bg-white pb-28" aria-busy="true">
-      <MatchedTerAppBar title="나와 어울리는 터" showActions={!isShared} />
+      <MatchedTerAppBar title={PAGE_TITLE} showActions={!isShared} />
       <div className="flex flex-col gap-5 px-5 pt-4">
         <span className="sr-only" role="status">
           터 정보를 불러오는 중

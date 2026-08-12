@@ -24,11 +24,12 @@ function parseTab(value: string | null): RecordTab {
   return value === 'visited' || value === 'saved' ? value : 'saved';
 }
 
-/** "2026-06-29" → "저장일 06/29" */
-function dateLabel(savedDate: string) {
-  const [, month, day] = savedDate.split('-');
-  if (!month || !day) return `저장일 ${savedDate}`;
-  return `저장일 ${month}/${day}`;
+/** "2026-06-29" → "저장일 06/29" | "작성일 06/29" */
+function dateLabel(date: string, tab: RecordTab) {
+  const prefix = tab === 'visited' ? '작성일' : '저장일';
+  const [, month, day] = date.split('-');
+  if (!month || !day) return `${prefix} ${date}`;
+  return `${prefix} ${month}/${day}`;
 }
 
 export default function RecordPage() {
@@ -74,7 +75,7 @@ export default function RecordPage() {
                   <RecordPlaceCard
                     name={place.placeName}
                     categories={place.categories}
-                    dateLabel={dateLabel(place.savedDate)}
+                    dateLabel={dateLabel(place.savedDate, activeTab)}
                     day={place.element}
                     imageUrl={place.thumbnailUrl || undefined}
                     onClick={

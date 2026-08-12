@@ -2,14 +2,10 @@ import { useNavigate } from 'react-router';
 
 import { isOnboardingRequired } from '../../api/onboardingRequired';
 import placeSample from '../../assets/home/place-sample.jpg';
-import notificationBell from '../../assets/notification-bell.svg';
-import notificationDot from '../../assets/notification-dot.svg';
 import GuestLoginPrompt from '../../components/GuestLoginPrompt';
 import SectionError from '../../components/SectionError';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
-import { useUnreadNotificationCount } from '../../hooks/notification/useNotification';
 import { formatKoreanDate } from '../../lib/date';
-import { hasUnreadNotificationCount } from '../../lib/notification';
 import { viewStateOf } from '../../lib/queryState';
 import {
   useEnergyRoutines,
@@ -36,8 +32,6 @@ export default function HomePage() {
   // isAuthPending = 부팅 세션 복원 중. 이때 게스트로 단정해 게이트를 띄우면,
   // 복원되는 회원에게 "로그인하러 가기"가 깜빡였다 사라진다.
   const { isMember, isPending: isAuthPending } = useAuthStatus();
-  // 홈은 알림 목록을 받지 않는다 — 배지에 필요한 건 미읽음 개수뿐이다.
-  const unreadCountQuery = useUnreadNotificationCount({ enabled: isMember, poll: true });
 
   const energyQuery = useTodayEnergy();
   const headerQuery = useHomeHeader();
@@ -118,9 +112,9 @@ export default function HomePage() {
       />
 
       <div className="relative flex flex-col gap-8 px-5 pb-8 pt-safe-5">
-        {/* 인사말 + 알림 벨 */}
-        <header className="flex items-start justify-between gap-3 text-white">
-          <div className="flex min-w-0 flex-1 flex-col gap-5">
+        {/* 인사말 */}
+        <header className="text-white">
+          <div className="flex min-w-0 flex-col gap-5">
             {headerState === 'loading' ? (
               <HeaderSkeleton />
             ) : headerState === 'failed' ? (
@@ -142,24 +136,6 @@ export default function HomePage() {
               </>
             )}
           </div>
-          {/* 회원 홈에서는 60초 폴링과 홈 재진입/창 포커스 시 조회한 미읽음 개수로 배지를 갱신한다. */}
-          {isMember && (
-            <button
-              type="button"
-              aria-label="알림"
-              onClick={() => navigate('/my/notifications')}
-              className="relative size-6 shrink-0"
-            >
-              <img
-                src={notificationBell}
-                alt=""
-                className="absolute top-[2.5px] left-1 h-[21px] w-[18px]"
-              />
-              {hasUnreadNotificationCount(unreadCountQuery.data) ? (
-                <img src={notificationDot} alt="" className="absolute top-0 right-0 size-[3px]" />
-              ) : null}
-            </button>
-          )}
         </header>
 
         {needsOnboarding ? (

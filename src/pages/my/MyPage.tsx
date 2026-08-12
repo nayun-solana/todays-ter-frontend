@@ -12,7 +12,6 @@ import TabPageHeader from '../../components/TabPageHeader';
 
 const SETTINGS: { label: string; path?: string; action?: 'logout' }[] = [
   { label: '사주 정보 수정', path: '/my/saju' },
-  { label: '알림 설정', path: '/my/notification-settings' },
   { label: '계정 연동 관리', path: '/my/account-links' },
   { label: '권한 안내', path: '/my/permissions' },
   { label: '개인정보 및 약관', path: '/private' },

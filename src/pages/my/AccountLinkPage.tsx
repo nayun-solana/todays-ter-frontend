@@ -1,5 +1,4 @@
 import PageHeader from '../../components/PageHeader';
-import { ChevronRightIcon } from '../../components/icons';
 import { useSocialConnections } from '../../hooks/my/useMy';
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -29,19 +28,6 @@ export default function AccountLinkPage() {
           ) : (
             <p className="typo-sub-2 mt-3 text-gray-5">연결된 계정이 없습니다.</p>
           )}
-        </section>
-
-        <section className="mt-3 space-y-3">
-          {['다른 계정으로 연동하기', '연동 정책 보기'].map((label) => (
-            <button
-              key={label}
-              type="button"
-              className="typo-body-3 flex h-[52px] w-full items-center justify-between rounded-btn bg-white px-5 text-left text-gray-5 shadow-card-soft"
-            >
-              {label}
-              <ChevronRightIcon />
-            </button>
-          ))}
         </section>
       </main>
     </div>

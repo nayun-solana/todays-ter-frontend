@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { toPng } from 'html-to-image';
 import { Download, X } from 'lucide-react';
 
@@ -107,6 +114,56 @@ function SolidShape({ fill, element }: { fill: string; element: OhaengLabel }) {
   return <div aria-hidden style={shapeMaskStyle(ELEMENT_SHAPE[element], fill, size)} />;
 }
 
+const SHARE_MESSAGE_MAX_FONT_PX = 20;
+const SHARE_MESSAGE_MIN_FONT_PX = 12;
+const SHARE_MESSAGE_MAX_LINES = 2;
+const SHARE_MESSAGE_LINE_HEIGHT = 1.375;
+
+function FitShareMessage({ message }: { message: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [fontSize, setFontSize] = useState(SHARE_MESSAGE_MAX_FONT_PX);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const fit = () => {
+      if (el.clientWidth === 0) return;
+
+      let size = SHARE_MESSAGE_MAX_FONT_PX;
+      while (size > SHARE_MESSAGE_MIN_FONT_PX) {
+        el.style.fontSize = `${size}px`;
+        const maxHeight = size * SHARE_MESSAGE_LINE_HEIGHT * SHARE_MESSAGE_MAX_LINES;
+        const tooTall = el.scrollHeight > maxHeight + 1;
+        const tooWide = el.scrollWidth > el.clientWidth + 1;
+        if (!tooTall && !tooWide) break;
+        size -= 0.5;
+      }
+
+      setFontSize((prev) => (prev === size ? prev : size));
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [message]);
+
+  return (
+    <p
+      ref={ref}
+      className="min-w-0 w-full whitespace-pre-line break-keep text-center font-extrabold text-white"
+      style={{
+        fontSize,
+        lineHeight: SHARE_MESSAGE_LINE_HEIGHT,
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {message}
+    </p>
+  );
+}
+
 function PanelWithHoles({
   fill,
   message,
@@ -132,10 +189,8 @@ function PanelWithHoles({
           style={panelHoleMaskStyle(ELEMENT_SHAPE[element], fill, size)}
         />
 
-        <div className="relative z-10 flex h-full items-center justify-center px-6">
-          <p className="whitespace-pre-line break-keep text-center text-xl font-extrabold leading-snug text-white">
-            {message}
-          </p>
+        <div className="relative z-10 flex h-full min-w-0 w-full items-center justify-center px-6">
+          <FitShareMessage message={message} />
         </div>
       </div>
     </div>
@@ -236,17 +291,17 @@ export default function ShareCardModal({
 
   return (
     <div
-      className="fixed inset-0 z-60 flex w-full flex-col items-center justify-center bg-black/70"
+      className="fixed inset-0 z-60 flex w-full flex-col items-center bg-black/70 py-10"
       role="dialog"
       aria-modal="true"
       aria-label="오늘의 공유 카드"
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-[350px] px-5 flex-col items-center"
+        className="flex min-h-0 w-full max-w-[350px] flex-1 flex-col items-center px-5"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-3 w-full rounded-btn bg-primary py-4 text-center text-lg font-extrabold text-white">
+        <div className="mb-3 w-full shrink-0 rounded-btn bg-primary py-4 text-center text-lg font-extrabold text-white">
           오늘의 공유 카드
         </div>
 
@@ -257,13 +312,13 @@ export default function ShareCardModal({
         ) : (
           <article
             ref={cardRef}
-            className="relative h-[400px] w-full overflow-hidden rounded-[28px] shadow-xl"
+            className="relative min-h-0 w-full flex-1 overflow-hidden rounded-[28px] shadow-xl"
           >
             <img
               src={bgSrc}
               alt={placeName}
               crossOrigin="anonymous"
-              className="absolute inset-0 size-full object-cover"
+              className="absolute bottom-0 h-[100%] w-full object-cover"
               onError={() => {
                 if (remoteUrl) setFailedUrl(remoteUrl);
               }}
@@ -283,7 +338,7 @@ export default function ShareCardModal({
           </article>
         )}
 
-        <div className="mt-5 flex items-center gap-4">
+        <div className="mt-5 flex shrink-0 items-center gap-4">
           <ActionButton
             label="다운로드"
             onClick={() => {

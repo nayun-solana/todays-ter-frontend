@@ -158,7 +158,7 @@ export default function HomePage() {
             )}
 
             {routinesState === 'loading' ? (
-              <BlockSkeleton className="h-[76px] rounded-[20px]" label="에너지 루틴 불러오는 중" />
+              <BlockSkeleton className="h-[76px] rounded-[20px] my-1" label="에너지 루틴 불러오는 중" />
             ) : routinesState === 'failed' ? (
               <SectionError
                 message="에너지 루틴을 불러오지 못했어요."

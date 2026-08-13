@@ -298,7 +298,7 @@ export default function OnboardingPage1() {
                   type="button"
                   onClick={openSkipSheet}
                   className={cn(
-                    'flex items-center gap-1 self-start typo-body-4',
+                    'flex items-center gap-1 self-start typo-body-4 mb-11',
                     unknownTime ? 'text-primary' : 'text-gray-3',
                   )}
                 >

@@ -374,16 +374,16 @@ export default function SajuEditPage() {
       <Button
         disabled={(!changed && !regenerationFailed) || isRegenerating}
         onClick={() => void submit()}
-        className="fixed inset-x-5 bottom-[calc(2rem+env(safe-area-inset-bottom))] w-auto"
+        className="fixed-app-x-5 fixed bottom-[calc(2rem+env(safe-area-inset-bottom))]"
       >
         {isRegenerating ? '리포트 재생성 중...' : '저장하고 리포트 재생성'}
       </Button>
       {updateSajuMutation.isError ? (
-        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+        <p className="fixed-app-x-5 fixed bottom-2 text-center text-xs text-danger">
           사주 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.
         </p>
       ) : regenerationFailed ? (
-        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+        <p className="fixed-app-x-5 fixed bottom-2 text-center text-xs text-danger">
           리포트 재생성에 실패했습니다. 다시 시도해주세요.
         </p>
       ) : null}

@@ -56,7 +56,7 @@
    * 앱 콘텐츠 폭 상한 → `max-w-app`.
    *
    * 모바일 전용 레이아웃이라 데스크톱에서는 뷰포트를 다 채우는 대신 이 폭으로 가운데 정렬한다.
-   * 하단 고정 CTA도 같은 값을 써야 `BottomNavBar`(중앙 고정)와 정렬이 맞는다.
+   * `position: fixed`는 뷰포트 기준이라 이 상한이 닿지 않는다 — 고정 요소는 `fixed-app-x`로 직접 맞춘다.
    */
   --container-app: 430px;
 
@@ -198,6 +198,34 @@
 
 @utility mb-safe {
   margin-bottom: env(safe-area-inset-bottom);
+}
+
+/*
+ * 뷰포트가 아니라 **앱 컬럼**에 맞춰 가로로 자리잡는 고정 요소.
+ *
+ * `position: fixed`의 기준은 뷰포트라, 앱 셸(`mx-auto max-w-app`)의 폭 상한이 닿지 않는다.
+ * 그대로 두면 데스크톱에서 하단 CTA·바텀시트·플로팅 버튼만 화면 전폭으로 퍼져
+ * 가운데 정렬된 본문·하단바와 어긋난다. `BottomNavBar`가 쓰던 중앙 정렬 방식을 유틸로 뽑았다.
+ *
+ * ⚠️ `transform`을 쓰므로 이 요소의 자손에 `position: fixed`를 두면 기준이 뷰포트가 아니라
+ *    이 요소가 된다. 안에는 일반 콘텐츠만 넣을 것.
+ */
+@utility fixed-app-x {
+  left: 50%;
+  width: 100%;
+  max-width: var(--container-app);
+  transform: translateX(-50%);
+}
+
+/**
+ * 좌우 20px을 띄운 형태 — 기존 `inset-x-5`를 그대로 대체한다.
+ * 요소 자체가 버튼이라 안쪽 패딩(`px-5`)으로는 같은 모양이 안 나오는 자리에 쓴다.
+ */
+@utility fixed-app-x-5 {
+  left: 50%;
+  width: calc(100% - 2.5rem);
+  max-width: calc(var(--container-app) - 2.5rem);
+  transform: translateX(-50%);
 }
 
 /** 기존 여백에 safe area를 더해야 하는 경우(예: 상단 20px + 노치). */

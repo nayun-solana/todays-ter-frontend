@@ -156,7 +156,7 @@ export default function ReviewDetailPage() {
       ) : null}
 
       {deleteRecord.isError ? (
-        <p className="fixed right-5 bottom-2 left-5 text-center text-xs text-danger">
+        <p className="fixed-app-x-5 fixed bottom-2 text-center text-xs text-danger">
           후기 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.
         </p>
       ) : null}

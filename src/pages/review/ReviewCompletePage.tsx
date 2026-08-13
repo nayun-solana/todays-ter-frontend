@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router';
 
 import checkIcon from '../../assets/review/check.png';
 import Button from '../../components/Button';
+import { withSubjectParticle } from '../../lib/korean';
 
 type CompleteLocationState = {
   matchedTerName?: string;
@@ -28,7 +29,7 @@ export default function ReviewCompletePage() {
         </h1>
         <p className="mt-3 text-center text-xs text-gray-6">
           {matchedTerName
-            ? `${matchedTerName}가 다녀온 터에 추가되었습니다.`
+            ? `${withSubjectParticle(matchedTerName)} 다녀온 터에 추가되었습니다.`
             : '다녀온 터에 추가되었습니다.'}
         </p>
       </div>

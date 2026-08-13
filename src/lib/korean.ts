@@ -27,3 +27,13 @@ function hasFinalConsonant(word: string): boolean {
 export function withObjectParticle(noun: string): string {
   return `${noun}${hasFinalConsonant(noun) ? '을' : '를'}`;
 }
+
+/**
+ * 주격 조사를 붙인다. "북촌한옥마을" → "북촌한옥마을이", "제주" → "제주가".
+ *
+ * 장소명처럼 값이 서버에서 오는 명사에 필요하다 — 조사를 하드코딩하면
+ * "북촌한옥마을가 다녀온 터에 추가되었습니다"가 그대로 화면에 뜬다.
+ */
+export function withSubjectParticle(noun: string): string {
+  return `${noun}${hasFinalConsonant(noun) ? '이' : '가'}`;
+}

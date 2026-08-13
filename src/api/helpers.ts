@@ -6,8 +6,3 @@ import type { ApiResponse } from './types';
 export function getResult<T>(response: AxiosResponse<ApiResponse<T>>): T {
   return response.data.result as T;
 }
-
-/** Axios 응답의 ApiResponse 전체 */
-export function getApiBody<T>(response: AxiosResponse<ApiResponse<T>>): ApiResponse<T> {
-  return response.data;
-}

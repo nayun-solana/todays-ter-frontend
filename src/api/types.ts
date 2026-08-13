@@ -33,16 +33,6 @@ export function apiErrorStatusOf(error: unknown): number | undefined {
   return typeof status === 'number' ? status : undefined;
 }
 
-/** @see SuccessCode */
-export const SuccessCode = {
-  OK: 'COMMON200',
-  CREATED: 'COMMON201',
-  ACCEPTED: 'COMMON202',
-  NO_CONTENT: 'COMMON204',
-} as const;
-
-export type SuccessCodeValue = (typeof SuccessCode)[keyof typeof SuccessCode];
-
 /** @see ErrorCode */
 export const ErrorCode = {
   INVALID_REQUEST: 'COMMON400',
@@ -54,5 +44,3 @@ export const ErrorCode = {
   DUPLICATE_RESOURCE: 'COMMON409_1',
   INTERNAL_SERVER_ERROR: 'COMMON500',
 } as const;
-
-export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];

@@ -236,7 +236,7 @@ export default function SearchPage() {
             aria-label="탐색 필터 열기"
             className="flex size-[34px] shrink-0 items-center justify-center rounded-btn bg-white shadow-card"
           >
-            <img src={iconFilter} alt="" className="size-[18px]" />
+            <img src={iconFilter} alt="" width="18" />
           </button>
           {appliedFilters.length === 0 ? (
             <button

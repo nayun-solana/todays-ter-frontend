@@ -338,14 +338,18 @@ export default function SearchPage() {
       </main>
 
       {showTopButton ? (
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          aria-label="맨 위로 이동"
-          className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 flex size-10 items-center justify-center rounded-full bg-gray-2"
-        >
-          <img src={iconArrowUp} alt="" className="h-4 w-[18px] rotate-90" />
-        </button>
+        // 화면 오른쪽이 아니라 **앱 컬럼** 오른쪽에 붙인다. 데스크톱에서 fixed는 뷰포트 기준이라
+        // 그냥 두면 본문에서 수백 px 떨어진 회색 여백 위에 혼자 뜬다.
+        <div className="fixed-app-x pointer-events-none fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 flex justify-end px-5">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="맨 위로 이동"
+            className="pointer-events-auto flex size-10 items-center justify-center rounded-full bg-gray-2"
+          >
+            <img src={iconArrowUp} alt="" className="h-4 w-[18px] rotate-90" />
+          </button>
+        </div>
       ) : null}
 
       <AnimatePresence>
@@ -372,7 +376,7 @@ export default function SearchPage() {
               aria-modal="true"
               aria-labelledby="search-filter-title"
               onClick={(event) => event.stopPropagation()}
-              className="max-h-[calc(100dvh-env(safe-area-inset-top))] w-full overflow-y-auto rounded-t-[20px] bg-white px-5 pt-[30px] pb-[calc(30px+env(safe-area-inset-bottom))]"
+              className="max-h-[calc(100dvh-env(safe-area-inset-top))] w-full max-w-app overflow-y-auto rounded-t-[20px] bg-white px-5 pt-[30px] pb-[calc(30px+env(safe-area-inset-bottom))]"
             >
               <div className="flex items-center justify-between">
                 <h2 id="search-filter-title" className="typo-head-2 text-gray-6">

@@ -18,7 +18,7 @@ export default function BirthTimeSkipSheet({ open, onClose, onConfirm }: BirthTi
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
 
-      <div className="relative w-full rounded-t-btn bg-white px-5 pb-8 pt-8">
+      <div className="relative w-full max-w-app rounded-t-btn bg-white px-5 pb-8 pt-8">
         <h2 className="text-xl font-extrabold text-gray-6">출생시간 없이 진행할까요?</h2>
 
         <div className="mt-6 flex flex-col gap-3 rounded-btn border border-gray-2 bg-gray-1 px-5 py-4">

@@ -153,7 +153,8 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
       {shareResult && <ShareToast result={shareResult} />}
 
       {/* 하단 고정 액션바. 공유 화면에서는 후기 작성이 남의 추천에 붙으므로 감춘다. */}
-      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      {/* `fixed`는 뷰포트 기준이라 앱 셸의 폭 상한이 안 먹는다 — 하단바와 같은 방식으로 직접 맞춘다. */}
+      <div className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-app -translate-x-1/2 gap-[7px] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         {isShared ? (
           <Button variant="primary" onClick={() => navigate('/home')}>
             나도 추천 받기

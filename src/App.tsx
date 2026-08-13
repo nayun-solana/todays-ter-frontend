@@ -5,9 +5,14 @@ import AppRoutes from './app/AppRoutes';
 import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 
 /**
- * 앱 셸 — 모든 페이지 배경이 뷰포트 전체 폭을 채우게 한다.
+ * 앱 셸.
  *
- * 카드·CTA처럼 실제 콘텐츠 폭이 제한된 요소만 각 화면에서 캡을 유지한다.
+ * 바깥 div는 뷰포트 전체를 덮어 데스크톱에서 좌우 여백의 바탕이 되고, 안쪽 열이 실제 화면이다.
+ * 모바일에서는 `max-w-app`이 뷰포트보다 넓어 아무 효과가 없다 — 즉 모바일 렌더는 그대로다.
+ *
+ * 예전에는 폭 상한이 아예 없어서 데스크톱에서 텍스트·카드가 화면 끝까지 늘어났고,
+ * `BottomNavBar`만 중앙 고정(`left-1/2 w-[332px]`)이라 하단바는 가운데, CTA는 전폭으로
+ * 서로 어긋나 보였다.
  */
 
 function App() {
@@ -18,8 +23,10 @@ function App() {
   }, []);
 
   return (
-    <div className="relative min-h-dvh w-full bg-gray-1">
-      <AppRoutes />
+    <div className="relative min-h-dvh w-full bg-gray-2">
+      <div className="relative mx-auto min-h-dvh w-full max-w-app bg-gray-1">
+        <AppRoutes />
+      </div>
       <PwaUpdatePrompt />
     </div>
   );

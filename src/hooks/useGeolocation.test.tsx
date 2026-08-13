@@ -76,8 +76,14 @@ describe('useGeolocation', () => {
     const { result } = renderHook(() => useGeolocation());
     expect(result.current.isSettled).toBe(false);
 
+    // 마감 직전에는 아직 확정되지 않는다 — 값이 늘어나면 이 단언이 먼저 깨진다.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(8_000);
+      await vi.advanceTimersByTimeAsync(2_999);
+    });
+    expect(result.current.isSettled).toBe(false);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
     });
 
     expect(result.current.isSettled).toBe(true);

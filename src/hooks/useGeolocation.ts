@@ -17,8 +17,12 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
  * 사용자가 권한 창을 닫지도 누르지도 않으면 성공·실패 어느 콜백도 오지 않는다.
  * 그 상태로 두면 소비부가 `isSettled`를 영영 못 받아 스켈레톤에 갇힌다 —
  * 여기서 끊고 "좌표 없음"으로 확정해 화면을 진행시킨다.
+ *
+ * 이 값이 곧 **권한 창을 방치했을 때 본문이 늦어지는 시간**이다. 거부·측위 실패는
+ * `timeout`(5초) 안에 콜백으로 오므로 여기까지 오지 않는다. 즉 마감을 짧게 잡아도
+ * 정상 경로는 영향이 없고, 방치한 사용자만 더 빨리 목록을 본다.
  */
-const SETTLE_DEADLINE_MS = 8_000;
+const SETTLE_DEADLINE_MS = 3_000;
 
 export type GeolocationState = {
   /** 측위 성공 시 좌표. 미확정·거부·실패는 전부 `null`. */
@@ -54,12 +58,15 @@ export function useGeolocation(enabled = true): GeolocationState {
     if (!shouldLocate) return;
 
     let cancelled = false;
+    let deadline = 0;
     const settle = () => {
       if (cancelled) return;
+      // 콜백이 먼저 왔으면 마감 타이머는 더 볼 일이 없다.
+      window.clearTimeout(deadline);
       setHasAttempted(true);
     };
 
-    const deadline = window.setTimeout(settle, SETTLE_DEADLINE_MS);
+    deadline = window.setTimeout(settle, SETTLE_DEADLINE_MS);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {

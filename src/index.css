@@ -52,6 +52,14 @@
   /* 브랜드 */
   --color-kakao: #fee500; /* 카카오 로그인 버튼 */
 
+  /*
+   * 앱 콘텐츠 폭 상한 → `max-w-app`.
+   *
+   * 모바일 전용 레이아웃이라 데스크톱에서는 뷰포트를 다 채우는 대신 이 폭으로 가운데 정렬한다.
+   * 하단 고정 CTA도 같은 값을 써야 `BottomNavBar`(중앙 고정)와 정렬이 맞는다.
+   */
+  --container-app: 430px;
+
   /* Animation */
   --animate-onboarding-shake: onboarding-shake 0.4s ease-in-out;
 

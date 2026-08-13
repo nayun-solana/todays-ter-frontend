@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
 
 import Button from '../../components/Button';
+import ProgressBar from '../../components/ProgressBar';
 import { cn } from '../../lib/cn';
 import {
   HOURS,
@@ -247,12 +248,8 @@ export default function OnboardingPage1() {
 
   return (
     <div className="flex min-h-dvh w-full flex-col px-5 pb-8 pt-[calc(1rem+env(safe-area-inset-top))]">
-      {/* 상단 진행바 — 3분할 세그먼트, 1/3 (Figma Component 5/베리언트4) */}
-      <div className="flex gap-1">
-        <span className="h-1 flex-1 rounded-full bg-primary" />
-        <span className="h-1 flex-1 rounded-full bg-gray-disabled" />
-        <span className="h-1 flex-1 rounded-full bg-gray-disabled" />
-      </div>
+      {/* 상단 진행바 — 3분할 세그먼트. 온보딩1은 아직 아무것도 제출하지 않았으므로 0/3. */}
+      <ProgressBar step={0} total={3} />
 
       <header className="mt-11 flex flex-col gap-4">
         <p className="text-base font-bold text-primary">내 사주 입력</p>

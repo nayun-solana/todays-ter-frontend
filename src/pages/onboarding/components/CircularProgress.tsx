@@ -228,6 +228,37 @@ const CircularProgress = ({
         />
 
         {/*
+          대기 중임을 알리는 회전 하이라이트입니다.
+
+          서버 진행률은 몇 초에 한 번씩만 올라오기 때문에, 그 사이 화면이 완전히 멈춰
+          "0%에서 죽었다"처럼 보였습니다. 이 호는 진행률과 무관하게 계속 돌아
+          아직 분석 중임을 알립니다.
+
+          진행 링보다 **먼저** 그려서 아래에 깔립니다 — 이미 채워진 구간은 흰색으로
+          덮이므로, 하이라이트는 아직 채워지지 않은 구간에서만 보입니다.
+
+          움직임 줄이기 설정이 켜져 있으면 회전하지 않습니다.
+        */}
+        <circle
+          cx={PROGRESS_CENTER}
+          cy={PROGRESS_CENTER}
+          r={PROGRESS_RADIUS}
+          fill="none"
+          stroke="#FFFFFF"
+          strokeOpacity={0.28}
+          strokeWidth={PROGRESS_STROKE_WIDTH}
+          strokeLinecap="round"
+          strokeDasharray={`${PROGRESS_CIRCUMFERENCE * 0.12} ${PROGRESS_CIRCUMFERENCE}`}
+          /*
+           * 움직임 줄이기에서는 **감춘다.** `animate-none`으로 멈추기만 하면 호가 12시부터
+           * 시계방향으로 남아, 가운데 숫자가 0%인데 링은 12%쯤 찬 것처럼 보인다.
+           * 이건 진행률이 아니라 대기 표시라 멈춰 있을 이유가 없다.
+           */
+          className="origin-center animate-spin [transform-box:fill-box] motion-reduce:hidden"
+          style={{ animationDuration: '2.4s' }}
+        />
+
+        {/*
           0%일 때 표시되는 평평한 진행 조각입니다.
 
           진행률이 0%에서 5%로 올라가는 동안

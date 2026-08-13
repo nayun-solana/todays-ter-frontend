@@ -177,7 +177,7 @@ export default function OnboardingPage3({ mode = 'onboarding' }: { mode?: 'onboa
 
   return (
     <div className="flex min-h-dvh w-full flex-col px-5 pb-8 pt-[calc(1rem+env(safe-area-inset-top))]">
-      {/* 상단 진행바 — 시안은 3분할 세그먼트(2/3 채움)이나 크로스팟 ProgressBar(연속형)로 근사 */}
+      {/* 상단 진행바 — 3분할 세그먼트. 사주·리포트를 지나 마지막 단계이므로 2/3. */}
       <ProgressBar step={2} total={3} />
 
       <header className="mt-11 flex flex-col gap-4">

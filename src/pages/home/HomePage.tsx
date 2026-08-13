@@ -37,8 +37,11 @@ export default function HomePage() {
   const headerQuery = useHomeHeader();
   const routinesQuery = useEnergyRoutines();
   // 좌표가 있으면 카드에 거리가 찍힌다. 거부·미지원이면 좌표 없이 그대로 조회한다.
-  const coords = useGeolocation();
-  const recommendedQuery = useRecommendedPlaces({ coords });
+  // 좌표는 queryKey에 들어가므로 측위가 끝나기 전에 부르면 같은 화면이 요청을 두 번 보낸다
+  // (좌표 없는 응답은 distanceKm이 비어 어차피 버려진다). 확정될 때까지 미룬다.
+  // isSettled는 거부·타임아웃·미지원도 포함하므로 좌표를 못 받아도 요청은 반드시 나간다.
+  const { coords, isSettled: isGeolocationSettled } = useGeolocation();
+  const recommendedQuery = useRecommendedPlaces({ coords, enabled: isGeolocationSettled });
 
   const header = headerQuery.data;
   const routines = routinesQuery.data;

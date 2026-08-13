@@ -13,19 +13,53 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
 };
 
 /**
+ * 최후의 안전망. `timeout` 옵션은 명세상 "권한을 얻은 뒤" 측위에 쓸 수 있는 시간이라,
+ * 사용자가 권한 창을 닫지도 누르지도 않으면 성공·실패 어느 콜백도 오지 않는다.
+ * 그 상태로 두면 소비부가 `isSettled`를 영영 못 받아 스켈레톤에 갇힌다 —
+ * 여기서 끊고 "좌표 없음"으로 확정해 화면을 진행시킨다.
+ */
+const SETTLE_DEADLINE_MS = 8_000;
+
+export type GeolocationState = {
+  /** 측위 성공 시 좌표. 미확정·거부·실패는 전부 `null`. */
+  coords: Coordinates | null;
+  /**
+   * 측위 시도가 끝났는지. 성공뿐 아니라 거부·타임아웃·미지원·미사용(`enabled: false`)까지
+   * 전부 "끝난 것"으로 본다. 좌표를 queryKey에 싣는 쪽은 이 값이 참이 될 때까지
+   * 요청을 미뤄야 한다 — 안 그러면 좌표 없는 요청 1회 + 좌표 있는 요청 1회가 나간다.
+   */
+  isSettled: boolean;
+};
+
+function isSupported() {
+  return 'geolocation' in navigator;
+}
+
+/**
  * 현재 위치 1회 조회.
  *
  * 거부·미지원·타임아웃을 구분하지 않고 전부 `null`로 돌려준다 — 호출부는 좌표가 있으면
  * 거리를 보여주고 없으면 안 보여주면 되며, 그 외 분기가 필요 없다.
  * 권한 창을 띄우는 부작용이 있으므로 정말 필요한 화면에서만 부를 것.
  */
-export function useGeolocation(enabled = true): Coordinates | null {
+export function useGeolocation(enabled = true): GeolocationState {
+  const shouldLocate = enabled && isSupported();
   const [coords, setCoords] = useState<Coordinates | null>(null);
+  const [hasAttempted, setHasAttempted] = useState(false);
+  // 시도 자체가 없으면(비활성·미지원) 처음부터 확정이다. 이걸 상태로 들고 있으면
+  // 지오로케이션이 없는 브라우저에서 확정 신호가 영영 안 와 요청이 한 번도 안 나간다.
+  const isSettled = !shouldLocate || hasAttempted;
 
   useEffect(() => {
-    if (!enabled || !('geolocation' in navigator)) return;
+    if (!shouldLocate) return;
 
     let cancelled = false;
+    const settle = () => {
+      if (cancelled) return;
+      setHasAttempted(true);
+    };
+
+    const deadline = window.setTimeout(settle, SETTLE_DEADLINE_MS);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -34,16 +68,19 @@ export function useGeolocation(enabled = true): Coordinates | null {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         });
+        settle();
       },
       // 거부·타임아웃 — 좌표 없이 진행한다. 에러를 화면에 드러내지 않는다.
-      () => undefined,
+      // 다만 "끝났다"는 사실은 알려야 소비부가 좌표 없이 요청을 낼 수 있다.
+      settle,
       GEOLOCATION_OPTIONS,
     );
 
     return () => {
       cancelled = true;
+      window.clearTimeout(deadline);
     };
-  }, [enabled]);
+  }, [shouldLocate]);
 
-  return coords;
+  return { coords, isSettled };
 }

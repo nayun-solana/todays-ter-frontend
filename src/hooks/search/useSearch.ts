@@ -23,12 +23,20 @@ export function getNextPlacePage(lastPage: PlaceListResponse) {
   return lastPage.page.hasNext ? lastPage.page.number + 1 : undefined;
 }
 
-export function useInfinitePlaces(params: InfinitePlaceListParams) {
+/**
+ * 장소 목록(무한 스크롤).
+ *
+ * `enabled`는 좌표처럼 "곧 정해지지만 아직 안 정해진" 값이 params에 들어갈 때 쓴다 —
+ * 좌표가 queryKey의 일부라, 미확정 상태로 부르면 좌표 없는 목록을 한 번 받고
+ * 좌표가 들어온 뒤 같은 목록을 다시 받는다.
+ */
+export function useInfinitePlaces(params: InfinitePlaceListParams, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
     queryKey: searchKeys.places(params),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => getPlaces({ ...params, page: pageParam, size: 10 }),
     getNextPageParam: getNextPlacePage,
+    enabled: options?.enabled ?? true,
   });
 }
 

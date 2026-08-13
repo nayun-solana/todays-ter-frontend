@@ -249,7 +249,12 @@ const CircularProgress = ({
           strokeWidth={PROGRESS_STROKE_WIDTH}
           strokeLinecap="round"
           strokeDasharray={`${PROGRESS_CIRCUMFERENCE * 0.12} ${PROGRESS_CIRCUMFERENCE}`}
-          className="origin-center animate-spin [transform-box:fill-box] motion-reduce:animate-none"
+          /*
+           * 움직임 줄이기에서는 **감춘다.** `animate-none`으로 멈추기만 하면 호가 12시부터
+           * 시계방향으로 남아, 가운데 숫자가 0%인데 링은 12%쯤 찬 것처럼 보인다.
+           * 이건 진행률이 아니라 대기 표시라 멈춰 있을 이유가 없다.
+           */
+          className="origin-center animate-spin [transform-box:fill-box] motion-reduce:hidden"
           style={{ animationDuration: '2.4s' }}
         />
 

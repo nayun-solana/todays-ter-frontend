@@ -34,6 +34,8 @@ export default function ProgressBar({ step, total, tone = 'light' }: ProgressBar
     <div
       className="flex gap-1"
       role="progressbar"
+      // 온보딩2에는 이 바와 원형 진행률 두 개가 함께 있다 — 라벨이 없으면 구분되지 않는다.
+      aria-label="온보딩 진행 단계"
       aria-valuemin={0}
       aria-valuemax={total}
       aria-valuenow={filledCount}

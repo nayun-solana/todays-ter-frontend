@@ -318,7 +318,7 @@ export default function ShareCardModal({
               src={bgSrc}
               alt={placeName}
               crossOrigin="anonymous"
-              className="absolute inset-0 size-full object-cover"
+              className="absolute bottom-0 h-[100%] w-full object-cover"
               onError={() => {
                 if (remoteUrl) setFailedUrl(remoteUrl);
               }}

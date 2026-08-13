@@ -19,5 +19,10 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts"]
+  /*
+   * `scripts`를 포함한다 — 여기 없으면 `tsc -b`가 아예 쳐다보지 않는다.
+   * 실제로 존재하지 않는 모듈을 import하는 스크립트 3개가 이 사각지대에서
+   * 오래 살아남았다(#209).
+   */
+  "include": ["vite.config.ts", "vitest.config.ts", "scripts"]
 }

@@ -10,7 +10,14 @@ type CompleteLocationState = {
 export default function ReviewCompletePage() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const matchedTerName = (state as CompleteLocationState | null)?.matchedTerName ?? '청계천 모전교';
+  /**
+   * 라우터 state가 없으면(새로고침·직접 진입) 장소명을 알 방법이 없다.
+   *
+   * 예전에는 '청계천 모전교'로 폴백해서, **전혀 다른 곳을 다녀온 사용자에게
+   * "청계천 모전교가 다녀온 터에 추가되었습니다"**라고 알렸다. 목데이터가 남아
+   * 거짓말을 하는 자리라, 이름을 모르면 이름 없이 말한다.
+   */
+  const matchedTerName = (state as CompleteLocationState | null)?.matchedTerName;
 
   return (
     <div className="flex min-h-dvh flex-col bg-gray-1">
@@ -20,7 +27,9 @@ export default function ReviewCompletePage() {
           방문 기록이 저장됐어요
         </h1>
         <p className="mt-3 text-center text-xs text-gray-6">
-          {matchedTerName}가 다녀온 터에 추가되었습니다.
+          {matchedTerName
+            ? `${matchedTerName}가 다녀온 터에 추가되었습니다.`
+            : '다녀온 터에 추가되었습니다.'}
         </p>
       </div>
 

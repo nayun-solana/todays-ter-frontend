@@ -14,7 +14,7 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus';
 import { toOhaengKey } from '../../lib/ohaeng';
 import type { RecommendationDetail } from '../../types/recommendation/recommendationDetail';
 import ActionSuggestionCard from './components/ActionSuggestionCard';
-import ImageCarousel from './components/ImageCarousel';
+import PlaceImage from './components/PlaceImage';
 import MatchChips from './components/MatchChips';
 import MatchedTerAppBar from './components/MatchedTerAppBar';
 import WhyMatchCard from './components/WhyMatchCard';
@@ -128,7 +128,7 @@ export default function MatchedTerPage({ variant = 'default' }: MatchedTerPagePr
           </p>
         )}
 
-        <ImageCarousel />
+        <PlaceImage imageUrl={data.imageUrl} placeName={data.placeName} />
         <h2 className="text-xl font-extrabold text-gray-6">{data.placeName}</h2>
 
         {/* 매칭칩·왜맞나요·행동제안은 12px 간격 (Figma) */}

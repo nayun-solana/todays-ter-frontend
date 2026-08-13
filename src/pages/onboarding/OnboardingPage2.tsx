@@ -11,6 +11,7 @@ import {
   useRetryFortuneReport,
 } from '../../hooks/onboarding/useGetReport';
 // components
+import ProgressBar from '../../components/ProgressBar';
 import AnalysisProgress from './components/CircularProgress';
 import StatusBox from './components/StatusBox';
 import Modal from './components/Modal';
@@ -150,32 +151,38 @@ export default function OnboardingStep2Page() {
   return (
     <main
       className="
-         min-h-dvh bg-primary px-5 pb-safe pt-safe-5 flex flex-col gap-12 justify-center
+         min-h-dvh bg-primary px-5 pb-safe pt-safe-5 flex flex-col
       "
     >
-      <div className="flex flex-col gap-7.5 items-center justify-center">
-        <div className="flex flex-col gap-3 items-center justify-center">
-          <p className="text-primary-light text-[10px] font-bold">분석 중...</p>
-          <p className="text-white text-sm font-extrabold">기본 리포트 생성</p>
+      {/* 상단 진행바 — 3분할 세그먼트. 사주 입력을 마치고 리포트를 만드는 중이므로 1/3. */}
+      <ProgressBar step={1} total={3} tone="onPrimary" />
+
+      {/* 진행바는 상단에 고정하고, 분석 내용은 남은 높이 안에서 가운데 정렬한다. */}
+      <div className="flex flex-1 flex-col gap-12 justify-center">
+        <div className="flex flex-col gap-7.5 items-center justify-center">
+          <div className="flex flex-col gap-3 items-center justify-center">
+            <p className="text-primary-light text-[10px] font-bold">분석 중...</p>
+            <p className="text-white text-sm font-extrabold">기본 리포트 생성</p>
+          </div>
+          <AnalysisProgress currentStep={progress} />
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <p className="text-white text-lg font-extrabold ">당신의 기운을 분석하고 있어요</p>
+            <p className="text-white text-[10px] font-normal text-center">
+              일간, 일지, 일주와 오행 분포를 바탕으로 <br />
+              나의 기본 성향과 고민별 흐름을 정리하고 있어요
+            </p>
+          </div>
         </div>
-        <AnalysisProgress currentStep={progress} />
-        <div className="flex flex-col gap-2 items-center justify-center">
-          <p className="text-white text-lg font-extrabold ">당신의 기운을 분석하고 있어요</p>
-          <p className="text-white text-[10px] font-normal text-center">
-            일간, 일지, 일주와 오행 분포를 바탕으로 <br />
-            나의 기본 성향과 고민별 흐름을 정리하고 있어요
-          </p>
+        <div className="flex flex-col gap-2 items-center justify-center w-full">
+          {progressContent.map((content, index) => (
+            <StatusBox
+              key={index}
+              isSuccess={progress > index}
+              title={content.title}
+              description={content.description}
+            />
+          ))}
         </div>
-      </div>
-      <div className="flex flex-col gap-2 items-center justify-center w-full">
-        {progressContent.map((content, index) => (
-          <StatusBox
-            key={index}
-            isSuccess={progress > index}
-            title={content.title}
-            description={content.description}
-          />
-        ))}
       </div>
       {isModalOpen && (
         <Modal

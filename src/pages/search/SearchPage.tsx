@@ -94,15 +94,21 @@ export default function SearchPage() {
   const filtersQuery = useExploreFilters();
   // 좌표를 함께 보내야 서버가 distanceKm을 채운다(안 보내면 항상 null, 실측).
   // 권한을 거부하거나 측위에 실패하면 undefined로 남고 거리만 빠진다 — 목록은 그대로 뜬다.
-  const coords = useGeolocation();
-  const placesQuery = useInfinitePlaces({
-    keyword: deferredKeyword.trim() || undefined,
-    regionCode: region ?? undefined,
-    themeType: selectedTheme ?? undefined,
-    elementType,
-    latitude: coords?.latitude,
-    longitude: coords?.longitude,
-  });
+  // 좌표는 queryKey의 일부라, 측위가 끝나기 전에 부르면 좌표 없는 목록을 한 번 받고
+  // 좌표가 들어온 뒤 같은 목록을 또 받는다. 확정될 때까지 요청을 미룬다.
+  // isSettled는 거부·타임아웃·미지원도 확정으로 치므로 목록이 안 뜨는 일은 없다.
+  const { coords, isSettled: isGeolocationSettled } = useGeolocation();
+  const placesQuery = useInfinitePlaces(
+    {
+      keyword: deferredKeyword.trim() || undefined,
+      regionCode: region ?? undefined,
+      themeType: selectedTheme ?? undefined,
+      elementType,
+      latitude: coords?.latitude,
+      longitude: coords?.longitude,
+    },
+    { enabled: isGeolocationSettled },
+  );
   const regions = [
     REGIONS[0],
     ...(filtersQuery.data?.regions ?? REGIONS.slice(1)).filter((item) => item.code !== 'ALL'),
@@ -158,9 +164,12 @@ export default function SearchPage() {
     return () => window.removeEventListener('scroll', updateScrollState);
   }, []);
 
+  // 관측자 재생성 조건은 실제로 읽는 값 셋뿐이다. placesQuery 객체 자체를 의존성에 두면
+  // useInfiniteQuery가 렌더마다 새 객체를 주는 탓에 매 렌더 disconnect → observe가 반복된다.
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = placesQuery;
+
   useEffect(() => {
     const target = loadMoreRef.current;
-    const { fetchNextPage, hasNextPage, isFetchingNextPage } = placesQuery;
     if (!target || !hasNextPage || isFetchingNextPage) return;
 
     const observer = new IntersectionObserver(
@@ -172,7 +181,7 @@ export default function SearchPage() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [placesQuery]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     if (!isFilterOpen) return;

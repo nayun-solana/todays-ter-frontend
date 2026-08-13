@@ -58,9 +58,6 @@ export const RecordDetailResponse = z.object({
 });
 export type RecordDetailResponse = z.infer<typeof RecordDetailResponse>;
 
-/** @deprecated RecordDetailResponse 사용 */
-export type RecordDetail = RecordDetailResponse;
-
 export type RecordDetailImage = {
   key: string;
   imageUrl: string;

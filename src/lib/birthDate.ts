@@ -18,7 +18,6 @@ export interface BirthDate {
 /** 휠에 올리는 가장 이른 해. 시안 기준값이라 두 화면이 같아야 한다. */
 export const BIRTH_YEAR_MIN = 1900;
 
-export const MONTHS: readonly number[] = Array.from({ length: 12 }, (_, index) => index + 1);
 export const HOURS: readonly number[] = Array.from({ length: 24 }, (_, index) => index);
 export const MINUTES: readonly number[] = Array.from({ length: 60 }, (_, index) => index);
 

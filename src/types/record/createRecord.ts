@@ -16,16 +16,6 @@ export const RecordImagesUploadResponse = z.object({
 });
 export type RecordImagesUploadResponse = z.infer<typeof RecordImagesUploadResponse>;
 
-/** POST /records 요청 body */
-export const CreateRecordRequest = z.object({
-  placeId: z.number().int().positive(),
-  type: RecordWriteType,
-  rating: z.number().int().min(1).max(5),
-  content: z.string(),
-  imageIds: z.array(z.number().int().nonnegative()),
-});
-export type CreateRecordRequest = z.infer<typeof CreateRecordRequest>;
-
 /** POST /records 응답 result */
 export const CreateRecordResponse = z.object({
   /** 나에 맞는 터 방문 기록일 때 */
@@ -57,10 +47,3 @@ export const UpdateRecordRequest = z
     message: '수정할 필드가 없습니다.',
   });
 export type UpdateRecordRequest = z.infer<typeof UpdateRecordRequest>;
-
-/** 상세 조회용 id — RECORD면 recordId, REVIEW면 reviewId */
-export function recordDetailIdOf(
-  result: Pick<CreateRecordResponse, 'recordId' | 'reviewId'>,
-): number | undefined {
-  return result.recordId ?? result.reviewId;
-}
